@@ -1,0 +1,30 @@
+{
+  "private": true,
+  "packageManager": "yarn@1.22.19",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@notionhq/client": "^5.1.0",
+    "@tailwindcss/postcss": "4.0.0-alpha.13",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "geist": "1.2.2",
+    "googleapis": "^161.0.0",
+    "next": "15.5.7",
+    "next-mdx-remote": "^4.4.1",
+    "postcss": "^8.4.35",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "remark-gfm": "^4.0.1",
+    "resend": "^6.1.1",
+    "sugar-high": "^0.6.0",
+    "tailwindcss": "4.0.0-alpha.13",
+    "typescript": "5.3.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.6.2"
+  }
+}

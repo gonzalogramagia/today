@@ -1,0 +1,239 @@
+@import 'tailwindcss';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes occasional-bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+.animate-occasional-bounce {
+  animation: occasional-bounce 5s infinite;
+}
+
+::selection {
+  background-color: #47a3f3;
+  color: #fefefe;
+}
+
+:root {
+  --sh-class: #2d5e9d;
+  --sh-identifier: #354150;
+  --sh-sign: #8996a3;
+  --sh-string: #007f7a;
+  --sh-keyword: #e02518;
+  --sh-comment: #a19595;
+  --sh-jsxliterals: #6266d1;
+  --sh-property: #e25a1c;
+  --sh-entity: #e25a1c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sh-class: #4c97f8;
+    --sh-identifier: white;
+    --sh-keyword: #f47067;
+    --sh-string: #0fa295;
+  }
+  html {
+    color-scheme: dark;
+  }
+}
+
+html {
+  min-width: 360px;
+}
+
+.prose .anchor {
+  @apply absolute invisible no-underline;
+
+  margin-left: -1em;
+  padding-right: 0.5em;
+  width: 80%;
+  max-width: 700px;
+  cursor: pointer;
+}
+
+.anchor:hover {
+  @apply visible;
+}
+
+.prose a {
+  @apply transition-all;
+  color: #fbbf24 !important;
+  text-decoration: none !important;
+}
+
+.prose a:hover {
+  text-decoration: none !important;
+}
+
+/* Botones Volver específicos - más específico que .prose a */
+.prose .volver-button,
+.volver-button {
+  color: #1f2937 !important; /* neutral-800 */
+}
+
+.dark .prose .volver-button,
+.dark .volver-button {
+  color: #ffffff !important; /* white */
+}
+
+/* Forzar color en todos los casos */
+a.volver-button,
+.prose a.volver-button {
+  color: #1f2937 !important;
+}
+
+.dark a.volver-button,
+.dark .prose a.volver-button {
+  color: #ffffff !important;
+}
+
+/* Solución final - máxima especificidad */
+:where(.prose) a[style*="color"] {
+  color: inherit !important;
+}
+
+/* Forzar colores específicos para modo oscuro */
+@media (prefers-color-scheme: dark) {
+  :where(.prose) a[style*="color"] {
+    color: #ffffff !important;
+  }
+}
+
+/* Enlaces del home mantienen el color celeste */
+section:not(.prose) a {
+  color: #59A8E7 !important;
+  text-decoration: none !important;
+}
+
+section:not(.prose) a:hover {
+  text-decoration: none !important;
+}
+
+
+.prose .anchor:after {
+  @apply text-neutral-300 dark:text-neutral-700;
+  content: '#';
+}
+
+.prose *:hover > .anchor {
+  @apply visible;
+}
+
+.prose pre {
+  @apply bg-neutral-50 dark:bg-neutral-900 rounded-lg overflow-x-auto border border-neutral-200 dark:border-neutral-900 py-2 px-3 text-sm;
+}
+
+.prose code {
+  @apply px-1 py-0.5 rounded-lg;
+}
+
+.prose pre code {
+  @apply p-0;
+  border: initial;
+  line-height: 1.5;
+}
+
+.prose code span {
+  @apply font-medium;
+}
+
+.prose img {
+  /* Don't apply styles to next/image */
+  @apply m-0;
+}
+
+.prose p {
+  @apply my-4 text-neutral-800 dark:text-neutral-200;
+}
+
+.prose h1 {
+  @apply text-4xl font-medium tracking-tight mt-6 mb-2;
+}
+
+.prose h2 {
+  @apply text-xl font-medium tracking-tight mt-6 mb-2;
+}
+
+.prose h3 {
+  @apply text-xl font-medium tracking-tight mt-6 mb-2;
+}
+
+.prose h4 {
+  @apply text-lg font-medium tracking-tight mt-6 mb-2;
+}
+
+.prose strong {
+  @apply font-medium;
+}
+
+.prose ul {
+  @apply list-disc pl-6;
+}
+
+.prose ol {
+  @apply list-decimal pl-6;
+}
+
+.prose > :first-child {
+  /* Override removing top margin, causing layout shift */
+  margin-top: 1.25em !important;
+  margin-bottom: 1.25em !important;
+}
+
+pre::-webkit-scrollbar {
+  display: none;
+}
+
+pre {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+/* Remove Safari input shadow on mobile */
+input[type='text'],
+input[type='email'] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+
+.title {
+  text-wrap: balance;
+}
+
+/* Date input calendar icon styling */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  order: -1;
+  margin-right: 0.5rem;
+  margin-left: 0;
+  position: absolute;
+  left: 0.75rem;
+  width: 1rem;
+  height: 1rem;
+}
+
+input[type="date"] {
+  display: flex;
+  flex-direction: row-reverse;
+  padding-right: 0;
+  padding-left: 2rem;
+  position: relative;
+}
+
+/* Make the entire input clickable */
+input[type="date"]::-webkit-datetime-edit {
+  cursor: pointer;
+}
