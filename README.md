@@ -34,6 +34,11 @@
 - **Countdown Timer**: Track time to important events with visual urgency indicators (Yellow/Red).
 - **Mens Sana Footer**: "Mens sana in corpore sano" - A reminder for balance.
 
+### 💾 Data Backup
+- **Export**: Backup your shortcuts, daily tasks, notes, and countdowns to a JSON file.
+- **Import**: Restore your configuration from a backup file selectively.
+- **Notes Support**: Your smart notes are included in the backup, so you never lose your ideas.
+
 ---
 
 ## 🛠️ Technology Stack
@@ -50,6 +55,18 @@
 ## 📄 License
 
 This project is created for personal productivity and is shared as-is. Feel free to fork and adapt it for your own "Home"!
+
+---
+
+## Recommended Extensions
+
+To get the full experience and stay in the flow, I recommend these Chrome extensions:
+
+- **[New Tab Redirect](https://chromewebstore.google.com/detail/new-tab-redirect/icpgjfneehieebagbmdbhnlpiopdcmna)**
+  **Why?** Makes *Home* your default new tab page, ensuring your tasks, top notes and countdowns are always the first thing you see — along with your shortcuts!
+
+- **[Just Focus](https://chromewebstore.google.com/detail/just-focus/gefaddaengbodpiobpbgblajdboalmgc)**
+  **Why?** A simple website blocker to eliminate distractions and keep your deep work sessions protected.
 
 ---
 
