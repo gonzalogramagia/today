@@ -7,12 +7,14 @@ import { usePathname } from 'next/navigation'
 type Task = {
     id: string
     text: string
+    url?: string
     completed: boolean
 }
 
 export default function DailyTasks() {
     const [tasks, setTasks] = useState<Task[]>([])
     const [inputValue, setInputValue] = useState('')
+    const [urlValue, setUrlValue] = useState('')
     const [mounted, setMounted] = useState(false)
     const pathname = usePathname()
     const isEnglish = pathname?.startsWith('/en')
@@ -76,10 +78,12 @@ export default function DailyTasks() {
         const newTask: Task = {
             id: crypto.randomUUID(),
             text: inputValue.trim(),
+            url: urlValue.trim() || undefined,
             completed: false
         }
         setTasks([...tasks, newTask])
         setInputValue('')
+        setUrlValue('')
     }
 
     const toggleTask = (id: string) => {
@@ -117,7 +121,19 @@ export default function DailyTasks() {
                                 {task.completed ? <CheckSquare size={16} /> : <Square size={16} />}
                             </button>
                             <span className={`flex-1 break-words transition-all ${task.completed ? 'line-through text-zinc-400 dark:text-zinc-600' : 'text-zinc-700 dark:text-zinc-300'}`}>
-                                {task.text}
+                                {task.url ? (
+                                    <a
+                                        href={task.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="hover:underline decoration-zinc-400 dark:decoration-zinc-600"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        {task.text}
+                                    </a>
+                                ) : (
+                                    task.text
+                                )}
                             </span>
                             <button
                                 onClick={() => deleteTask(task.id)}
@@ -135,21 +151,30 @@ export default function DailyTasks() {
                     )}
                 </div>
 
-                <form onSubmit={addTask} className="flex gap-2">
+                <form onSubmit={addTask} className="flex flex-col gap-2">
+                    <div className="flex gap-2">
+                        <input
+                            type="text"
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            placeholder={isEnglish ? 'Add task...' : 'Agregar tarea...'}
+                            className="flex-1 bg-zinc-50 dark:bg-zinc-800 border-none rounded text-xs px-2 py-1.5 focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-600 outline-none text-zinc-800 dark:text-zinc-200"
+                        />
+                        <button
+                            type="submit"
+                            disabled={!inputValue.trim()}
+                            className="bg-black dark:bg-white text-white dark:text-black rounded p-1.5 hover:opacity-80 disabled:opacity-50 transition-opacity cursor-pointer"
+                        >
+                            <Plus size={14} />
+                        </button>
+                    </div>
                     <input
                         type="text"
-                        value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
-                        placeholder={isEnglish ? 'Add task...' : 'Agregar tarea...'}
-                        className="flex-1 bg-zinc-50 dark:bg-zinc-800 border-none rounded text-xs px-2 py-1.5 focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-600 outline-none text-zinc-800 dark:text-zinc-200"
+                        value={urlValue}
+                        onChange={(e) => setUrlValue(e.target.value)}
+                        placeholder={isEnglish ? 'Optional URL...' : 'URL opcional...'}
+                        className="w-full bg-zinc-50 dark:bg-zinc-800 border-none rounded text-xs px-2 py-1.5 focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-600 outline-none text-zinc-800 dark:text-zinc-200 text-xs"
                     />
-                    <button
-                        type="submit"
-                        disabled={!inputValue.trim()}
-                        className="bg-black dark:bg-white text-white dark:text-black rounded p-1.5 hover:opacity-80 disabled:opacity-50 transition-opacity cursor-pointer"
-                    >
-                        <Plus size={14} />
-                    </button>
                 </form>
             </div>
         </div>
