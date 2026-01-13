@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Download, X, CheckSquare, Square } from 'lucide-react';
+import { FileUp, X, CheckSquare, Square } from 'lucide-react';
 import Link from 'next/link';
 
 interface ExportModalProps {
@@ -30,7 +30,7 @@ export default function ExportModal({ lang }: ExportModalProps) {
 
     // Translations
     const t = {
-        title: isEnglish ? 'Export Configuration' : 'Exportar Configuración',
+        title: isEnglish ? 'Export Backup' : 'Exportar Backup',
         filenameLabel: isEnglish ? 'Filename' : 'Nombre del archivo',
         selectLabel: isEnglish ? 'Select what to export:' : 'Elige qué exportar:',
         shortcutsLeft: isEnglish ? 'Left Shortcuts' : 'Atajos Izquierda',
@@ -126,7 +126,7 @@ export default function ExportModal({ lang }: ExportModalProps) {
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-zinc-100 dark:border-zinc-800">
                     <h1 className="text-lg font-semibold flex items-center gap-2">
-                        <Download className="w-5 h-5" />
+                        <FileUp className="w-5 h-5" />
                         {t.title}
                     </h1>
                     <Link href="/" className="p-1 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
@@ -199,7 +199,7 @@ export default function ExportModal({ lang }: ExportModalProps) {
                         onClick={handleExport}
                         className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors flex items-center gap-2"
                     >
-                        <Download className="w-4 h-4" />
+                        <FileUp className="w-4 h-4" />
                         {t.exportBtn}
                     </button>
                 </div>

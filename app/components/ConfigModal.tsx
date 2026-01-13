@@ -1,6 +1,6 @@
 'use client';
 
-import { Wrench, Languages, Download, Upload, X, Eye, EyeOff } from "lucide-react";
+import { Wrench, Languages, FileDown, FileUp, X, Eye, EyeOff } from "lucide-react";
 import Link from 'next/link';
 import { useState, useEffect } from "react";
 import { Language } from "../data/i18n";
@@ -163,18 +163,18 @@ export default function ConfigModal({ lang, onClose, toggleLanguage, exportPath,
                             href={importPath}
                             className="flex flex-col items-center justify-center gap-2 p-4 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all group cursor-pointer"
                         >
-                            <Upload size={24} className="text-zinc-500 group-hover:text-blue-500 transition-colors" />
+                            <FileDown size={24} className="text-zinc-500 group-hover:text-blue-500 transition-colors" />
                             <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-200">
-                                {lang === 'en' ? 'Import' : 'Importar'}
+                                {lang === 'en' ? 'Import Backup' : 'Importar Backup'}
                             </span>
                         </Link>
                         <Link
                             href={exportPath}
                             className="flex flex-col items-center justify-center gap-2 p-4 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all group cursor-pointer"
                         >
-                            <Download size={24} className="text-zinc-500 group-hover:text-blue-500 transition-colors" />
+                            <FileUp size={24} className="text-zinc-500 group-hover:text-blue-500 transition-colors" />
                             <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-200">
-                                {lang === 'en' ? 'Export' : 'Exportar'}
+                                {lang === 'en' ? 'Export Backup' : 'Exportar Backup'}
                             </span>
                         </Link>
                     </div>

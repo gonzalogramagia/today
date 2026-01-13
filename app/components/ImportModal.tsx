@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Upload, X, CheckSquare, Square, FileJson, AlertCircle } from 'lucide-react';
+import { FileDown, X, CheckSquare, Square, FileJson, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 
 interface ImportModalProps {
@@ -34,7 +34,7 @@ export default function ImportModal({ lang }: ImportModalProps) {
 
     // Translations
     const t = {
-        title: isEnglish ? 'Import Configuration' : 'Importar Configuración',
+        title: isEnglish ? 'Import Backup' : 'Importar Backup',
         dropLabel: isEnglish ? 'Drop JSON file here or click to upload' : 'Arrastra el archivo JSON aquí o click para subir',
         selectLabel: isEnglish ? 'Select what to import:' : 'Elige qué importar:',
         shortcutsLeft: isEnglish ? 'Left Shortcuts' : 'Atajos Izquierda',
@@ -138,7 +138,7 @@ export default function ImportModal({ lang }: ImportModalProps) {
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-zinc-100 dark:border-zinc-800">
                     <h1 className="text-lg font-semibold flex items-center gap-2">
-                        <Upload className="w-5 h-5" />
+                        <FileDown className="w-5 h-5" />
                         {t.title}
                     </h1>
                     <Link href="/" className="p-1 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
@@ -170,7 +170,7 @@ export default function ImportModal({ lang }: ImportModalProps) {
                             </>
                         ) : (
                             <>
-                                <Upload className="w-10 h-10 text-zinc-400 mb-2" />
+                                <FileDown className="w-10 h-10 text-zinc-400 mb-2" />
                                 <span className="text-sm text-zinc-500 max-w-[200px]">{t.dropLabel}</span>
                             </>
                         )}
@@ -233,7 +233,7 @@ export default function ImportModal({ lang }: ImportModalProps) {
                         disabled={!file || !previewData}
                         className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-sm transition-colors flex items-center gap-2"
                     >
-                        <Upload className="w-4 h-4" />
+                        <FileDown className="w-4 h-4" />
                         {t.importBtn}
                     </button>
                 </div>
