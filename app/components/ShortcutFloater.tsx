@@ -19,6 +19,17 @@ export default function ShortcutFloater() {
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [editingId, setEditingId] = useState<string | null>(null)
     const [activeSide, setActiveSide] = useState<Position>('right')
+    const [areShortcutsVisible, setAreShortcutsVisible] = useState(true)
+
+    useEffect(() => {
+        const checkVisibility = () => {
+            const saved = localStorage.getItem('config-show-shortcuts')
+            setAreShortcutsVisible(saved !== 'false')
+        }
+        checkVisibility()
+        window.addEventListener('config-update', checkVisibility)
+        return () => window.removeEventListener('config-update', checkVisibility)
+    }, [])
 
     const pathname = usePathname()
     const isEnglish = pathname?.startsWith('/en')
@@ -185,8 +196,14 @@ export default function ShortcutFloater() {
         const left = shortcut.position === 'left' ? 0 : width
         const top = 0
 
-        const features = `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes,status=yes,popup=yes`
-        window.open(shortcut.url, '_blank', features)
+        const openInTab = localStorage.getItem('config-open-in-new-tab') === 'true'
+
+        if (openInTab) {
+            window.open(shortcut.url, '_blank')
+        } else {
+            const features = `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes,status=yes,popup=yes`
+            window.open(shortcut.url, '_blank', features)
+        }
     }
 
     return (
@@ -195,7 +212,7 @@ export default function ShortcutFloater() {
             {sides.map((side) => (
                 <div
                     key={side}
-                    className={`fixed top-7 ${side === 'left' ? 'left-8' : 'right-8'} flex items-center gap-2 z-50`}
+                    className={`fixed top-7 ${side === 'left' ? 'left-8' : 'right-8'} flex items-center gap-2 z-50 transition-opacity duration-300 ${areShortcutsVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                 >
                     {/* Add Button - Left only for 'left' side */}
                     {side === 'left' && (

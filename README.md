@@ -21,13 +21,13 @@
 - **Cancel Creation**: Creating a task also has a trash button to cancel the action.
 
 ### 🧭 Navigation Hub
+- **Fast Access**: Shortcut links that open in a new window by default, with the option to open in a new tab.
 - **Quick Links**: Floating buttons for essential services:
     - **Home**: (Disabled/Current)
     - **Emojis**: Fast access to emoji library.
     - **Music**: Direct link to your music layout.
     - **Tasks**: Quick access to project management.
     - **Config/GitHub**: Toggle between Settings and Source code.
-- **Fast Access**: All links open instantly in the same tab.
 
 ### 🕒 Time & Focus
 - **Digital Clock**: Large, bold real-time clock and localized date display.
@@ -40,6 +40,8 @@
     - **Clock & Calendar**: Toggle the main time display.
     - **Daily Tasks**: Show/Hide the daily tasks list.
     - **Countdown**: Show/Hide the countdown timer.
+    - **Shortcuts**: Show/Hide the floating shortcuts bubbles.
+- **Link Behavior**: Toggle to open shortcuts in a new tab or the current tab.
 - **Smooth Transitions**: All elements fade in/out smoothly to maintain a polished look.
 - **Language Switch**: Instantly toggle between English and Spanish.
 
