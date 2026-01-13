@@ -48,7 +48,7 @@ export default function FloatingLinks({ lang }: FloatingLinksProps) {
     return (
         <>
             {/* Right Side Buttons: Config / Github */}
-            <div className="fixed bottom-8 right-8 flex gap-3 z-50">
+            <div className="fixed bottom-8 right-8 flex gap-3 z-[70]">
                 {isSettingsOpen ? (
                     <a
                         href="https://github.com/gonzalogramagia/home"
