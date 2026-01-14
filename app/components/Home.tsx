@@ -554,7 +554,7 @@ export default function Home({ lang }: HomeProps) {
                                         onChange={(e) => handleTextChange(e, block.id)}
                                         onKeyDown={(e) => handleKeyDown(e, block.id)}
                                         placeholder={t.placeholder}
-                                        className="w-full min-h-[160px] p-3 border border-gray-300 dark:border-gray-600 rounded-md resize-y bg-black text-white focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-pre-wrap break-words break-all overflow-auto"
+                                        className="w-full min-h-[160px] p-3 border border-gray-300 dark:border-gray-600 rounded-md resize-y bg-black text-white focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-pre-wrap break-words overflow-auto"
                                     />
                                     {showEmojiPicker && filteredEmojis.length > 0 && (
                                         <div
@@ -595,7 +595,7 @@ export default function Home({ lang }: HomeProps) {
                                 </div>
                             ) : (
                                 <div
-                                    className="w-full min-h-[160px] p-3 border border-gray-300 dark:border-gray-600 rounded-md resize-y bg-white dark:bg-gray-800 text-black dark:text-white whitespace-pre-wrap break-words break-all overflow-auto"
+                                    className="w-full min-h-[160px] p-3 border border-gray-300 dark:border-gray-600 rounded-md resize-y bg-white dark:bg-gray-800 text-black dark:text-white whitespace-pre-wrap break-words overflow-auto"
                                     onDoubleClick={(e) => {
                                         let node = e.target as HTMLElement | null;
                                         while (node) {
