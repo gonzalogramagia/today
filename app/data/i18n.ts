@@ -52,7 +52,7 @@ export const dictionary: Record<Language, Dictionary> = {
         goToHome: "Ir a Home",
         goToEmojis: "Ir a Emojis",
         goToMusic: "Ir a Música",
-        goToTasks: "Ir a Tareas",
+        goToTasks: "Ir a Entrenar",
     },
     en: {
         title: "MY NOTES",
@@ -78,6 +78,6 @@ export const dictionary: Record<Language, Dictionary> = {
         goToHome: "Go to Home",
         goToEmojis: "Go to Emojis",
         goToMusic: "Go to Music",
-        goToTasks: "Go to Tasks",
+        goToTasks: "Go to Training",
     },
 };

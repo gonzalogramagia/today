@@ -26,7 +26,7 @@
     - **Home**: (Disabled/Current)
     - **Emojis**: Fast access to emoji library.
     - **Music**: Direct link to your music layout.
-    - **Tasks**: Quick access to project management.
+    - **Entrenar**: Quick access to training app.
     - **Config/GitHub**: Toggle between Settings and Source code.
 
 ### 🕒 Time & Focus

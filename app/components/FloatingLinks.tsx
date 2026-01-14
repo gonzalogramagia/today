@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import ConfigModal from "./ConfigModal";
-import { Github, Home, Smile, Music, BowArrow, Wrench } from "lucide-react";
+import { Github, Home, Smile, Music, BicepsFlexed, Wrench } from "lucide-react";
 import { dictionary, Language } from "../data/i18n";
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -107,12 +107,12 @@ export default function FloatingLinks({ lang }: FloatingLinksProps) {
                     <Music className="w-6 h-6 text-zinc-900 dark:text-white group-hover:text-yellow-500 transition-colors" />
                 </a>
                 <a
-                    href="https://tasks.gonzalogramagia.com"
+                    href="https://entrenar.app"
                     className="p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 group cursor-pointer"
                     aria-label={t.goToTasks}
                     title={t.goToTasks}
                 >
-                    <BowArrow className="w-6 h-6 text-gray-900 dark:text-white group-hover:text-yellow-500 transition-colors" />
+                    <BicepsFlexed className="w-6 h-6 text-gray-900 dark:text-white group-hover:text-yellow-500 transition-colors" />
                 </a>
             </div>
         </>
