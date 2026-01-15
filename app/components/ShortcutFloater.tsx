@@ -224,57 +224,76 @@ export default function ShortcutFloater() {
                         </button>
                     )}
 
-                    {shortcuts.filter(s => s.position === side).map(shortcut => (
+                    {side === 'left' ? (
+                        shortcuts.filter(s => s.position === side).map(shortcut => (
+                            <div
+                                key={shortcut.id}
+                                className="group relative flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer overflow-visible"
+                            >
+                                {/* Main Icon Button */}
+                                <a
+                                    href={shortcut.url}
+                                    onClick={(e) => handleShortcutClick(e, shortcut)}
+                                    className="w-full h-full p-1 flex items-center justify-center rounded-full cursor-pointer"
+                                    role="button"
+                                    tabIndex={0}
+                                    draggable="true"
+                                >
+                                    <img
+                                        src={shortcut.iconUrl}
+                                        alt={shortcut.name}
+                                        className="w-full h-full object-contain rounded-full"
+                                        onError={(e) => {
+                                            // Fallback if image fails
+                                            (e.target as HTMLImageElement).style.display = 'none';
+                                            (e.target as HTMLImageElement).parentElement!.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>'
+                                        }}
+                                    />
+                                </a>
+
+                                {/* Tooltip Name - Click to Edit */}
+                                <div
+                                    onClick={(e) => {
+                                        e.preventDefault()
+                                        e.stopPropagation()
+                                        handleOpenModal(side, shortcut)
+                                    }}
+                                    className="absolute -bottom-7 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 cursor-pointer hover:bg-zinc-800 flex items-center gap-1"
+                                    title={t.editTooltip}
+                                >
+                                    {shortcut.name}
+                                    <Pencil size={10} className="text-zinc-400" />
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        // Right side - Hardcoded Just Focus
                         <div
-                            key={shortcut.id}
                             className="group relative flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer overflow-visible"
                         >
-                            {/* Main Icon Button */}
                             <a
-                                href={shortcut.url}
-                                onClick={(e) => handleShortcutClick(e, shortcut)}
+                                href="https://chromewebstore.google.com/detail/just-focus/gefaddaengbodpiobpbgblajdboalmgc"
+                                onClick={(e) => {
+                                    e.preventDefault()
+                                    const openInTab = localStorage.getItem('config-open-in-new-tab') === 'true'
+                                    if (openInTab) {
+                                        window.open("https://chromewebstore.google.com/detail/just-focus/gefaddaengbodpiobpbgblajdboalmgc", '_blank')
+                                    } else {
+                                        window.open("https://chromewebstore.google.com/detail/just-focus/gefaddaengbodpiobpbgblajdboalmgc", '_self')
+                                    }
+                                }}
                                 className="w-full h-full p-1 flex items-center justify-center rounded-full cursor-pointer"
                                 role="button"
                                 tabIndex={0}
                                 draggable="true"
                             >
                                 <img
-                                    src={shortcut.iconUrl}
-                                    alt={shortcut.name}
+                                    src="/just-focus.png"
+                                    alt="Just Focus"
                                     className="w-full h-full object-contain rounded-full"
-                                    onError={(e) => {
-                                        // Fallback if image fails
-                                        (e.target as HTMLImageElement).style.display = 'none';
-                                        (e.target as HTMLImageElement).parentElement!.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>'
-                                    }}
                                 />
                             </a>
-
-                            {/* Tooltip Name - Click to Edit */}
-                            <div
-                                onClick={(e) => {
-                                    e.preventDefault()
-                                    e.stopPropagation()
-                                    handleOpenModal(side, shortcut)
-                                }}
-                                className="absolute -bottom-7 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 cursor-pointer hover:bg-zinc-800 flex items-center gap-1"
-                                title={t.editTooltip}
-                            >
-                                {shortcut.name}
-                                <Pencil size={10} className="text-zinc-400" />
-                            </div>
                         </div>
-                    ))}
-
-                    {/* Add Button - Right only for 'right' side */}
-                    {side === 'right' && (
-                        <button
-                            onClick={() => handleOpenModal(side)}
-                            className="flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm opacity-50 hover:opacity-100 transition-all hover:scale-105 cursor-pointer"
-                            title={t.addTooltip}
-                        >
-                            <Plus size={16} className="text-zinc-600 dark:text-zinc-400" />
-                        </button>
                     )}
                 </div>
             ))}
