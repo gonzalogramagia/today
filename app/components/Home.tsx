@@ -429,7 +429,7 @@ export default function Home({ lang }: HomeProps) {
                     </h1>
                     <button
                         onClick={addBlock}
-                        className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors cursor-pointer"
+                        className="px-3 py-1 bg-[#6866D6] text-white text-sm rounded hover:bg-[#5856c4] transition-colors cursor-pointer"
                     >
                         {t.addBlock}
                     </button>
