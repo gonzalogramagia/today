@@ -5,6 +5,7 @@ import { Copy, Pencil, Trash2, Save, Check, ChevronUp, ChevronDown } from "lucid
 import { symbols, SymbolItem } from "../data/symbols";
 import { dictionary, Language } from "../data/i18n";
 import FloatingLinks from "./FloatingLinks";
+import Header from "./Header";
 
 interface TextBlock {
     id: string;
@@ -25,6 +26,7 @@ export default function Home({ lang }: HomeProps) {
     const [copiedBlockId, setCopiedBlockId] = useState<string | null>(null);
     const [deletingBlockId, setDeletingBlockId] = useState<string | null>(null);
     const [justMovedId, setJustMovedId] = useState<string | null>(null);
+    const [createdBlockId, setCreatedBlockId] = useState<string | null>(null);
 
     // Emoji Picker State
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -169,6 +171,21 @@ export default function Home({ lang }: HomeProps) {
         }
     }, [blocks, justMovedId]);
 
+    // Focus on created block
+    useEffect(() => {
+        if (createdBlockId) {
+            const element = document.querySelector(`[data-block-id="${createdBlockId}"]`);
+            if (element) {
+                element.scrollIntoView({ behavior: "smooth", block: "center" });
+                const input = element.querySelector('input[type="text"]') as HTMLInputElement;
+                if (input) {
+                    input.focus();
+                }
+            }
+            setCreatedBlockId(null);
+        }
+    }, [blocks, createdBlockId]);
+
     // --- Emoji Picker Logic ---
     // Helper function to remove accents for accent-insensitive search
     const removeAccents = (str: string) => {
@@ -296,6 +313,7 @@ export default function Home({ lang }: HomeProps) {
             content: "",
         };
         setBlocks((prev) => [...prev, newBlock]);
+        setCreatedBlockId(id);
     };
 
     const updateBlock = (id: string, content: string) => {
@@ -342,11 +360,11 @@ export default function Home({ lang }: HomeProps) {
 
     const moveBlockUp = (id: string) => {
         const index = blocks.findIndex((b) => b.id === id);
-        if (index < 0 || index >= blocks.length - 1) return;
+        if (index <= 0) return;
 
         const newBlocks = [...blocks];
-        [newBlocks[index], newBlocks[index + 1]] = [
-            newBlocks[index + 1],
+        [newBlocks[index], newBlocks[index - 1]] = [
+            newBlocks[index - 1],
             newBlocks[index],
         ];
         setBlocks(newBlocks);
@@ -355,11 +373,11 @@ export default function Home({ lang }: HomeProps) {
 
     const moveBlockDown = (id: string) => {
         const index = blocks.findIndex((b) => b.id === id);
-        if (index <= 0) return;
+        if (index < 0 || index >= blocks.length - 1) return;
 
         const newBlocks = [...blocks];
-        [newBlocks[index], newBlocks[index - 1]] = [
-            newBlocks[index - 1],
+        [newBlocks[index], newBlocks[index + 1]] = [
+            newBlocks[index + 1],
             newBlocks[index],
         ];
         setBlocks(newBlocks);
@@ -372,85 +390,40 @@ export default function Home({ lang }: HomeProps) {
         : "https://milemojis.com";
 
     // Clock State
-    const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
-    useEffect(() => {
-        setCurrentTime(new Date());
-        const timer = setInterval(() => {
-            setCurrentTime(new Date());
-        }, 1000);
-        return () => clearInterval(timer);
-    }, []);
-
-    // Format helpers
-    const formatTime = (date: Date) => {
-        return date.toLocaleTimeString(lang === 'es' ? 'es-AR' : 'en-US', {
-            hour12: false,
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
-        });
-    };
-
-    const formatDate = (date: Date) => {
-        return date.toLocaleDateString(lang === 'es' ? 'es-AR' : 'en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-    };
-
-    const [showClock, setShowClock] = useState(true);
-
-    useEffect(() => {
-        const checkVisibility = () => {
-            const saved = localStorage.getItem('config-show-clock');
-            setShowClock(saved !== 'false');
-        }
-
-        checkVisibility();
-        window.addEventListener('config-update', checkVisibility);
-        return () => window.removeEventListener('config-update', checkVisibility);
-    }, []);
 
     return (
         <section className="mb-8">
             <div className="mb-8">
                 {/* Clock and Date */}
-                {currentTime && (
-                    <div className={`flex flex-col items-center justify-center mt-4 lg:-mt-11 mb-12 animate-in fade-in slide-in-from-top-4 duration-500 transition-opacity ${showClock ? 'opacity-100' : 'opacity-0 select-none pointer-events-none'}`}>
-                        <span className="text-6xl font-black font-mono tracking-tighter text-zinc-900 leading-none cursor-default select-none hover:scale-105 transition-transform">
-                            {formatTime(currentTime)}
-                        </span>
-                        <span className="text-lg text-zinc-500 font-medium capitalize cursor-default select-none">
-                            {formatDate(currentTime)}
-                        </span>
-                    </div>
-                )}
+                {/* Header (Notes + Clock + Desktop Add Button) */}
+                <Header
+                    lang={lang === 'es' ? 'es' : 'en'}
+                    onAddNote={addBlock}
+                    addNoteText={t.addBlock}
+                />
 
-                <div className="flex items-center justify-center gap-4 mb-4">
-                    <h1 className="text-2xl font-semibold tracking-tighter">
+                <div className="flex items-center justify-center gap-4 mb-4 -mt-10 lg:hidden">
+                    <h1 className="text-2xl font-semibold tracking-tighter lg:hidden">
                         📝
                         <span className="ml-3">{t.title}</span>
                     </h1>
+                    {/* Mobile Only Add Button (Desktop one is in Header) */}
                     <button
                         onClick={addBlock}
-                        className="px-3 py-1 bg-[#6866D6] text-white text-sm rounded hover:bg-[#5856c4] transition-colors cursor-pointer"
+                        className="lg:hidden px-3 py-1 bg-[#6866D6] text-white text-sm rounded hover:bg-[#5856c4] transition-colors cursor-pointer"
                     >
-                        {t.addBlock}
+                        {t.addBlockMobile}
                     </button>
                 </div>
                 <p
-                    className="mb-8 text-gray-600 text-center"
+                    className="mb-8 text-gray-600 text-center lg:-mt-16"
                     dangerouslySetInnerHTML={{ __html: t.subtitle }}
                 />
             </div>
 
             <div className="space-y-4">
                 {blocks
-                    .slice()
-                    .reverse()
                     .map((block) => (
                         <div
                             key={block.id}
@@ -628,7 +601,7 @@ export default function Home({ lang }: HomeProps) {
                                         <button
                                             onClick={() => moveBlockDown(block.id)}
                                             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-default p-1"
-                                            disabled={blocks.findIndex(b => b.id === block.id) <= 0}
+                                            disabled={blocks.findIndex(b => b.id === block.id) >= blocks.length - 1}
                                             title={t.moveDown || "Move Down"}
                                         >
                                             <ChevronDown size={20} />
@@ -636,7 +609,7 @@ export default function Home({ lang }: HomeProps) {
                                         <button
                                             onClick={() => moveBlockUp(block.id)}
                                             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-default p-1"
-                                            disabled={blocks.findIndex(b => b.id === block.id) >= blocks.length - 1}
+                                            disabled={blocks.findIndex(b => b.id === block.id) <= 0}
                                             title={t.moveUp || "Move Up"}
                                         >
                                             <ChevronUp size={20} />
