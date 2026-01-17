@@ -6,26 +6,26 @@ import type { Metadata } from 'next'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 
-const baseUrl = 'https://home.gonzalogramagia.com'
+const baseUrl = 'https://hoy.today'
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: 'Home',
-    template: '%s | Home',
+    default: 'Today',
+    template: '%s | Today',
   },
-  description: 'Tu espacio personal productivo. Notas, tareas y accesos directos guardados 100% en tu navegador.',
+  description: 'Your personal space for productivity. Manage notes, daily tasks, and countdowns—all saved locally in your browser.',
   icons: {
     icon: '/favicon.ico?v=2',
     shortcut: '/favicon.ico?v=2',
     apple: '/apple-touch-icon.png?v=2',
   },
   openGraph: {
-    title: 'Home',
-    description: 'Tu espacio personal productivo. Notas, tareas y accesos directos guardados 100% en tu navegador.',
+    title: 'Today',
+    description: 'Your personal space for productivity. Manage notes, daily tasks, and countdowns—all saved locally in your browser.',
     url: baseUrl,
-    siteName: 'Home',
-    locale: 'es_ES',
+    siteName: 'Today',
+    locale: 'en_US',
     type: 'website',
   },
   robots: {

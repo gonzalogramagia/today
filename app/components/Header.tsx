@@ -59,7 +59,8 @@ export default function Header({ lang, onAddNote, addNoteText, title, mobileAddT
             <img
                 src="/notes.png"
                 alt="Notes"
-                className="w-72 h-auto object-contain select-none pointer-events-none"
+                onClick={onAddNote}
+                className={`w-72 h-auto object-contain select-none hover:scale-105 transition-transform duration-300 ${onAddNote ? 'cursor-pointer' : ''}`}
             />
 
             {/* Desktop Content */}
@@ -67,7 +68,7 @@ export default function Header({ lang, onAddNote, addNoteText, title, mobileAddT
                 /* Clock + Add Button Container - Visible on Desktop when clock is enabled */
                 <div className="hidden lg:flex flex-col items-start justify-center gap-2 -mt-4 -ml-3 animate-in fade-in slide-in-from-top-4 duration-500 transition-opacity">
                     <div className="flex flex-col items-start justify-start">
-                        <span className="text-6xl font-black font-mono tracking-tighter text-zinc-900 leading-none cursor-default select-none hover:scale-105 transition-transform">
+                        <span className="text-6xl font-black font-mono tracking-tighter text-zinc-900 leading-none cursor-default select-none">
                             {formatTime(currentTime)}
                         </span>
                         <span className="text-lg text-zinc-500 font-medium capitalize cursor-default select-none">

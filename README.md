@@ -1,8 +1,8 @@
-# 🏠 Home
+# 🗓️ Today
 
 **Your privacy-first, browser-based personal dashboard.**
 
-"Home" is a minimalist productivity hub designed to keep your focus sharp and your data local. It combines note-taking, daily task tracking, and quick navigation in a clean, privacy-focused interface where everything lives in your browser's `localStorage`.
+"Today" is a minimalist productivity hub designed to keep your focus sharp and your data local. It combines note-taking, daily task tracking, and quick navigation in a clean, privacy-focused interface where everything lives in your browser's `localStorage`.
 
 ---
 
@@ -23,9 +23,9 @@
 ### 🧭 Navigation Hub
 - **Fast Access**: Shortcut links that open in a new window by default, with the option to open in a new tab.
 - **Quick Links**: Floating buttons for essential services:
-    - **Home**: (Disabled/Current)
+    - **Today**: (You are here!)
     - **Emojis**: Fast access to emoji library.
-    - **Music**: Direct link to your music layout.
+    - **Music**: Direct link to your perfect soundtrack.
     - **Entrenar**: Quick access to training app.
     - **Config/GitHub**: Toggle between Settings and Source code.
 
@@ -64,7 +64,7 @@
 
 ## 📄 License
 
-This project is created for personal productivity and is shared as-is. Feel free to fork and adapt it for your own "Home"!
+This project is created for personal productivity and is shared as-is. Feel free to fork and adapt it for your own "Today"!
 
 ---
 
@@ -73,7 +73,7 @@ This project is created for personal productivity and is shared as-is. Feel free
 To get the full experience and stay in the flow, I recommend these Chrome extensions:
 
 - **[New Tab Redirect](https://chromewebstore.google.com/detail/new-tab-redirect/icpgjfneehieebagbmdbhnlpiopdcmna)**
-  **Why?** Makes *Home* your default new tab page, ensuring your tasks, top notes and countdowns are always the first thing you see — along with your shortcuts!
+  **Why?** Makes *Today* your default new tab page, ensuring your tasks, top notes and countdowns are always the first thing you see — along with your shortcuts!
 
 - **[Just Focus](https://chromewebstore.google.com/detail/just-focus/gefaddaengbodpiobpbgblajdboalmgc)**
   **Why?** A simple website blocker to eliminate distractions and keep your deep work sessions protected.
