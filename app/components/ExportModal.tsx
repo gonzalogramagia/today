@@ -17,7 +17,6 @@ export default function ExportModal({ lang }: ExportModalProps) {
     const [filename, setFilename] = useState('backup');
     const [selected, setSelected] = useState({
         shortcutsLeft: true,
-        shortcutsRight: true,
         tasks: true,
         countdown: true,
         notes: true,
@@ -33,8 +32,7 @@ export default function ExportModal({ lang }: ExportModalProps) {
         title: isEnglish ? 'Export Backup' : 'Exportar Backup',
         filenameLabel: isEnglish ? 'Filename' : 'Nombre del archivo',
         selectLabel: isEnglish ? 'Select what to export:' : 'Elige qué exportar:',
-        shortcutsLeft: isEnglish ? 'Left Custom Shortcuts' : 'Atajos Personalizados Izquierda',
-        shortcutsRight: isEnglish ? 'Right Custom Shortcuts' : 'Atajos Personalizados Derecha',
+        shortcutsLeft: isEnglish ? 'Custom Shortcuts' : 'Atajos Personalizados',
         tasks: isEnglish ? 'Daily Tasks' : 'Tareas Diarias',
         countdown: isEnglish ? 'Countdown' : 'Cuenta Regresiva',
         notes: isEnglish ? 'Notes' : 'Notas',
@@ -50,18 +48,19 @@ export default function ExportModal({ lang }: ExportModalProps) {
         const data: any = {};
 
         // Shortcuts
-        if (selected.shortcutsLeft || selected.shortcutsRight) {
+        if (selected.shortcutsLeft) {
             const savedShortcuts = localStorage.getItem('local-shortcuts');
             if (savedShortcuts) {
                 try {
                     const parsed = JSON.parse(savedShortcuts);
                     if (Array.isArray(parsed)) {
-                        const left = parsed.filter((s: any) => s.position === 'left' || (!s.position && false)); // Default right
-                        const right = parsed.filter((s: any) => s.position === 'right' || !s.position);
+                        // We only export all shortcuts now as there are no "sides" really in the export logic relevant to user selection anymore if we treat them as one block?
+                        // Original logic filtered by left/right. If user wants "shortcuts", we should probably export all of them?
+                        // The user said "no hay atajos de la derecha" (there are no right shortcuts).
+                        // So we assume all shortcuts are "left" or just "shortcuts".
+                        // I will export ALL shortcuts when this is selected.
 
-                        data.shortcuts = [];
-                        if (selected.shortcutsLeft) data.shortcuts.push(...left);
-                        if (selected.shortcutsRight) data.shortcuts.push(...right);
+                        data.shortcuts = parsed;
                     }
                 } catch (e) {
                     console.error("Error parsing shortcuts for export", e);
@@ -150,7 +149,7 @@ export default function ExportModal({ lang }: ExportModalProps) {
                                 type="text"
                                 value={filename}
                                 onChange={(e) => setFilename(e.target.value)}
-                                className="flex-1 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
+                                className="flex-1 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6866D6] dark:text-white"
                                 placeholder="backup"
                             />
                             <div className="bg-zinc-100 dark:bg-zinc-800 border border-l-0 border-zinc-200 dark:border-zinc-700 rounded-r-md px-3 py-2 text-sm text-zinc-500">
@@ -167,7 +166,6 @@ export default function ExportModal({ lang }: ExportModalProps) {
                         <div className="grid grid-cols-1 gap-2">
                             {[
                                 { key: 'shortcutsLeft', label: t.shortcutsLeft },
-                                { key: 'shortcutsRight', label: t.shortcutsRight },
                                 { key: 'tasks', label: t.tasks },
                                 { key: 'countdown', label: t.countdown },
                                 { key: 'notes', label: t.notes },
@@ -177,7 +175,7 @@ export default function ExportModal({ lang }: ExportModalProps) {
                                     onClick={() => toggle(key as keyof typeof selected)}
                                     className="flex items-center gap-3 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
                                 >
-                                    <div className={`${selected[key as keyof typeof selected] ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-300 dark:text-zinc-600'}`}>
+                                    <div className={`${selected[key as keyof typeof selected] ? 'text-[#6866D6]' : 'text-zinc-300 dark:text-zinc-600'}`}>
                                         {selected[key as keyof typeof selected] ? <CheckSquare className="w-5 h-5" /> : <Square className="w-5 h-5" />}
                                     </div>
                                     <span className="text-sm font-medium">{label}</span>
@@ -197,7 +195,7 @@ export default function ExportModal({ lang }: ExportModalProps) {
                     </Link>
                     <button
                         onClick={handleExport}
-                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors flex items-center gap-2"
+                        className="px-4 py-2 text-sm font-medium text-white bg-[#6866D6] hover:bg-[#5856c4] rounded-lg shadow-sm transition-colors flex items-center gap-2"
                     >
                         <FileUp className="w-4 h-4" />
                         {t.exportBtn}

@@ -250,7 +250,7 @@ export default function ConfigModal({ lang, onClose, toggleLanguage, exportPath,
             </div>
             {/* Moovimiento Link - Visible on all screens when config is open */}
             <a
-                href="https://mas.moovimiento.com"
+                href={lang === 'en' ? "https://mas.moovimiento.com/en" : "https://mas.moovimiento.com"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex fixed top-6 right-8 p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 group z-[80]"

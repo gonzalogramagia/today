@@ -22,7 +22,6 @@ export default function ImportModal({ lang }: ImportModalProps) {
 
     const [selected, setSelected] = useState({
         shortcutsLeft: true,
-        shortcutsRight: true,
         tasks: true,
         countdown: true,
         notes: true,
@@ -37,8 +36,7 @@ export default function ImportModal({ lang }: ImportModalProps) {
         title: isEnglish ? 'Import Backup' : 'Importar Backup',
         dropLabel: isEnglish ? 'Drop JSON file here or click to upload' : 'Arrastra el archivo JSON aquí o click para subir',
         selectLabel: isEnglish ? 'Select what to import:' : 'Elige qué importar:',
-        shortcutsLeft: isEnglish ? 'Left Custom Shortcuts' : 'Atajos Personalizados Izquierda',
-        shortcutsRight: isEnglish ? 'Right Custom Shortcuts' : 'Atajos Personalizados Derecha',
+        shortcutsLeft: isEnglish ? 'Custom Shortcuts' : 'Atajos Personalizados',
         tasks: isEnglish ? 'Daily Tasks' : 'Tareas Diarias',
         countdown: isEnglish ? 'Countdown' : 'Cuenta Regresiva',
         notes: isEnglish ? 'Notes' : 'Notas',
@@ -85,30 +83,9 @@ export default function ImportModal({ lang }: ImportModalProps) {
         if (!previewData) return;
 
         // Shortcuts Logic
-        if ((selected.shortcutsLeft || selected.shortcutsRight) && previewData.shortcuts && Array.isArray(previewData.shortcuts)) {
-            const currentSaved = localStorage.getItem('local-shortcuts');
-            let currentShortcuts = currentSaved ? JSON.parse(currentSaved) : [];
-            if (!Array.isArray(currentShortcuts)) currentShortcuts = [];
-
-            // 1. Filter out existing shortcuts for the selected sides (we replace them)
-            if (selected.shortcutsLeft) {
-                currentShortcuts = currentShortcuts.filter((s: any) => s.position !== 'left'); // Remove existing left
-            }
-            if (selected.shortcutsRight) {
-                currentShortcuts = currentShortcuts.filter((s: any) => s.position === 'left'); // Keep only left (remove right)
-            }
-
-            // 2. Add new shortcuts for selected sides
-            if (selected.shortcutsLeft) {
-                const newLeft = previewData.shortcuts.filter((s: any) => s.position === 'left');
-                currentShortcuts.push(...newLeft);
-            }
-            if (selected.shortcutsRight) {
-                const newRight = previewData.shortcuts.filter((s: any) => s.position !== 'left'); // Default to right
-                currentShortcuts.push(...newRight);
-            }
-
-            localStorage.setItem('local-shortcuts', JSON.stringify(currentShortcuts));
+        if (selected.shortcutsLeft && previewData.shortcuts && Array.isArray(previewData.shortcuts)) {
+            // We just replace all shortcuts since "Right" no longer exists and we are importing "Custom Shortcuts"
+            localStorage.setItem('local-shortcuts', JSON.stringify(previewData.shortcuts));
         }
 
         // Tasks Logic
@@ -152,7 +129,7 @@ export default function ImportModal({ lang }: ImportModalProps) {
                     {/* File Upload */}
                     <div
                         onClick={() => fileInputRef.current?.click()}
-                        className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${file ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-600'
+                        className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${file ? 'border-[#6866D6] bg-[#6866D6]/5 dark:bg-[#6866D6]/20' : 'border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-600'
                             }`}
                     >
                         <input
@@ -164,7 +141,7 @@ export default function ImportModal({ lang }: ImportModalProps) {
                         />
                         {file ? (
                             <>
-                                <FileJson className="w-10 h-10 text-blue-500 mb-2" />
+                                <FileJson className="w-10 h-10 text-[#6866D6] mb-2" />
                                 <span className="font-medium text-sm text-zinc-900 dark:text-zinc-100">{file.name}</span>
                                 <span className="text-xs text-zinc-500">{(file.size / 1024).toFixed(1)} KB</span>
                             </>
@@ -192,7 +169,6 @@ export default function ImportModal({ lang }: ImportModalProps) {
                             <div className="grid grid-cols-1 gap-2">
                                 {[
                                     { key: 'shortcutsLeft', label: t.shortcutsLeft, dataKey: 'shortcuts' },
-                                    { key: 'shortcutsRight', label: t.shortcutsRight, dataKey: 'shortcuts' },
                                     { key: 'tasks', label: t.tasks, dataKey: 'tasks' },
                                     { key: 'countdown', label: t.countdown, dataKey: 'countdown' },
                                     { key: 'notes', label: t.notes, dataKey: 'notes' },
@@ -207,7 +183,7 @@ export default function ImportModal({ lang }: ImportModalProps) {
                                                 : 'opacity-50 cursor-not-allowed bg-zinc-50 dark:bg-zinc-900'
                                                 }`}
                                         >
-                                            <div className={`${selected[key as keyof typeof selected] ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-300 dark:text-zinc-600'}`}>
+                                            <div className={`${selected[key as keyof typeof selected] ? 'text-[#6866D6]' : 'text-zinc-300 dark:text-zinc-600'}`}>
                                                 {selected[key as keyof typeof selected] ? <CheckSquare className="w-5 h-5" /> : <Square className="w-5 h-5" />}
                                             </div>
                                             <span className="text-sm font-medium">{label}</span>
@@ -231,7 +207,7 @@ export default function ImportModal({ lang }: ImportModalProps) {
                     <button
                         onClick={handleImport}
                         disabled={!file || !previewData}
-                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-sm transition-colors flex items-center gap-2"
+                        className="px-4 py-2 text-sm font-medium text-white bg-[#6866D6] hover:bg-[#5856c4] disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-sm transition-colors flex items-center gap-2"
                     >
                         <FileDown className="w-4 h-4" />
                         {t.importBtn}
