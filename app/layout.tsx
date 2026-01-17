@@ -66,7 +66,7 @@ export default function RootLayout({
         <ShortcutFloater />
         <DailyTasks />
         <Countdown />
-        <div className="pt-6 lg:pt-20">
+        <div className="pt-0 lg:pt-8">
           {children}
         </div>
       </body>

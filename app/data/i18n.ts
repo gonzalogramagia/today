@@ -4,6 +4,7 @@ export interface Dictionary {
     title: string;
     subtitle: string; // HTML string
     addBlock: string;
+    addBlockMobile: string;
     blockNamePlaceholder: string;
     copy: string;
     copied: string;
@@ -30,8 +31,9 @@ export interface Dictionary {
 export const dictionary: Record<Language, Dictionary> = {
     es: {
         title: "MIS NOTAS",
-        subtitle: "Se guardan automáticamente en el <strong>almacenamiento local</strong> de tu navegador",
-        addBlock: "Agregar +",
+        subtitle: "Se guardan automáticamente <br class='lg:hidden' /> en el <strong>almacenamiento local</strong> de tu navegador",
+        addBlock: "Agregar otra nota +",
+        addBlockMobile: "Agregar +",
         blockNamePlaceholder: "Nombre de la nota",
         copy: "Copiar",
         copied: "Copiado!",
@@ -57,7 +59,8 @@ export const dictionary: Record<Language, Dictionary> = {
     en: {
         title: "MY NOTES",
         subtitle: "Automatically saved in your browser's <strong>local storage</strong>",
-        addBlock: "Add new +",
+        addBlock: "Add new note +",
+        addBlockMobile: "Add +",
         blockNamePlaceholder: "Block Name",
         copy: "Copy",
         copied: "Copied!",
