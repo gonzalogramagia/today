@@ -118,7 +118,7 @@ export default function FloatingLinks({ lang }: FloatingLinksProps) {
                 </a>
                 <a
                     href={playUrl}
-                    className="hidden sm:block p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 group cursor-pointer"
+                    className="p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 group cursor-pointer"
                     aria-label={t.goToPlay}
                     title={t.goToPlay}
                 >

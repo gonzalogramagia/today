@@ -20,19 +20,19 @@
 - **Safe Delete**: Two-step confirmation (Trash ➔ Red Check) to prevent accidents.
 - **Cancel Creation**: Creating a task also has a trash button to cancel the action.
 
-### 🧭 Navigation Hub
-- **Fast Access**: Shortcut links that open in a new window by default, with the option to open in a new tab.
-- **Quick Links**: Floating buttons for essential services:
-    - **Today**: (You are here!)
-    - **Emojis**: Fast access to emoji library.
-    - **Music**: Direct link to your perfect soundtrack.
-    - **Entrenar**: Quick access to training app.
-    - **Config/GitHub**: Toggle between Settings and Source code.
-
 ### 🕒 Time & Focus
 - **Digital Clock**: Large, bold real-time clock and localized date display.
 - **Countdown Timer**: Track time to important events with visual urgency indicators (Yellow/Red).
 - **Mens Sana Footer**: "Mens sana in corpore sano" - A reminder for balance.
+
+### 🧭 Navigation Hub
+- **Fast Access**: Shortcut links that open in a new window by default, with the option to open in a new tab.
+- **Quick Links**: Floating buttons for essential services:
+    - **Today**: You are here!
+    - **Emojis**: Fast access to emoji library.
+    - **Music**: Direct link to your perfect soundtrack.
+    - **Play**: Take a break and play.
+    - **Config/GitHub**: Toggle between Settings and Source code.
 
 ### ⚙️ Configuration & Personalization
 - **Centralized Config**: A dedicated modal to manage all your preferences (toggle with Language button).
@@ -56,7 +56,7 @@
 - **Framework**: [Next.js 16](https://nextjs.org/)
 - **Library**: [React 19](https://react.dev/)
 - **Language**: [TypeScript](https://www.typescriptlang.org/)
-- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
+- **Styling**: [Tailwind](https://tailwindcss.com/)
 - **Icons**: [Lucide React](https://lucide.dev/)
 - **Font**: [Geist](https://vercel.com/font)
 
