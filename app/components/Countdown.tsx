@@ -1,18 +1,21 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Timer, Trash2, CalendarClock, Plus } from 'lucide-react'
+import { Timer, Trash2, CalendarClock, Plus, Pencil, X } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 
+interface CountdownItem {
+    id: string
+    name: string
+    date: string
+}
+
 export default function Countdown() {
-    const [eventName, setEventName] = useState('')
-    const [targetDate, setTargetDate] = useState('')
-    const [timeLeft, setTimeLeft] = useState('')
-    const [timeColor, setTimeColor] = useState('text-zinc-500')
-    const [funMessage, setFunMessage] = useState('')
-    const [isActive, setIsActive] = useState(false)
-    const [isCreating, setIsCreating] = useState(false)
+    const [countdowns, setCountdowns] = useState<CountdownItem[]>([])
     const [mounted, setMounted] = useState(false)
+    const [isCreating, setIsCreating] = useState(false)
+    const [editingId, setEditingId] = useState<string | null>(null)
+    const [formData, setFormData] = useState({ name: '', date: '' })
     const pathname = usePathname()
     const isEnglish = pathname?.startsWith('/en')
     const containerRef = useRef<HTMLDivElement>(null)
@@ -22,26 +25,22 @@ export default function Countdown() {
         const handleClickOutside = (event: MouseEvent) => {
             if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
                 setIsCreating(false)
+                setEditingId(null)
             }
         }
-
-        if (isCreating) {
+        if (isCreating || editingId) {
             document.addEventListener('click', handleClickOutside)
         }
-        return () => {
-            document.removeEventListener('click', handleClickOutside)
-        }
-    }, [isCreating])
+        return () => document.removeEventListener('click', handleClickOutside)
+    }, [isCreating, editingId])
 
     const [isVisible, setIsVisible] = useState(true)
 
-    // Visibility check
     useEffect(() => {
         const checkVisibility = () => {
             const saved = localStorage.getItem('config-show-countdown')
             setIsVisible(saved !== 'false')
         }
-
         checkVisibility()
         window.addEventListener('config-update', checkVisibility)
         return () => window.removeEventListener('config-update', checkVisibility)
@@ -49,29 +48,34 @@ export default function Countdown() {
 
     useEffect(() => {
         setMounted(true)
-        const loadCountdown = () => {
-            const saved = localStorage.getItem('countdown-event')
+        const loadCountdowns = () => {
+            const saved = localStorage.getItem('countdown-events')
             if (saved) {
                 try {
-                    const { name, date } = JSON.parse(saved)
-                    setEventName(name)
-                    setTargetDate(date)
-                    setIsActive(true)
+                    setCountdowns(JSON.parse(saved))
                 } catch (e) {
-                    console.error('Failed to parse countdown', e)
+                    console.error('Failed to parse countdowns', e)
                 }
             } else {
-                setIsActive(false)
-                setEventName('')
-                setTargetDate('')
+                // Fallback to old single-event format if exists
+                const oldSaved = localStorage.getItem('countdown-event')
+                if (oldSaved) {
+                    try {
+                        const old = JSON.parse(oldSaved)
+                        const migrated = [{ id: crypto.randomUUID(), name: old.name, date: old.date }]
+                        setCountdowns(migrated)
+                        localStorage.setItem('countdown-events', JSON.stringify(migrated))
+                        localStorage.removeItem('countdown-event')
+                    } catch (e) { }
+                }
             }
         }
 
-        loadCountdown()
+        loadCountdowns()
 
         const handleStorageChange = (e: StorageEvent) => {
-            if (e.key === 'countdown-event') {
-                loadCountdown()
+            if (e.key === 'countdown-events') {
+                loadCountdowns()
             }
         }
 
@@ -80,10 +84,140 @@ export default function Countdown() {
     }, [])
 
     useEffect(() => {
-        if (!isActive || !targetDate) return
+        if (!mounted) return
+        localStorage.setItem('countdown-events', JSON.stringify(countdowns))
+    }, [countdowns, mounted])
 
+    const handleSave = (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!formData.name || !formData.date) return
+
+        if (editingId) {
+            setCountdowns(countdowns.map(c => c.id === editingId ? { ...c, ...formData } : c))
+            setEditingId(null)
+        } else {
+            if (countdowns.length >= 2) return
+            setCountdowns([...countdowns, { id: crypto.randomUUID(), ...formData }])
+            setIsCreating(false)
+        }
+        setFormData({ name: '', date: '' })
+    }
+
+    const handleDelete = (id: string) => {
+        setCountdowns(countdowns.filter(c => c.id !== id))
+    }
+
+    const startEditing = (item: CountdownItem) => {
+        setEditingId(item.id)
+        setFormData({ name: item.name, date: item.date })
+        setIsCreating(false)
+    }
+
+    if (!mounted) return null
+
+    return (
+        <div ref={containerRef} className={`fixed right-9 top-48 z-40 hidden xl:flex flex-col gap-4 w-64 transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none select-none'}`}>
+            <div className="group bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-lg p-4 transition-all">
+                <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-medium text-zinc-900 dark:text-zinc-100 pt-1 text-sm flex items-center gap-2">
+                        <CalendarClock size={16} />
+                        {isEnglish ? 'Countdown' : 'Cuenta Regresiva'}
+                    </h3>
+                    {countdowns.length < 2 && !editingId && (
+                        <button
+                            onClick={() => {
+                                setIsCreating(!isCreating)
+                                setFormData({ name: '', date: '' })
+                            }}
+                            className={`p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer ${isCreating ? 'text-red-500 opacity-100' : 'text-zinc-500 opacity-0 group-hover:opacity-100'} transition-opacity`}
+                        >
+                            {isCreating ? <X size={16} /> : <Plus size={16} />}
+                        </button>
+                    )}
+                </div>
+
+                <div className="flex flex-col gap-4">
+                    {countdowns.map((item, index) => (
+                        <div key={item.id} className="relative group/item">
+                            <CountdownDisplay
+                                item={item}
+                                isEnglish={isEnglish}
+                                onDelete={() => handleDelete(item.id)}
+                                onEdit={() => startEditing(item)}
+                                isEditing={editingId === item.id}
+                            />
+                            {index === 0 && countdowns.length > 1 && (
+                                <div className="mt-4 border-t border-zinc-100 dark:border-zinc-800" />
+                            )}
+                        </div>
+                    ))}
+
+                    {countdowns.length === 0 && !isCreating && (
+                        <div className="text-xs text-zinc-400 dark:text-zinc-600 text-center pt-5 pb-6 italic">
+                            {isEnglish ? 'No active countdown' : 'No hay cuenta regresiva aún'}
+                        </div>
+                    )}
+
+                    {(isCreating || editingId) && (
+                        <form onSubmit={handleSave} className="flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-200 pt-2">
+                            <input
+                                type="text"
+                                value={formData.name}
+                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                placeholder={isEnglish ? 'Event name...' : 'Nombre del evento...'}
+                                autoFocus
+                                className="w-full bg-zinc-50 dark:bg-zinc-800 border-none rounded text-xs px-2 py-1.5 focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-600 outline-none text-zinc-800 dark:text-zinc-200"
+                            />
+                            <input
+                                type="datetime-local"
+                                value={formData.date}
+                                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                                className="w-full bg-zinc-50 dark:bg-zinc-800 border-none rounded text-xs px-2 py-1.5 focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-600 outline-none text-zinc-800 dark:text-zinc-200"
+                            />
+                            <div className="flex gap-2">
+                                <button
+                                    type="submit"
+                                    disabled={!formData.name || !formData.date}
+                                    className="flex-1 bg-[#6866D6] text-white rounded p-1.5 text-xs hover:bg-[#5856c4] disabled:opacity-50 transition-colors cursor-pointer flex items-center justify-center gap-1"
+                                >
+                                    <Timer size={14} />
+                                    {isEnglish ? 'Save' : 'Guardar'}
+                                </button>
+                                {editingId && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setEditingId(null)
+                                            setFormData({ name: '', date: '' })
+                                        }}
+                                        className="p-1.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-red-500 transition-colors"
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                )}
+                            </div>
+                        </form>
+                    )}
+                </div>
+            </div>
+        </div>
+    )
+}
+
+function CountdownDisplay({ item, isEnglish, onDelete, onEdit, isEditing }: {
+    item: CountdownItem,
+    isEnglish: boolean,
+    onDelete: () => void,
+    onEdit: () => void,
+    isEditing: boolean
+}) {
+    const [timeLeft, setTimeLeft] = useState('')
+    const [timeColor, setTimeColor] = useState('text-zinc-500')
+    const [funMessage, setFunMessage] = useState('')
+
+    useEffect(() => {
         const calculateTimeLeft = () => {
-            const difference = +new Date(targetDate) - +new Date()
+            const difference = +new Date(item.date) - +new Date()
 
             if (difference > 0) {
                 const totalMinutes = Math.floor(difference / (1000 * 60))
@@ -92,7 +226,6 @@ export default function Countdown() {
                 const minutes = Math.floor((difference / 1000 / 60) % 60)
                 const seconds = Math.floor((difference / 1000) % 60)
 
-                // Color logic
                 if (totalMinutes <= 5) {
                     setTimeColor('text-red-500 animate-pulse')
                     setFunMessage(isEnglish ? 'Hurry up! 😱🔥' : 'Apurate! 😱🔥')
@@ -113,117 +246,47 @@ export default function Countdown() {
         }
 
         setTimeLeft(calculateTimeLeft())
-
-        const timer = setInterval(() => {
-            setTimeLeft(calculateTimeLeft())
-        }, 1000)
-
+        const timer = setInterval(() => setTimeLeft(calculateTimeLeft()), 1000)
         return () => clearInterval(timer)
-    }, [isActive, targetDate, isEnglish])
+    }, [item.date, isEnglish])
 
-    const handleSave = (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!eventName || !targetDate) return
-
-        setIsActive(true)
-        localStorage.setItem('countdown-event', JSON.stringify({ name: eventName, date: targetDate }))
-    }
-
-    const handleDelete = () => {
-        setIsActive(false)
-        setEventName('')
-        setTargetDate('')
-        setTimeLeft('')
-        setFunMessage('')
-        localStorage.removeItem('countdown-event')
-    }
-
-    if (!mounted) return null
-
-    // Format target date for display
-    const formattedDate = targetDate ? new Date(targetDate).toLocaleString(isEnglish ? 'en-US' : 'es-AR', {
+    const formattedDate = new Date(item.date).toLocaleString(isEnglish ? 'en-US' : 'es-AR', {
         month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-    }) : ''
+    })
 
     return (
-        <div ref={containerRef} className={`fixed right-9 top-48 z-40 hidden xl:flex flex-col gap-4 w-64 transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none select-none'}`}>
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-lg p-4 transition-all">
-                <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-medium text-zinc-900 dark:text-zinc-100 pt-1 text-sm flex items-center gap-2">
-                        <CalendarClock size={16} />
-                        {isEnglish ? 'Countdown' : 'Cuenta Regresiva'}
-                    </h3>
-                    {!isActive && (
-                        <button
-                            onClick={() => setIsCreating(!isCreating)}
-                            className={`p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer ${isCreating ? 'rotate-45' : ''}`}
-                        >
-                            <Plus size={16} className="text-zinc-500" />
-                        </button>
-                    )}
-                </div>
+        <div className={`flex flex-col gap-1 relative transition-opacity ${isEditing ? 'opacity-30 pointer-events-none' : ''}`}>
+            <div className="absolute -top-1 right-0 flex items-center gap-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                <button
+                    onClick={onEdit}
+                    className="text-zinc-400 hover:text-[#6866D6] transition-colors cursor-pointer p-1"
+                    title={isEnglish ? 'Edit' : 'Editar'}
+                >
+                    <Pencil size={14} />
+                </button>
+                <button
+                    onClick={onDelete}
+                    className="text-zinc-400 hover:text-red-500 transition-colors cursor-pointer p-1"
+                    title={isEnglish ? 'Delete' : 'Eliminar'}
+                >
+                    <Trash2 size={14} />
+                </button>
+            </div>
 
-                {isActive ? (
-                    <div className="flex flex-col gap-1 relative">
-                        <button
-                            onClick={handleDelete}
-                            className="absolute -top-1 right-0 text-zinc-400 hover:text-red-500 transition-colors cursor-pointer p-1"
-                            title={isEnglish ? 'Delete' : 'Eliminar'}
-                        >
-                            <Trash2 size={14} />
-                        </button>
+            <div className="font-bold text-lg text-zinc-800 dark:text-zinc-100 break-words pr-12 leading-tight">
+                {item.name}
+            </div>
 
-                        <div className="font-bold text-lg text-zinc-800 dark:text-zinc-100 break-words pr-6 leading-tight">
-                            {eventName}
-                        </div>
+            <div className="text-[10px] text-zinc-400 dark:text-zinc-500 mb-1">
+                {isEnglish ? 'Starts:' : 'Inicia:'} {formattedDate}
+            </div>
 
-                        <div className="text-[10px] text-zinc-400 dark:text-zinc-500 mb-1">
-                            {isEnglish ? 'Starts:' : 'Inicia:'} {formattedDate}
-                        </div>
+            <div className={`text-xl font-mono font-bold tracking-tight ${timeColor} transition-colors duration-500`}>
+                {timeLeft}
+            </div>
 
-                        <div className={`text-xl font-mono font-bold tracking-tight ${timeColor} transition-colors duration-500`}>
-                            {timeLeft}
-                        </div>
-
-                        <div className="text-xs font-medium text-zinc-600 dark:text-zinc-400 mt-1 animate-bounce">
-                            {funMessage}
-                        </div>
-                    </div>
-                ) : (
-                    <>
-                        {!isCreating && (
-                            <div className="text-xs text-zinc-400 dark:text-zinc-600 text-center pt-5 pb-6 italic">
-                                {isEnglish ? 'No active countdown' : 'No hay cuenta regresiva aún'}
-                            </div>
-                        )}
-                        {isCreating && (
-                            <form onSubmit={handleSave} className="flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
-                                <input
-                                    type="text"
-                                    value={eventName}
-                                    onChange={(e) => setEventName(e.target.value)}
-                                    placeholder={isEnglish ? 'Event name...' : 'Nombre del evento...'}
-                                    autoFocus
-                                    className="w-full bg-zinc-50 dark:bg-zinc-800 border-none rounded text-xs px-2 py-1.5 focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-600 outline-none text-zinc-800 dark:text-zinc-200"
-                                />
-                                <input
-                                    type="datetime-local"
-                                    value={targetDate}
-                                    onChange={(e) => setTargetDate(e.target.value)}
-                                    className="w-full bg-zinc-50 dark:bg-zinc-800 border-none rounded text-xs px-2 py-1.5 focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-600 outline-none text-zinc-800 dark:text-zinc-200"
-                                />
-                                <button
-                                    type="submit"
-                                    disabled={!eventName || !targetDate}
-                                    className="bg-[#6866D6] text-white rounded p-1.5 text-xs hover:bg-[#5856c4] disabled:opacity-50 transition-colors cursor-pointer flex items-center justify-center gap-1"
-                                >
-                                    <Timer size={14} />
-                                    {isEnglish ? 'Start' : 'Iniciar'}
-                                </button>
-                            </form>
-                        )}
-                    </>
-                )}
+            <div className="text-xs font-medium text-zinc-600 dark:text-zinc-400 mt-1 animate-bounce">
+                {funMessage}
             </div>
         </div>
     )
