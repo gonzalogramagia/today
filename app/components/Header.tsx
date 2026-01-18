@@ -54,13 +54,13 @@ export default function Header({ lang, onAddNote, addNoteText, title, mobileAddT
     if (!currentTime) return null
 
     return (
-        <div className={`flex flex-col ${showClock ? 'lg:flex-row lg:mb-6 lg:gap-0' : 'lg:mb-20'} items-center justify-center gap-8 -mt-16 lg:-mt-[5.75rem] -mb-4`}>
+        <div className={`flex flex-col ${showClock ? 'lg:flex-row lg:mb-6 lg:gap-0' : 'lg:mb-20'} items-center justify-center gap-8 -mt-20 lg:-mt-24 -mb-4`}>
             {/* Image - Visible on all screens. On mobile it stands alone (replacing clock/calendar which is hidden) */}
             <img
                 src="/notes.png"
                 alt="Notes"
                 onClick={onAddNote}
-                className={`w-72 h-auto object-contain select-none hover:scale-105 transition-transform duration-300 ${onAddNote ? 'cursor-pointer' : ''}`}
+                className={`w-64 lg:w-72 h-auto object-contain select-none hover:scale-105 transition-transform duration-300 ${onAddNote ? 'cursor-pointer' : ''}`}
             />
 
             {/* Desktop Content */}
@@ -88,7 +88,7 @@ export default function Header({ lang, onAddNote, addNoteText, title, mobileAddT
             ) : (
                 /* Title + Small Button - Visible on Desktop when clock is disabled (mimics mobile layout) */
                 <div className="hidden lg:flex items-center justify-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500 -mt-20">
-                    <h1 className="text-2xl font-semibold tracking-tighter text-black dark:text-white">
+                    <h1 className="text-2xl font-bold tracking-tighter text-black dark:text-white">
                         📝
                         <span className="ml-3">{title}</span>
                     </h1>

@@ -406,7 +406,7 @@ export default function Home({ lang }: HomeProps) {
                 />
 
                 <div className="flex items-center justify-center gap-4 mb-4 -mt-10 lg:hidden">
-                    <h1 className="text-2xl font-semibold tracking-tighter lg:hidden">
+                    <h1 className="text-2xl font-bold tracking-tighter lg:hidden">
                         📝
                         <span className="ml-3">{t.title}</span>
                     </h1>
