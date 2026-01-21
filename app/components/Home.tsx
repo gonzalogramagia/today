@@ -39,6 +39,7 @@ export default function Home({ lang }: HomeProps) {
     const [emojiSelectedIndex, setEmojiSelectedIndex] = useState(0);
     const [emojiCoords, setEmojiCoords] = useState({ top: 0, left: 0 });
     const [triggerIdx, setTriggerIdx] = useState<number>(-1);
+    const [focusType, setFocusType] = useState<'title' | 'content' | null>(null);
 
     // Cargar datos del localStorage al montar el componente
     useEffect(() => {
@@ -121,6 +122,19 @@ export default function Home({ lang }: HomeProps) {
         localStorage.setItem("localhost-tag-colors", JSON.stringify(tagColors));
     }, [tagColors]);
 
+    // Cleanup tag colors when a tag is no longer used by any block
+    useEffect(() => {
+        const usedTags = new Set(blocks.map(b => b.userTag).filter(Boolean));
+        setTagColors(prev => {
+            const unusedTags = Object.keys(prev).filter(tag => !usedTags.has(tag));
+            if (unusedTags.length === 0) return prev;
+
+            const next = { ...prev };
+            unusedTags.forEach(tag => delete next[tag]);
+            return next;
+        });
+    }, [blocks]);
+
     // Si se hace click fuera del bloque en edición, guardar y salir de edición
     useEffect(() => {
         const onDocClick = (e: MouseEvent) => {
@@ -201,6 +215,7 @@ export default function Home({ lang }: HomeProps) {
             saveCurrentEditing();
             setEditingBlockId(block.id);
             setEditingContent(block.content);
+            setFocusType('content');
         }
     };
 
@@ -360,7 +375,7 @@ export default function Home({ lang }: HomeProps) {
         const newBlock: TextBlock = {
             id,
             tag: blockId,
-            title: `Nota #${blockId}`,
+            title: "",
             content: "",
             color: "#FEFCE8",
         };
@@ -383,6 +398,12 @@ export default function Home({ lang }: HomeProps) {
     const updateBlockTag = (id: string, userTag: string) => {
         setBlocks((prev) =>
             prev.map((block) => (block.id === id ? { ...block, userTag: userTag.toUpperCase() } : block))
+        );
+    };
+
+    const updateBlockColor = (id: string, color: string) => {
+        setBlocks((prev) =>
+            prev.map((block) => (block.id === id ? { ...block, color } : block))
         );
     };
 
@@ -410,6 +431,7 @@ export default function Home({ lang }: HomeProps) {
                         tag: generateId(),
                         title: "",
                         content: "",
+                        color: "#FEFCE8",
                     }];
                 }
                 return remaining;
@@ -534,11 +556,12 @@ export default function Home({ lang }: HomeProps) {
                                 type="text"
                                 value={block.title}
                                 onChange={(e) => updateBlockTitle(block.id, e.target.value)}
-                                onDoubleClick={() => {
+                                onFocus={() => {
                                     if (editingBlockId !== block.id) {
                                         saveCurrentEditing();
                                         setEditingBlockId(block.id);
                                         setEditingContent(block.content);
+                                        setFocusType('title');
                                     }
                                 }}
                                 onKeyDown={(e) => {
@@ -552,11 +575,16 @@ export default function Home({ lang }: HomeProps) {
                                         }
                                     }
                                 }}
-                                className={`w-full sm:flex-1 text-lg font-semibold px-2 py-1 border-b border-gray-200 focus:outline-none focus:border-blue-500 ${editingBlockId === block.id
-                                    ? "bg-black text-white"
+                                className={`w-full sm:flex-1 text-lg font-semibold px-2 py-1 border-b border-gray-200 focus:outline-none focus:border-blue-500 rounded-t-md transition-colors ${editingBlockId === block.id
+                                    ? "text-zinc-900"
                                     : "bg-transparent text-zinc-900"
                                     }`}
-                                placeholder={t.blockNamePlaceholder}
+                                style={{
+                                    backgroundColor: editingBlockId === block.id
+                                        ? ((block.userTag && tagColors[block.userTag]) || block.color || "#FEFCE8")
+                                        : undefined
+                                }}
+                                placeholder={`Nota #${block.tag}`}
                             />
                             <div className="flex items-center justify-between w-full sm:w-auto sm:justify-start gap-3 mt-1 sm:mt-0">
                                 {editingBlockId !== block.id && (
@@ -620,8 +648,9 @@ export default function Home({ lang }: HomeProps) {
                         {editingBlockId === block.id ? (
                             <div className="relative">
                                 <textarea
-                                    autoFocus
+                                    autoFocus={focusType === 'content'}
                                     onFocus={(e) => {
+                                        setFocusType('content');
                                         const val = e.target.value;
                                         e.target.value = "";
                                         e.target.value = val;
@@ -666,7 +695,7 @@ export default function Home({ lang }: HomeProps) {
                         ) : (
                             <div
                                 className="w-full min-h-[160px] p-3 border border-gray-300 dark:border-gray-600 rounded-md resize-y text-black dark:text-white whitespace-pre-wrap break-words overflow-auto transition-colors duration-200"
-                                style={{ backgroundColor: (block.userTag && tagColors[block.userTag]) || "#FEFCE8" }}
+                                style={{ backgroundColor: (block.userTag && tagColors[block.userTag]) || block.color || "#FEFCE8" }}
                                 onDoubleClick={(e) => {
                                     let node = e.target as HTMLElement | null;
                                     while (node) {
@@ -676,6 +705,7 @@ export default function Home({ lang }: HomeProps) {
                                     saveCurrentEditing();
                                     setEditingBlockId(block.id);
                                     setEditingContent(block.content);
+                                    setFocusType('content');
                                 }}
                                 dangerouslySetInnerHTML={{ __html: formatText(block.content) }}
                             />
@@ -707,8 +737,13 @@ export default function Home({ lang }: HomeProps) {
                                                 <button
                                                     key={c.h}
                                                     title={c.n}
-                                                    onClick={() => updateTagColor(block.userTag || "", c.h)}
-                                                    className={`w-4 h-4 rounded-full border border-white/20 transition-transform hover:scale-125 cursor-pointer ${tagColors[block.userTag || ""] === c.h ? "ring-2 ring-blue-500 scale-110" : ""}`}
+                                                    onClick={() => {
+                                                        if (block.userTag) {
+                                                            updateTagColor(block.userTag, c.h);
+                                                        }
+                                                        updateBlockColor(block.id, c.h);
+                                                    }}
+                                                    className={`w-4 h-4 rounded-full border border-white/20 transition-transform hover:scale-125 cursor-pointer ${((block.userTag && tagColors[block.userTag]) || block.color) === c.h ? "ring-2 ring-blue-500 scale-110" : ""}`}
                                                     style={{ backgroundColor: c.h }}
                                                 />
                                             ))}
