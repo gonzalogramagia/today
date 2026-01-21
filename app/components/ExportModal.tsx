@@ -102,6 +102,14 @@ export default function ExportModal({ lang }: ExportModalProps) {
                     console.error("Error parsing notes for export", e);
                 }
             }
+            const savedTagColors = localStorage.getItem('localhost-tag-colors');
+            if (savedTagColors) {
+                try {
+                    data.tagColors = JSON.parse(savedTagColors);
+                } catch (e) {
+                    console.error("Error parsing tag colors for export", e);
+                }
+            }
         }
 
         // Download

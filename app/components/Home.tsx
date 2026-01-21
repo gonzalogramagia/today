@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Copy, Pencil, Trash2, Save, Check, ChevronUp, ChevronDown } from "lucide-react";
+import { Copy, Pencil, Trash2, Save, Check, ChevronUp, ChevronDown, X } from "lucide-react";
 import { symbols, SymbolItem } from "../data/symbols";
 import { dictionary, Language } from "../data/i18n";
 import FloatingLinks from "./FloatingLinks";
@@ -10,8 +10,10 @@ import Header from "./Header";
 interface TextBlock {
     id: string;
     tag: string;
+    userTag?: string;
     title: string;
     content: string;
+    color?: string;
 }
 
 interface HomeProps {
@@ -27,6 +29,8 @@ export default function Home({ lang }: HomeProps) {
     const [deletingBlockId, setDeletingBlockId] = useState<string | null>(null);
     const [justMovedId, setJustMovedId] = useState<string | null>(null);
     const [createdBlockId, setCreatedBlockId] = useState<string | null>(null);
+    const [tagColors, setTagColors] = useState<Record<string, string>>({});
+    const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
     // Emoji Picker State
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -46,14 +50,15 @@ export default function Home({ lang }: HomeProps) {
                 const migrated = (parsed as any[]).map((b) => {
                     const tag =
                         b && typeof b.tag === "string" && b.tag ? b.tag : generateId();
+                    const color = b && b.color ? b.color : "#FEFCE8";
                     if (
                         b &&
                         typeof b.title === "string" &&
                         /^Bloque [a-z0-9]{4}$/i.test(b.title)
                     ) {
-                        return { ...b, title: "", tag };
+                        return { ...b, title: "", tag, color };
                     }
-                    return { ...b, tag };
+                    return { ...b, tag, color };
                 });
                 setBlocks(migrated as TextBlock[]);
             } catch (e) {
@@ -61,8 +66,18 @@ export default function Home({ lang }: HomeProps) {
                 const ensured = raw.map((b) => ({
                     ...b,
                     tag: b && b.tag ? b.tag : generateId(),
+                    color: b && b.color ? b.color : "#FEFCE8",
                 }));
                 setBlocks(ensured as TextBlock[]);
+            }
+        }
+
+        const savedTagColors = localStorage.getItem("localhost-tag-colors");
+        if (savedTagColors) {
+            try {
+                setTagColors(JSON.parse(savedTagColors));
+            } catch (e) {
+                console.error("Failed to parse tag colors", e);
             }
         }
 
@@ -74,16 +89,37 @@ export default function Home({ lang }: HomeProps) {
                     console.error("Failed to sync blocks", err);
                 }
             }
+            if (e.key === "localhost-tag-colors" && e.newValue) {
+                try {
+                    setTagColors(JSON.parse(e.newValue));
+                } catch (err) {
+                    console.error("Failed to sync tag colors", err);
+                }
+            }
         };
 
         window.addEventListener("storage", handleStorageChange);
         return () => window.removeEventListener("storage", handleStorageChange);
     }, []);
 
+    // Scroll to editing block
+    useEffect(() => {
+        if (editingBlockId) {
+            const element = document.querySelector(`[data-block-id="${editingBlockId}"]`);
+            if (element) {
+                element.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+        }
+    }, [editingBlockId]);
+
     // Guardar en localStorage cada vez que cambien los bloques
     useEffect(() => {
         localStorage.setItem("localhost-blocks", JSON.stringify(blocks));
     }, [blocks]);
+
+    useEffect(() => {
+        localStorage.setItem("localhost-tag-colors", JSON.stringify(tagColors));
+    }, [tagColors]);
 
     // Si se hace click fuera del bloque en edición, guardar y salir de edición
     useEffect(() => {
@@ -127,6 +163,7 @@ export default function Home({ lang }: HomeProps) {
                 if (next) {
                     setEditingBlockId(next.id);
                     setEditingContent(next.content);
+                    // Single click focus handled by autoFocus on textarea or manual focus after state update
                     return;
                 }
             }
@@ -319,11 +356,13 @@ export default function Home({ lang }: HomeProps) {
 
     const addBlock = () => {
         const id = generateId();
+        const blockId = generateId();
         const newBlock: TextBlock = {
             id,
-            tag: generateId(),
-            title: "",
+            tag: blockId,
+            title: `Nota #${blockId}`,
             content: "",
+            color: "#FEFCE8",
         };
         setBlocks((prev) => [...prev, newBlock]);
         setCreatedBlockId(id);
@@ -339,6 +378,19 @@ export default function Home({ lang }: HomeProps) {
         setBlocks((prev) =>
             prev.map((block) => (block.id === id ? { ...block, title } : block))
         );
+    };
+
+    const updateBlockTag = (id: string, userTag: string) => {
+        setBlocks((prev) =>
+            prev.map((block) => (block.id === id ? { ...block, userTag: userTag.toUpperCase() } : block))
+        );
+    };
+
+    const updateTagColor = (tagName: string, color: string) => {
+        setTagColors((prev) => ({
+            ...prev,
+            [tagName]: color,
+        }));
     };
 
     const copyToClipboard = (id: string, text: string) => {
@@ -402,12 +454,19 @@ export default function Home({ lang }: HomeProps) {
         ? "https://milemojis.com/en"
         : "https://milemojis.com";
 
+    // Derived tags
+    const availableTags = Array.from(new Set(blocks.map(b => b.userTag).filter(Boolean))) as string[];
+
+    const filteredBlocks = selectedTag
+        ? blocks.filter(b => b.userTag === selectedTag)
+        : blocks;
+
     // Clock State
 
 
     return (
         <section className="mb-8">
-            <div className="mb-8">
+            <div className="mb-5">
                 {/* Clock and Date */}
                 {/* Header (Notes + Clock + Desktop Add Button) */}
                 <Header
@@ -432,185 +491,241 @@ export default function Home({ lang }: HomeProps) {
                     </button>
                 </div>
                 <p
-                    className="mb-8 text-gray-600 text-center lg:-mt-16"
+                    className="mb-4 text-gray-600 text-center lg:-mt-16"
                     dangerouslySetInnerHTML={{ __html: t.subtitle }}
                 />
+
+                {availableTags.length > 0 && (
+                    <div className="flex flex-wrap justify-center gap-2 mb-0 animate-in fade-in slide-in-from-top-2 duration-500">
+                        {availableTags.map(tag => (
+                            <button
+                                key={tag}
+                                onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
+                                className={`group relative px-3 py-1 text-xs font-bold rounded-full border cursor-pointer transition-all flex items-center gap-2 uppercase ${selectedTag === tag
+                                    ? "ring-2 ring-offset-1"
+                                    : "bg-white text-zinc-500 border-zinc-200 hover:border-zinc-400"
+                                    }`}
+                                style={{
+                                    backgroundColor: selectedTag === tag ? (tagColors[tag] || "#FEFCE8") : "white",
+                                    borderColor: selectedTag === tag ? (tagColors[tag] || "#FEFCE8") : undefined,
+                                    ringColor: tagColors[tag] || "#FEFCE8"
+                                } as any}
+                            >
+                                {selectedTag === tag && (
+                                    <X className="absolute -top-1.5 -right-1 w-3.5 h-3.5 bg-black text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm" />
+                                )}
+                                <span className="w-2 h-2 rounded-full border border-black/10" style={{ backgroundColor: tagColors[tag] || "#FEFCE8" }} />
+                                #{tag}
+                            </button>
+                        ))}
+                    </div>
+                )}
             </div>
 
             <div className="space-y-4">
-                {blocks
-                    .map((block) => (
-                        <div
-                            key={block.id}
-                            data-block-id={block.id}
-                            className="border border-gray-200 rounded-lg p-4 pb-2"
-                        >
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-3">
-                                <input
-                                    type="text"
-                                    value={block.title}
-                                    onChange={(e) => updateBlockTitle(block.id, e.target.value)}
-                                    onFocus={() => {
-                                        if (editingBlockId !== block.id) {
-                                            saveCurrentEditing();
-                                            setEditingBlockId(block.id);
-                                            setEditingContent(block.content);
-                                        } else {
-                                            setEditingBlockId(block.id);
-                                        }
-                                    }}
-                                    onClick={() => {
-                                        if (editingBlockId !== block.id) {
-                                            saveCurrentEditing();
-                                            setEditingBlockId(block.id);
-                                            setEditingContent(block.content);
-                                        } else {
-                                            setEditingBlockId(block.id);
-                                        }
-                                    }}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            e.preventDefault();
-                                            if (editingBlockId === block.id) {
-                                                updateBlock(block.id, editingContent);
-                                                setEditingBlockId(null);
-                                                setEditingContent("");
-                                                (e.target as HTMLInputElement).blur();
-                                            }
-                                        }
-                                    }}
-                                    className={`w-full sm:flex-1 text-lg font-semibold px-2 py-1 border-b border-gray-200 focus:outline-none focus:border-blue-500 ${editingBlockId === block.id
-                                        ? "bg-black text-white"
-                                        : "bg-transparent text-zinc-900"
-                                        }`}
-                                    placeholder={`${t.blockNamePlaceholder} #${block.tag}...`}
-                                />
-                                <div className="flex items-center justify-between w-full sm:w-auto sm:justify-start gap-3">
-                                    {editingBlockId !== block.id && (
-                                        <button
-                                            onClick={() => copyToClipboard(block.id, block.content)}
-                                            className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors cursor-pointer ${copiedBlockId === block.id
-                                                ? "bg-green-100 text-green-600"
-                                                : "text-gray-500 hover:bg-gray-100"
-                                                }`}
-                                            title={t.copy}
-                                        >
-                                            {copiedBlockId === block.id ? (
-                                                <>
-                                                    <Check className="w-4 h-4" />
-                                                    <span>{t.copied}</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Copy className="w-4 h-4" />
-                                                    <span>{t.copy}</span>
-                                                </>
-                                            )}
-                                        </button>
-                                    )}
-
-                                    <button
-                                        onClick={() => toggleEditBlock(block)}
-                                        className="flex items-center gap-1 text-xs text-gray-500 px-2 py-1 rounded hover:bg-gray-100 cursor-pointer"
-                                    >
-                                        {editingBlockId === block.id ? (
-                                            <>
-                                                <Save className="w-4 h-4" />
-                                                <span>{t.save}</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Pencil className="w-4 h-4" />
-                                                <span>{t.edit}</span>
-                                            </>
-                                        )}
-                                    </button>
-
-                                    {editingBlockId === block.id && (
-                                        <button
-                                            onClick={() => deleteBlock(block.id)}
-                                            className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors cursor-pointer ${deletingBlockId === block.id
-                                                ? "bg-red-100 text-red-600 font-bold"
-                                                : "text-red-500 hover:text-red-700 hover:bg-gray-100"
-                                                }`}
-                                            aria-label={deletingBlockId === block.id ? t.ariaDelete : `${t.ariaDeleteSpecific} ${block.title}`}
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                            <span>{deletingBlockId === block.id ? t.confirmDelete : t.delete}</span>
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-
-                            {editingBlockId === block.id ? (
-                                <div className="relative">
-                                    <textarea
-                                        value={editingContent}
-                                        onChange={(e) => handleTextChange(e, block.id)}
-                                        onKeyDown={(e) => handleKeyDown(e, block.id)}
-                                        placeholder={t.placeholder}
-                                        className="w-full min-h-[160px] p-3 border border-gray-300 rounded-md resize-y bg-black text-white focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-pre-wrap break-words overflow-auto"
-                                    />
-                                    {showEmojiPicker && filteredEmojis.length > 0 && (
-                                        <div
-                                            id="emoji-picker-container"
-                                            className="absolute z-50 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden min-w-[200px]"
-                                            style={{
-                                                top: emojiCoords.top,
-                                                left: emojiCoords.left
-                                            }}
-                                        >
-                                            <ul className="max-h-[200px] overflow-y-auto">
-                                                {filteredEmojis.map((item, idx) => (
-                                                    <li
-                                                        key={item.symbol + idx}
-                                                        className={`px-3 py-2 flex items-center gap-2 cursor-pointer text-sm ${idx === emojiSelectedIndex
-                                                            ? "bg-blue-100 text-blue-800"
-                                                            : "text-gray-700 hover:bg-gray-100"
-                                                            }`}
-                                                        onClick={() => insertEmoji(item)}
-                                                        onMouseEnter={() => setEmojiSelectedIndex(idx)}
-                                                    >
-                                                        <span className="text-xl">{item.symbol}</span>
-                                                        <div className="flex flex-col">
-                                                            {/* Show description based on lang? The original code had spans, maybe showing both or specific? */}
-                                                            {/* Original code: 
-                                <span className="font-medium">{item.description.es.main}</span>
-                                <span className="text-xs opacity-60">:{item.description.en.main.toLowerCase().replace(/\s+/g, '_')}:</span>
-                              */}
-                                                            {/* We should probably adapt this to show description in current language */}
-                                                            <span className="font-medium">{item.description[lang].main}</span>
-                                                            <span className="text-xs opacity-60">:{item.description.en.main.toLowerCase().replace(/\s+/g, '_')}:</span>
-                                                        </div>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <div
-                                    className="w-full min-h-[160px] p-3 border border-gray-300 dark:border-gray-600 rounded-md resize-y bg-[#FEFCE8] dark:bg-zinc-900/50 text-black dark:text-white whitespace-pre-wrap break-words overflow-auto"
-                                    onDoubleClick={(e) => {
-                                        let node = e.target as HTMLElement | null;
-                                        while (node) {
-                                            if (node.tagName === "A") return;
-                                            node = node.parentElement;
-                                        }
+                {filteredBlocks.map((block) => (
+                    <div
+                        key={block.id}
+                        data-block-id={block.id}
+                        className="border border-gray-200 rounded-lg p-4 pb-2"
+                    >
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-3">
+                            <input
+                                type="text"
+                                value={block.title}
+                                onChange={(e) => updateBlockTitle(block.id, e.target.value)}
+                                onDoubleClick={() => {
+                                    if (editingBlockId !== block.id) {
                                         saveCurrentEditing();
                                         setEditingBlockId(block.id);
                                         setEditingContent(block.content);
+                                    }
+                                }}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        if (editingBlockId === block.id) {
+                                            updateBlock(block.id, editingContent);
+                                            setEditingBlockId(null);
+                                            setEditingContent("");
+                                            (e.target as HTMLInputElement).blur();
+                                        }
+                                    }
+                                }}
+                                className={`w-full sm:flex-1 text-lg font-semibold px-2 py-1 border-b border-gray-200 focus:outline-none focus:border-blue-500 ${editingBlockId === block.id
+                                    ? "bg-black text-white"
+                                    : "bg-transparent text-zinc-900"
+                                    }`}
+                                placeholder={t.blockNamePlaceholder}
+                            />
+                            <div className="flex items-center justify-between w-full sm:w-auto sm:justify-start gap-3 mt-1 sm:mt-0">
+                                {editingBlockId !== block.id && (
+                                    <button
+                                        onClick={() => copyToClipboard(block.id, block.content)}
+                                        className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors cursor-pointer ${copiedBlockId === block.id
+                                            ? "bg-green-100 text-green-600"
+                                            : "text-gray-500 hover:bg-gray-100"
+                                            }`}
+                                        title={t.copy}
+                                    >
+                                        {copiedBlockId === block.id ? (
+                                            <>
+                                                <Check className="w-4 h-4" />
+                                                <span>{t.copied}</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Copy className="w-4 h-4" />
+                                                <span>{t.copy}</span>
+                                            </>
+                                        )}
+                                    </button>
+                                )}
+
+
+
+                                <button
+                                    onClick={() => toggleEditBlock(block)}
+                                    className="flex items-center gap-1 text-xs text-gray-500 px-2 py-1 rounded hover:bg-gray-100 cursor-pointer"
+                                >
+                                    {editingBlockId === block.id ? (
+                                        <>
+                                            <Save className="w-4 h-4" />
+                                            <span>{t.save}</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Pencil className="w-4 h-4" />
+                                            <span>{t.edit}</span>
+                                        </>
+                                    )}
+                                </button>
+
+                                {editingBlockId === block.id && (
+                                    <button
+                                        onClick={() => deleteBlock(block.id)}
+                                        className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors cursor-pointer ${deletingBlockId === block.id
+                                            ? "bg-red-100 text-red-600 font-bold"
+                                            : "text-red-500 hover:text-red-700 hover:bg-gray-100"
+                                            }`}
+                                        aria-label={deletingBlockId === block.id ? t.ariaDelete : `${t.ariaDeleteSpecific} ${block.title}`}
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                        <span>{deletingBlockId === block.id ? t.confirmDelete : t.delete}</span>
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        {editingBlockId === block.id ? (
+                            <div className="relative">
+                                <textarea
+                                    autoFocus
+                                    onFocus={(e) => {
+                                        const val = e.target.value;
+                                        e.target.value = "";
+                                        e.target.value = val;
                                     }}
-                                    dangerouslySetInnerHTML={{ __html: formatText(block.content) }}
+                                    value={editingContent}
+                                    onChange={(e) => handleTextChange(e, block.id)}
+                                    onKeyDown={(e) => handleKeyDown(e, block.id)}
+                                    placeholder={t.placeholder}
+                                    className="w-full min-h-[160px] p-3 border border-gray-300 rounded-md resize-y bg-black text-white focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-pre-wrap break-words overflow-auto"
                                 />
-                            )}
-                            <div className="flex justify-between items-center mt-2">
-                                <div className="text-xs text-gray-400">
-                                    {editingBlockId === block.id
-                                        ? editingContent.length
-                                        : block.content.length}{" "}
-                                    {t.characters}
-                                </div>
+                                {showEmojiPicker && filteredEmojis.length > 0 && (
+                                    <div
+                                        id="emoji-picker-container"
+                                        className="absolute z-50 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden min-w-[200px]"
+                                        style={{
+                                            top: emojiCoords.top,
+                                            left: emojiCoords.left
+                                        }}
+                                    >
+                                        <ul className="max-h-[200px] overflow-y-auto">
+                                            {filteredEmojis.map((item, idx) => (
+                                                <li
+                                                    key={item.symbol + idx}
+                                                    className={`px-3 py-2 flex items-center gap-2 cursor-pointer text-sm ${idx === emojiSelectedIndex
+                                                        ? "bg-blue-100 text-blue-800"
+                                                        : "text-gray-700 hover:bg-gray-100"
+                                                        }`}
+                                                    onClick={() => insertEmoji(item)}
+                                                    onMouseEnter={() => setEmojiSelectedIndex(idx)}
+                                                >
+                                                    <span className="text-xl">{item.symbol}</span>
+                                                    <div className="flex flex-col">
+                                                        <span className="font-medium">{item.description[lang].main}</span>
+                                                        <span className="text-xs opacity-60">:{item.description.en.main.toLowerCase().replace(/\s+/g, '_')}:</span>
+                                                    </div>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div
+                                className="w-full min-h-[160px] p-3 border border-gray-300 dark:border-gray-600 rounded-md resize-y text-black dark:text-white whitespace-pre-wrap break-words overflow-auto transition-colors duration-200"
+                                style={{ backgroundColor: (block.userTag && tagColors[block.userTag]) || "#FEFCE8" }}
+                                onDoubleClick={(e) => {
+                                    let node = e.target as HTMLElement | null;
+                                    while (node) {
+                                        if (node.tagName === "A") return;
+                                        node = node.parentElement;
+                                    }
+                                    saveCurrentEditing();
+                                    setEditingBlockId(block.id);
+                                    setEditingContent(block.content);
+                                }}
+                                dangerouslySetInnerHTML={{ __html: formatText(block.content) }}
+                            />
+                        )}
+                        <div className="flex items-center mt-2 h-10 relative">
+                            {/* Left side: Tag or Editor */}
+                            <div className="flex-1 flex items-center justify-start">
+                                {editingBlockId === block.id && (
+                                    <div className="flex items-center gap-3 px-2 py-1 bg-zinc-800 rounded-md order-1 sm:order-none scale-90 sm:scale-100 origin-left">
+                                        <div className="flex items-center gap-1 border-r border-zinc-700 pr-3">
+                                            <span className="text-zinc-400 text-[10px] font-bold">#</span>
+                                            <input
+                                                type="text"
+                                                value={block.userTag || ""}
+                                                onChange={(e) => updateBlockTag(block.id, e.target.value.toUpperCase())}
+                                                className="bg-transparent text-white text-[10px] focus:outline-none w-16 uppercase font-bold"
+                                                placeholder="TAG..."
+                                            />
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            {[
+                                                { h: "#FEFCE8", n: lang === "es" ? "Amarillo" : "Yellow" },
+                                                { h: "#FEE2E2", n: lang === "es" ? "Rojo" : "Red" },
+                                                { h: "#E0F2FE", n: lang === "es" ? "Azul" : "Blue" },
+                                                { h: "#DCFCE7", n: lang === "es" ? "Verde" : "Green" },
+                                                { h: "#F3E8FF", n: lang === "es" ? "Violeta" : "Purple" },
+                                                { h: "#FFEDD5", n: lang === "es" ? "Naranja" : "Orange" }
+                                            ].map((c) => (
+                                                <button
+                                                    key={c.h}
+                                                    title={c.n}
+                                                    onClick={() => updateTagColor(block.userTag || "", c.h)}
+                                                    className={`w-4 h-4 rounded-full border border-white/20 transition-transform hover:scale-125 cursor-pointer ${tagColors[block.userTag || ""] === c.h ? "ring-2 ring-blue-500 scale-110" : ""}`}
+                                                    style={{ backgroundColor: c.h }}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                {editingBlockId !== block.id && block.userTag && (
+                                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-black/5 text-zinc-500 uppercase tracking-wider border border-black/5 whitespace-nowrap">
+                                        #{block.userTag}
+                                    </span>
+                                )
+                                }
+                            </div>
+
+
+                            {/* Right side: Arrows */}
+                            <div className="flex-1 flex items-center justify-end">
                                 {blocks.length > 1 && (
                                     <div className="flex items-center gap-1">
                                         <button
@@ -633,12 +748,13 @@ export default function Home({ lang }: HomeProps) {
                                 )}
                             </div>
                         </div>
-                    ))}
+                    </div>
+                ))}
             </div>
 
             {/* Floating Links Component */}
             <FloatingLinks lang={lang} />
-        </section>
+        </section >
     );
 }
 

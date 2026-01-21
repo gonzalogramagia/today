@@ -101,6 +101,9 @@ export default function ImportModal({ lang }: ImportModalProps) {
         // Notes Logic
         if (selected.notes && previewData.notes) {
             localStorage.setItem('localhost-blocks', JSON.stringify(previewData.notes));
+            if (previewData.tagColors) {
+                localStorage.setItem('localhost-tag-colors', JSON.stringify(previewData.tagColors));
+            }
         }
 
         router.push('/');
