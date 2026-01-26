@@ -295,6 +295,17 @@ export default function Home({ lang }: HomeProps) {
         return id;
     };
 
+    const startEditing = (block: TextBlock, focus: 'title' | 'content' | 'tag') => {
+        if (editingBlockId !== block.id) {
+            saveCurrentEditing();
+            setEditingBlockId(block.id);
+            setEditingContent(block.content);
+            setEditingTitle(block.title);
+            setEditingTag(block.userTag || "");
+        }
+        setFocusType(focus);
+    };
+
     const toggleEditBlock = (block: TextBlock) => {
         if (editingBlockId === block.id) {
             updateBlock(block.id, editingContent, editingTitle, editingTag);
@@ -302,15 +313,8 @@ export default function Home({ lang }: HomeProps) {
             setEditingContent("");
             setEditingTitle("");
             setEditingTag("");
-
         } else {
-            saveCurrentEditing();
-            setEditingBlockId(block.id);
-            setEditingContent(block.content);
-            setEditingTitle(block.title);
-            setEditingTag(block.userTag || "");
-            setFocusType('content');
-
+            startEditing(block, 'content');
         }
     };
 
@@ -762,16 +766,7 @@ export default function Home({ lang }: HomeProps) {
                                     type="text"
                                     value={editingBlockId === block.id ? editingTitle : block.title}
                                     onChange={(e) => setEditingTitle(e.target.value)}
-                                    onFocus={() => {
-                                        if (editingBlockId !== block.id) {
-                                            saveCurrentEditing();
-                                            setEditingBlockId(block.id);
-                                            setEditingContent(block.content);
-                                            setEditingTitle(block.title);
-                                            setEditingTag(block.userTag || "");
-                                        }
-                                        setFocusType('title');
-                                    }}
+                                    onFocus={() => startEditing(block, 'title')}
                                     onKeyDown={(e) => {
                                         if (e.key === "Enter") {
                                             e.preventDefault();
@@ -914,10 +909,7 @@ export default function Home({ lang }: HomeProps) {
                                             if (node.tagName === "A") return;
                                             node = node.parentElement;
                                         }
-                                        saveCurrentEditing();
-                                        setEditingBlockId(block.id);
-                                        setEditingContent(block.content);
-                                        setFocusType('content');
+                                        startEditing(block, 'content');
                                     }}
                                     dangerouslySetInnerHTML={{ __html: formatText(block.content) }}
                                 />
@@ -1077,11 +1069,17 @@ export default function Home({ lang }: HomeProps) {
                                     )}
                                     {editingBlockId !== block.id && (
                                         block.userTag ? (
-                                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-black/10 text-zinc-700 uppercase tracking-wider border border-black/10 whitespace-nowrap">
+                                            <span
+                                                onDoubleClick={() => startEditing(block, 'tag')}
+                                                className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-black/10 text-zinc-700 uppercase tracking-wider border border-black/10 whitespace-nowrap transition-colors"
+                                            >
                                                 #{block.userTag}
                                             </span>
                                         ) : (
-                                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-zinc-400/10 text-zinc-400 uppercase tracking-widest border border-black/5 whitespace-nowrap italic">
+                                            <span
+                                                onDoubleClick={() => startEditing(block, 'tag')}
+                                                className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-zinc-400/10 text-zinc-400 uppercase tracking-widest border border-black/5 whitespace-nowrap italic transition-colors"
+                                            >
                                                 {t.noTag}
                                             </span>
                                         )
