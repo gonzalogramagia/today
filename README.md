@@ -13,11 +13,13 @@
 - **Auto-Preservation**: Deleting the last note automatically generates a fresh one, so you're never left with an empty void.
 - **Rich Formatting**: Markdown support (`*bold*`, `_italics_`) and auto-linked URLs.
 - **Emoji Picker**: Type `:` to search/insert emojis instantly.
-- **Image Attachments**: Drag & drop or paste images directly into notes. Features include:
-    - **Smart Limits**: Up to 4 images on desktop and 2 on mobile.
-    - **Interactive Reordering**: Swap image positions by dragging them (only in edit mode on desktop).
-    - **Fullscreen Preview**: Click on images to view them in a high-quality lightbox.
-    - **Safe Management**: Add or remove images securely while in edit mode.
+- **Universal Attachments**: Support for images and files (PDF, MP4, etc.).
+    - **Smart Image Limits**: Up to 4 images on desktop and 2 on mobile (grid layout).
+    - **File Support**: Attach 1 non-image file per note (PDF, documents, etc.).
+    - **Interactive Previews**: Images show in a grid; files appear as elegant buttons in the footer.
+    - **Drag & Drop**: Drag images or files directly onto a note to attach.
+    - **Fullscreen Preview**: Click on images for a high-quality lightbox.
+    - **Safe Management**: Manage attachments securely while in edit mode.
 
 ### ✅ Daily Tasks
 - **Focus Mode**: When adding a task, existing items fade out to help you concentrate on the new entry.
@@ -31,7 +33,7 @@
 - **Mens Sana Footer**: "Mens sana in corpore sano" - A reminder for balance.
 
 ### 🧭 Navigation Hub
-- **Fast Access**: Shortcut links that open in a new window by default, with the option to open in a new tab.
+- **Fast Access**: Shortcut links with premium hover effects (grayscale & scale focus). Open in new window or tab.
 - **Quick Links**: Floating buttons for essential services:
     - **Today**: You are here!
     - **Emojis**: Fast access to emoji library.

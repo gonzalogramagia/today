@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Copy, Pencil, Trash2, Save, Check, ChevronUp, ChevronDown, X, Plus } from "lucide-react";
+import { Copy, Pencil, Trash2, Save, Check, ChevronUp, ChevronDown, X, Plus, Paperclip } from "lucide-react";
 import { symbols, SymbolItem } from "../data/symbols";
 import { dictionary, Language } from "../data/i18n";
 import FloatingLinks from "./FloatingLinks";
@@ -14,7 +14,8 @@ interface TextBlock {
     title: string;
     content: string;
     color?: string;
-    images?: string[];
+    images?: string[]; // Kept for backward compatibility
+    attachments?: { url: string; name: string; type: string }[];
 }
 
 interface HomeProps {
@@ -314,28 +315,41 @@ export default function Home({ lang }: HomeProps) {
         }
     };
 
-    const handleImageUpload = (blockId: string, files: FileList | null) => {
+    const handleFileUpload = (blockId: string, files: FileList | null) => {
         if (!files) return;
-
-        const isMobile = window.innerWidth < 768;
-        const maxImages = isMobile ? 2 : 4;
 
         const block = blocks.find(b => b.id === blockId);
         if (!block) return;
 
-        const currentImages = block.images || [];
-        if (currentImages.length >= maxImages) return;
+        const currentAttachments = block.attachments || [];
+        const currentLegacyImages = block.images || [];
 
-        const remainingSlots = maxImages - currentImages.length;
-        const filesToProcess = Array.from(files).filter(f => f.type.startsWith('image/')).slice(0, remainingSlots);
+        const filesToProcess = Array.from(files);
 
         filesToProcess.forEach(file => {
+            const isImage = file.type.startsWith('image/') || file.name.toLowerCase().endsWith('.jpg') || file.name.toLowerCase().endsWith('.jpeg');
+
+            if (isImage) {
+                const totalImages = currentLegacyImages.length + currentAttachments.filter(a => a.type.startsWith('image/') || a.name.toLowerCase().endsWith('.jpg') || a.name.toLowerCase().endsWith('.jpeg')).length;
+                const isMobile = window.innerWidth < 768;
+                const maxImgs = isMobile ? 2 : 4;
+                if (totalImages >= maxImgs) return;
+            } else {
+                const totalFiles = currentAttachments.filter(a => !a.type.startsWith('image/') && !a.name.toLowerCase().endsWith('.jpg') && !a.name.toLowerCase().endsWith('.jpeg')).length;
+                if (totalFiles >= 1) return;
+            }
+
             const reader = new FileReader();
             reader.onload = (e) => {
-                const base64 = e.target?.result as string;
+                const baseUrl = e.target?.result as string;
+                const newAttachment = {
+                    url: baseUrl,
+                    name: file.name,
+                    type: file.type
+                };
                 setBlocks(prev => prev.map(b =>
                     b.id === blockId
-                        ? { ...b, images: [...(b.images || []), base64] }
+                        ? { ...b, attachments: [...(b.attachments || []), newAttachment] }
                         : b
                 ));
             };
@@ -343,12 +357,15 @@ export default function Home({ lang }: HomeProps) {
         });
     };
 
-    const removeImage = (blockId: string, index: number) => {
-        setBlocks(prev => prev.map(b =>
-            b.id === blockId
-                ? { ...b, images: b.images?.filter((_, i) => i !== index) }
-                : b
-        ));
+    const removeAttachment = (blockId: string, index: number, isLegacy: boolean) => {
+        setBlocks(prev => prev.map(b => {
+            if (b.id !== blockId) return b;
+            if (isLegacy) {
+                return { ...b, images: b.images?.filter((_, i) => i !== index) };
+            } else {
+                return { ...b, attachments: b.attachments?.filter((_, i) => i !== index) };
+            }
+        }));
     };
 
     const swapImages = (blockId: string, idx1: number, idx2: number) => {
@@ -373,7 +390,7 @@ export default function Home({ lang }: HomeProps) {
         }
         if (files.length > 0) {
             // Create a fake FileList-like object or just pass the array
-            handleImageUpload(blockId, files as any);
+            handleFileUpload(blockId, files as any);
         }
     };
 
@@ -649,7 +666,7 @@ export default function Home({ lang }: HomeProps) {
                         onDrop={(e) => {
                             e.preventDefault();
                             e.currentTarget.classList.remove('ring-2', 'ring-[#6866D6]', 'ring-offset-2');
-                            handleImageUpload(block.id, e.dataTransfer.files);
+                            handleFileUpload(block.id, e.dataTransfer.files);
                         }}
                         onPaste={(e) => handlePaste(e, block.id)}
                         className="border border-black/5 rounded-lg p-4 pb-2 transition-all duration-200"
@@ -811,67 +828,72 @@ export default function Home({ lang }: HomeProps) {
                                 dangerouslySetInnerHTML={{ __html: formatText(block.content) }}
                             />
                         )}
+                        {/* Image Attachment Preview Grid */}
+                        {(() => {
+                            const attachments = block.attachments || [];
+                            const legacyImages = block.images || [];
 
-                        {/* Images Section */}
-                        <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
-                            {(block.images || []).slice(0, 4).map((img, idx) => (
-                                <div
-                                    key={idx}
-                                    draggable={editingBlockId === block.id && !isMobile}
-                                    onDragStart={() => setDraggedImageInfo({ blockId: block.id, index: idx })}
-                                    onDragEnter={() => {
-                                        if (draggedImageInfo && draggedImageInfo.blockId === block.id && draggedImageInfo.index !== idx) {
-                                            swapImages(block.id, draggedImageInfo.index, idx);
-                                            setDraggedImageInfo({ ...draggedImageInfo, index: idx });
-                                        }
-                                    }}
-                                    onDragOver={(e) => {
-                                        if (draggedImageInfo && draggedImageInfo.blockId === block.id) {
-                                            e.preventDefault();
-                                        }
-                                    }}
-                                    onDrop={(e) => {
-                                        e.preventDefault();
-                                        setDraggedImageInfo(null);
-                                    }}
-                                    onDragEnd={() => setDraggedImageInfo(null)}
-                                    className={`relative group/img aspect-square rounded-md overflow-hidden border border-black/10 bg-black/5 cursor-pointer transition-all ${idx >= 2 ? 'hidden md:block' : ''} ${editingBlockId === block.id && !isMobile ? 'cursor-move' : 'cursor-zoom-in'}`}
-                                    onClick={() => editingBlockId !== block.id && setImageModalUrl(img)}
-                                >
-                                    <img src={img} alt="" className="w-full h-full object-cover transition-transform group-hover/img:scale-105 pointer-events-none" />
-                                    {editingBlockId === block.id && (
-                                        <button
+                            // Combine both, filtering for images
+                            const imageAttachments = [
+                                ...legacyImages.map((url, i) => ({ url, name: 'image', type: 'legacy', index: i })),
+                                ...attachments
+                                    .filter(a => a.type.startsWith('image/') || a.name.toLowerCase().endsWith('.jpg') || a.name.toLowerCase().endsWith('.jpeg'))
+                                    .map((a, i) => ({ ...a, type: 'attachment', index: i }))
+                            ].slice(0, 4);
+
+                            if (imageAttachments.length === 0) return null;
+
+                            return (
+                                <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-2">
+                                    {imageAttachments.map((img, idx) => (
+                                        <div
+                                            key={`${img.type}-${idx}`}
+                                            className="relative group/img aspect-square rounded-md overflow-hidden border border-black/10 bg-black/5 cursor-zoom-in transition-all"
+                                            onClick={() => setImageModalUrl(img.url)}
+                                        >
+                                            <img src={img.url} alt="" className="w-full h-full object-cover transition-transform group-hover/img:scale-105 pointer-events-none" />
+                                            {editingBlockId === block.id && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        removeAttachment(block.id, img.index, img.type === 'legacy');
+                                                    }}
+                                                    className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover/img:opacity-100 transition-opacity cursor-pointer shadow-sm hover:bg-red-600 z-10"
+                                                >
+                                                    <X size={12} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+
+                                    {/* Add More Images Button */}
+                                    {editingBlockId === block.id && imageAttachments.length > 0 && imageAttachments.length < 4 && (
+                                        <div
+                                            className="relative aspect-square rounded-md border-2 border-dashed border-black/10 bg-black/5 hover:bg-black/10 hover:border-black/20 transition-all cursor-pointer flex flex-col items-center justify-center gap-1 group/add-img"
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                removeImage(block.id, idx);
+                                                const input = document.createElement('input');
+                                                input.type = 'file';
+                                                input.accept = 'image/png, image/jpeg, image/jpg';
+                                                input.multiple = true;
+                                                input.onchange = (ev) => {
+                                                    const files = (ev.target as HTMLInputElement).files;
+                                                    handleFileUpload(block.id, files);
+                                                };
+                                                input.click();
                                             }}
-                                            className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover/img:opacity-100 transition-opacity cursor-pointer shadow-sm hover:bg-red-600 z-10"
                                         >
-                                            <X size={12} />
-                                        </button>
+                                            <Plus className="w-6 h-6 text-black/30 group-hover/add-img:text-black/50 transition-colors" />
+                                            <span className="text-[10px] text-zinc-500 font-bold uppercase group-hover/add-img:text-zinc-600">
+                                                {lang === 'es' ? 'Imagen' : 'Image'}
+                                            </span>
+                                        </div>
                                     )}
                                 </div>
-                            ))}
-                            {editingBlockId === block.id && (block.images || []).length < (isMobile ? 2 : 4) && (
-                                <div
-                                    className="relative aspect-square rounded-md border-2 border-dashed border-black/10 bg-black/5 hover:bg-black/10 hover:border-black/20 transition-all cursor-pointer flex flex-col items-center justify-center gap-1 group/add"
-                                    onClick={() => fileInputRefs.current[block.id]?.click()}
-                                >
-                                    <Plus className="w-6 h-6 text-black/30 group-hover/add:text-black/50 transition-colors" />
-                                    <span className="text-[10px] text-black/30 font-bold uppercase group-hover/add:text-black/50">{lang === 'es' ? 'Agregar' : 'Add'}</span>
-                                    <input
-                                        type="file"
-                                        ref={el => { fileInputRefs.current[block.id] = el }}
-                                        className="hidden"
-                                        accept="image/*"
-                                        multiple
-                                        onChange={(e) => handleImageUpload(block.id, e.target.files)}
-                                    />
-                                </div>
-                            )}
-                        </div>
+                            );
+                        })()}
 
-                        <div className="flex items-center mt-2 h-10 relative">
+                        <div className="flex items-center mt-1 h-10 relative">
                             {/* Left side: Tag or Editor */}
                             <div className="flex-1 flex items-center justify-start">
                                 {editingBlockId === block.id && (
@@ -919,8 +941,88 @@ export default function Home({ lang }: HomeProps) {
                             </div>
 
 
-                            {/* Right side: Arrows */}
-                            <div className="flex-1 flex items-center justify-end">
+                            {/* Right side: Actions / Arrows */}
+                            <div className="flex-1 flex items-center justify-end gap-2">
+                                {/* Attachment Display (Footer - Only for non-images) */}
+                                <div className="flex flex-wrap items-center justify-end gap-2">
+                                    {(block.attachments || []).filter(a => !a.type.startsWith('image/') && !a.name.toLowerCase().endsWith('.jpg') && !a.name.toLowerCase().endsWith('.jpeg')).map((file, idx) => (
+                                        <div key={idx} className="flex items-center gap-1 group/file">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    const link = document.createElement('a');
+                                                    link.href = file.url;
+                                                    link.download = file.name;
+                                                    link.click();
+                                                }}
+                                                className="flex items-center gap-2 px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-md transition-all scale-90 sm:scale-100 origin-right cursor-pointer shadow-sm border border-black/5 max-w-[150px] sm:max-w-[200px]"
+                                            >
+                                                <Paperclip size={14} className="text-zinc-400 flex-shrink-0" />
+                                                <span className="text-[10px] font-bold uppercase truncate">
+                                                    {file.name}
+                                                </span>
+                                            </button>
+                                            {editingBlockId === block.id && (
+                                                <button
+                                                    onClick={() => {
+                                                        const realIdx = block.attachments?.findIndex(a => a === file);
+                                                        if (realIdx !== undefined && realIdx !== -1) {
+                                                            removeAttachment(block.id, realIdx, false);
+                                                        }
+                                                    }}
+                                                    className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors cursor-pointer"
+                                                    title={lang === 'es' ? 'Borrar archivo' : 'Delete file'}
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+
+                                    {/* Action Button: Attach (Only if NO non-image files exist) */}
+                                    {editingBlockId === block.id && (block.attachments || []).filter(a => !a.type.startsWith('image/') && !a.name.toLowerCase().endsWith('.jpg') && !a.name.toLowerCase().endsWith('.jpeg')).length === 0 && (
+                                        <div className="flex items-center">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    fileInputRefs.current[block.id]?.click();
+                                                }}
+                                                className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-md transition-all scale-90 sm:scale-100 origin-right cursor-pointer shadow-sm"
+                                            >
+                                                <Paperclip size={14} className="text-zinc-400" />
+                                                <span className="text-[10px] font-bold uppercase whitespace-nowrap">
+                                                    {lang === 'es' ? (
+                                                        <>Adjuntar archivo <span className="hidden sm:inline">(PDF, mp4, etc)</span></>
+                                                    ) : (
+                                                        <>Attach file <span className="hidden sm:inline">(PDF, mp4, etc)</span></>
+                                                    )}
+                                                </span>
+                                            </button>
+                                            <input
+                                                type="file"
+                                                ref={el => { fileInputRefs.current[block.id] = el }}
+                                                className="hidden"
+                                                accept={(() => {
+                                                    const currentLegacy = block.images?.length || 0;
+                                                    const currentAttach = (block.attachments || []).filter(a => a.type.startsWith('image/') || a.name.toLowerCase().endsWith('.jpg') || a.name.toLowerCase().endsWith('.jpeg')).length;
+                                                    const totalImages = currentLegacy + currentAttach;
+                                                    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+                                                    const maxImgs = isMobile ? 2 : 4;
+
+                                                    if (totalImages >= maxImgs) {
+                                                        // Limit is reached, only accept non-images (excluding typical image mime types)
+                                                        return ".pdf,.doc,.docx,.txt,.mp4,.zip,.rar,.xls,.xlsx";
+                                                    }
+                                                    return undefined; // Accept any
+                                                })()}
+                                                multiple
+                                                onChange={(e) => handleFileUpload(block.id, e.target.files)}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+
                                 {blocks.length > 1 && (
                                     <div className="flex items-center gap-1">
                                         <button
