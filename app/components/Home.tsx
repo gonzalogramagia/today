@@ -537,15 +537,27 @@ export default function Home({ lang }: HomeProps) {
             str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
         let formatted = escapeHtml(text);
+
+        // 1. Temporarily replace URLs with placeholders to avoid formatting them
+        const urls: string[] = [];
         const urlRegex = /((https?:\/\/|www\.)[\w\-.:/?#@!$&'()*+,;=%~]+)/g;
         formatted = formatted.replace(urlRegex, (match) => {
+            urls.push(match);
+            return `LINKTOKEN${urls.length - 1}TOKEN`;
+        });
+
+        // 2. Bold: *texto* -> <strong>texto</strong>
+        formatted = formatted.replace(/\*([^*]+)\*/g, "<strong>$1</strong>");
+
+        // 3. Italics: _texto_ -> <em>texto</em>
+        formatted = formatted.replace(/_([^_]+)_/g, "<em>$1</em>");
+
+        // 4. Restore URLs and wrap them in <a> tags
+        formatted = formatted.replace(/LINKTOKEN(\d+)TOKEN/g, (_, idx) => {
+            const match = urls[parseInt(idx)];
             const url = match.startsWith("http") ? match : `https://${match}`;
             return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-[#6866D6] hover:underline">${match}</a>`;
         });
-        // Bold: *texto* -> <strong>texto</strong>
-        formatted = formatted.replace(/\*([^*]+)\*/g, "<strong>$1</strong>");
-        // Italics: _texto_ -> <em>texto</em>
-        formatted = formatted.replace(/_([^_]+)_/g, "<em>$1</em>");
 
         return formatted;
     };
