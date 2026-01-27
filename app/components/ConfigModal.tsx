@@ -134,7 +134,7 @@ export default function ConfigModal({ lang, onClose, toggleLanguage, exportPath,
                         </div>
 
                         {/* Tasks Toggle */}
-                        <div className="hidden sm:flex items-center justify-between p-3 bg-zinc-50 rounded-xl border border-zinc-100">
+                        <div className="hidden lg:flex items-center justify-between p-3 bg-zinc-50 rounded-xl border border-zinc-100">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-white rounded-lg shadow-sm">
                                     {showTasks ? <Eye size={20} className="text-zinc-600" /> : <EyeOff size={20} className="text-zinc-400" />}
@@ -155,7 +155,7 @@ export default function ConfigModal({ lang, onClose, toggleLanguage, exportPath,
                         </div>
 
                         {/* Countdown Toggle */}
-                        <div className="hidden sm:flex items-center justify-between p-3 bg-zinc-50 rounded-xl border border-zinc-100">
+                        <div className="hidden lg:flex items-center justify-between p-3 bg-zinc-50 rounded-xl border border-zinc-100">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-white rounded-lg shadow-sm">
                                     {showCountdown ? <Eye size={20} className="text-zinc-600" /> : <EyeOff size={20} className="text-zinc-400" />}
