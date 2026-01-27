@@ -16,23 +16,53 @@ export default function Countdown() {
     const [isCreating, setIsCreating] = useState(false)
     const [editingId, setEditingId] = useState<string | null>(null)
     const [formData, setFormData] = useState({ name: '', date: '' })
+    const [draggedCountdownId, setDraggedCountdownId] = useState<string | null>(null)
     const pathname = usePathname()
     const isEnglish = pathname?.startsWith('/en')
     const containerRef = useRef<HTMLDivElement>(null)
+
+    const handleSaveFixed = (e?: React.FormEvent, customData?: { name: string, date: string }) => {
+        e?.preventDefault()
+        const data = customData || formData
+        if (!data.name || !data.date) return
+
+        if (editingId) {
+            setCountdowns(countdowns.map(c => c.id === editingId ? { ...c, ...data } : c))
+            setEditingId(null)
+        } else {
+            if (countdowns.length >= 2) return
+            setCountdowns([...countdowns, { id: crypto.randomUUID(), ...data }])
+            setIsCreating(false)
+        }
+        setFormData({ name: '', date: '' })
+    }
+
+    const handleSave = (e: React.FormEvent) => handleSaveFixed(e)
+
+    const handleCloseEdit = () => {
+        if (editingId) {
+            handleSaveFixed()
+        }
+        setIsCreating(false)
+        setEditingId(null)
+    }
 
     // Close form when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+                if (editingId) {
+                    handleSaveFixed()
+                }
                 setIsCreating(false)
                 setEditingId(null)
             }
         }
         if (isCreating || editingId) {
-            document.addEventListener('click', handleClickOutside)
+            document.addEventListener('mousedown', handleClickOutside)
         }
-        return () => document.removeEventListener('click', handleClickOutside)
-    }, [isCreating, editingId])
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [isCreating, editingId, formData])
 
     const [isVisible, setIsVisible] = useState(true)
 
@@ -57,7 +87,6 @@ export default function Countdown() {
                     console.error('Failed to parse countdowns', e)
                 }
             } else {
-                // Fallback to old single-event format if exists
                 const oldSaved = localStorage.getItem('countdown-event')
                 if (oldSaved) {
                     try {
@@ -88,21 +117,6 @@ export default function Countdown() {
         localStorage.setItem('countdown-events', JSON.stringify(countdowns))
     }, [countdowns, mounted])
 
-    const handleSave = (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!formData.name || !formData.date) return
-
-        if (editingId) {
-            setCountdowns(countdowns.map(c => c.id === editingId ? { ...c, ...formData } : c))
-            setEditingId(null)
-        } else {
-            if (countdowns.length >= 2) return
-            setCountdowns([...countdowns, { id: crypto.randomUUID(), ...formData }])
-            setIsCreating(false)
-        }
-        setFormData({ name: '', date: '' })
-    }
-
     const handleDelete = (id: string) => {
         setCountdowns(countdowns.filter(c => c.id !== id))
     }
@@ -113,19 +127,43 @@ export default function Countdown() {
         setIsCreating(false)
     }
 
+    const handleDragStart = (id: string) => {
+        setDraggedCountdownId(id)
+    }
+
+    const handleDragOver = (e: React.DragEvent, id: string) => {
+        e.preventDefault()
+        if (draggedCountdownId === id) return
+
+        const draggedIdx = countdowns.findIndex(c => c.id === draggedCountdownId)
+        const targetIdx = countdowns.findIndex(c => c.id === id)
+
+        if (draggedIdx === -1 || targetIdx === -1) return
+
+        const newCountdowns = [...countdowns]
+        const [removed] = newCountdowns.splice(draggedIdx, 1)
+        newCountdowns.splice(targetIdx, 0, removed)
+        setCountdowns(newCountdowns)
+    }
+
+    const handleDragEnd = () => {
+        setDraggedCountdownId(null)
+    }
+
     if (!mounted) return null
 
     return (
-        <div ref={containerRef} className={`fixed right-9 top-48 z-40 hidden xl:flex flex-col gap-4 w-64 transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none select-none'}`}>
+        <div ref={containerRef} className={`fixed right-9 top-48 z-40 hidden lg:flex flex-col gap-4 w-64 transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none select-none'}`}>
             <div className="group bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-lg p-4 transition-all">
-                <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-medium text-zinc-900 dark:text-zinc-100 pt-1 text-sm flex items-center gap-2">
+                <div className="flex items-center justify-between mb-3" onClick={handleCloseEdit}>
+                    <h3 className="font-medium text-zinc-900 dark:text-zinc-100 pt-1 text-sm flex items-center gap-2 cursor-default">
                         <CalendarClock size={16} />
                         {isEnglish ? 'Countdown' : 'Cuenta Regresiva'}
                     </h3>
                     {countdowns.length < 2 && !editingId && (
                         <button
-                            onClick={() => {
+                            onClick={(e) => {
+                                e.stopPropagation()
                                 setIsCreating(!isCreating)
                                 setFormData({ name: '', date: '' })
                             }}
@@ -138,13 +176,26 @@ export default function Countdown() {
 
                 <div className="flex flex-col gap-4">
                     {countdowns.map((item, index) => (
-                        <div key={item.id} className="relative group/item">
+                        <div
+                            key={item.id}
+                            className={`relative group/item transition-all duration-200 ${draggedCountdownId === item.id ? 'opacity-30 scale-[0.98] cursor-grabbing' : 'opacity-100'} ${editingId || isCreating ? 'cursor-default' : 'cursor-grab'}`}
+                            draggable={!editingId && !isCreating}
+                            onDragStart={() => handleDragStart(item.id)}
+                            onDragOver={(e) => handleDragOver(e, item.id)}
+                            onDragEnd={handleDragEnd}
+                            onClick={() => {
+                                if (editingId && editingId !== item.id) {
+                                    handleCloseEdit()
+                                }
+                            }}
+                        >
                             <CountdownDisplay
                                 item={item}
                                 isEnglish={isEnglish}
                                 onDelete={() => handleDelete(item.id)}
                                 onEdit={() => startEditing(item)}
                                 isEditing={editingId === item.id}
+                                globalEditingId={editingId}
                             />
                             {editingId === item.id && (
                                 <div className="mt-2">
@@ -188,12 +239,13 @@ export default function Countdown() {
     )
 }
 
-function CountdownDisplay({ item, isEnglish, onDelete, onEdit, isEditing }: {
+function CountdownDisplay({ item, isEnglish, onDelete, onEdit, isEditing, globalEditingId }: {
     item: CountdownItem,
     isEnglish: boolean,
     onDelete: () => void,
     onEdit: () => void,
-    isEditing: boolean
+    isEditing: boolean,
+    globalEditingId: string | null
 }) {
     const [timeLeft, setTimeLeft] = useState('')
     const [timeColor, setTimeColor] = useState('text-zinc-500')
@@ -257,22 +309,24 @@ function CountdownDisplay({ item, isEnglish, onDelete, onEdit, isEditing }: {
 
     return (
         <div className={`flex flex-col gap-1 relative transition-opacity ${isEditing ? 'opacity-30 pointer-events-none' : ''}`}>
-            <div className="absolute -top-1 right-0 flex items-center gap-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity">
-                <button
-                    onClick={onEdit}
-                    className="text-zinc-400 hover:text-[#6866D6] transition-colors cursor-pointer p-1"
-                    title={isEnglish ? 'Edit' : 'Editar'}
-                >
-                    <Pencil size={14} />
-                </button>
-                <button
-                    onClick={onDelete}
-                    className="text-zinc-400 hover:text-red-500 transition-colors cursor-pointer p-1"
-                    title={isEnglish ? 'Delete' : 'Eliminar'}
-                >
-                    <Trash2 size={14} />
-                </button>
-            </div>
+            {!globalEditingId && (
+                <div className="absolute -top-1 right-0 flex items-center gap-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                    <button
+                        onClick={onEdit}
+                        className="text-zinc-400 hover:text-[#6866D6] transition-colors cursor-pointer p-1"
+                        title={isEnglish ? 'Edit' : 'Editar'}
+                    >
+                        <Pencil size={14} />
+                    </button>
+                    <button
+                        onClick={onDelete}
+                        className="text-zinc-400 hover:text-red-500 transition-colors cursor-pointer p-1"
+                        title={isEnglish ? 'Delete' : 'Eliminar'}
+                    >
+                        <Trash2 size={14} />
+                    </button>
+                </div>
+            )}
 
             <div className="font-bold text-lg text-zinc-800 dark:text-zinc-100 break-words pr-12 leading-tight">
                 {item.name}

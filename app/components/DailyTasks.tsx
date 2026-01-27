@@ -19,6 +19,7 @@ export default function DailyTasks() {
     const [isAdding, setIsAdding] = useState(false)
     const [editingId, setEditingId] = useState<string | null>(null)
     const [deletingId, setDeletingId] = useState<string | null>(null)
+    const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null)
     const pathname = usePathname()
     const isEnglish = pathname?.startsWith('/en')
     const containerRef = useRef<HTMLDivElement>(null)
@@ -37,18 +38,21 @@ export default function DailyTasks() {
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+                if (editingId) {
+                    addTask()
+                }
                 setIsAdding(false)
                 setEditingId(null)
             }
         }
 
         if (isAdding || editingId) {
-            document.addEventListener('click', handleClickOutside)
+            document.addEventListener('mousedown', handleClickOutside)
         }
         return () => {
-            document.removeEventListener('click', handleClickOutside)
+            document.removeEventListener('mousedown', handleClickOutside)
         }
-    }, [isAdding, editingId])
+    }, [isAdding, editingId, inputValue, urlValue])
 
     const [isVisible, setIsVisible] = useState(true)
 
@@ -151,7 +155,16 @@ export default function DailyTasks() {
     }
 
     const cancelEditing = () => {
+        if (editingId) {
+            addTask()
+        }
         setEditingId(null)
+        setInputValue('')
+        setUrlValue('')
+    }
+
+    const handleCloseAdd = () => {
+        setIsAdding(false)
         setInputValue('')
         setUrlValue('')
     }
@@ -171,12 +184,35 @@ export default function DailyTasks() {
         }
     }
 
+    const handleDragStart = (id: string) => {
+        setDraggedTaskId(id)
+    }
+
+    const handleDragOver = (e: React.DragEvent, id: string) => {
+        e.preventDefault()
+        if (draggedTaskId === id) return
+
+        const draggedIdx = tasks.findIndex(t => t.id === draggedTaskId)
+        const targetIdx = tasks.findIndex(t => t.id === id)
+
+        if (draggedIdx === -1 || targetIdx === -1) return
+
+        const newTasks = [...tasks]
+        const [removed] = newTasks.splice(draggedIdx, 1)
+        newTasks.splice(targetIdx, 0, removed)
+        setTasks(newTasks)
+    }
+
+    const handleDragEnd = () => {
+        setDraggedTaskId(null)
+    }
+
     if (!mounted) return null
 
     return (
-        <div ref={containerRef} className={`fixed left-9 top-48 z-40 hidden xl:flex flex-col gap-4 w-64 transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none select-none'}`}>
+        <div ref={containerRef} className={`fixed left-9 top-48 z-40 hidden lg:flex flex-col gap-4 w-64 transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none select-none'}`}>
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-lg p-4 transition-all">
-                <div className="group/header flex items-center justify-between mb-5">
+                <div className="group/header flex items-center justify-between mb-5" onClick={() => editingId && cancelEditing()}>
                     <h3 className="font-medium text-zinc-900 dark:text-zinc-100 text-sm flex items-center justify-start gap-2 relative group/tooltip w-max cursor-default">
                         <span className="text-base select-none">
                             🕒
@@ -189,27 +225,39 @@ export default function DailyTasks() {
                         </div>
                     </h3>
                     <button
-                        onClick={() => {
+                        onClick={(e) => {
+                            e.stopPropagation()
                             if (isAdding) {
-                                setIsAdding(false)
-                                setInputValue('')
-                                setUrlValue('')
+                                handleCloseAdd()
                             } else {
+                                if (editingId) cancelEditing()
                                 setIsAdding(true)
                                 setEditingId(null)
                                 setInputValue('')
                                 setUrlValue('')
                             }
                         }}
-                        className={`p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer ${isAdding ? 'text-red-500 opacity-100' : 'text-zinc-500 opacity-0 group-hover/header:opacity-100'} transition-opacity`}
+                        className={`p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer ${isAdding ? 'text-red-500 opacity-100' : 'text-zinc-500 opacity-0 group-hover/header:opacity-100'} ${editingId ? 'hidden' : ''} transition-opacity`}
                     >
                         {isAdding ? <X size={16} /> : <Plus size={16} />}
                     </button>
                 </div>
 
                 <div className={`space-y-2 max-h-[60vh] overflow-y-auto overflow-x-hidden mb-3 custom-scrollbar transition-opacity duration-200 ${isAdding ? 'opacity-50 pointer-events-none' : ''}`}>
-                    {tasks.map(task => (
-                        <div key={task.id} className="group min-h-[24px]">
+                    {tasks.map((task, index) => (
+                        <div
+                            key={task.id}
+                            className={`group min-h-[24px] transition-all duration-200 ${draggedTaskId === task.id ? 'opacity-30 scale-[0.98] cursor-grabbing' : 'opacity-100'} ${editingId || isAdding ? 'cursor-default' : 'cursor-grab'}`}
+                            draggable={!editingId && !isAdding}
+                            onDragStart={() => handleDragStart(task.id)}
+                            onDragOver={(e) => handleDragOver(e, task.id)}
+                            onDragEnd={handleDragEnd}
+                            onClick={() => {
+                                if (editingId && editingId !== task.id) {
+                                    cancelEditing()
+                                }
+                            }}
+                        >
                             {editingId === task.id ? (
                                 <form onSubmit={addTask} className="flex flex-col gap-2 animate-in fade-in duration-200 px-0.5">
                                     <div className="flex gap-2">
@@ -271,14 +319,20 @@ export default function DailyTasks() {
                                     {(!isAdding && !editingId) && (
                                         <div className="flex items-center gap-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button
-                                                onClick={() => startEditing(task)}
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    startEditing(task)
+                                                }}
                                                 className="p-1 text-zinc-400 hover:text-[#6866D6] transition-colors cursor-pointer"
                                                 title={isEnglish ? 'Edit' : 'Editar'}
                                             >
                                                 <Pencil size={14} />
                                             </button>
                                             <button
-                                                onClick={() => confirmDelete(task.id)}
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    confirmDelete(task.id)
+                                                }}
                                                 className={`p-1 cursor-pointer ${deletingId === task.id ? 'text-red-500 opacity-100' : 'text-zinc-400 hover:text-red-500'}`}
                                                 title={isEnglish ? 'Delete' : 'Eliminar'}
                                             >
