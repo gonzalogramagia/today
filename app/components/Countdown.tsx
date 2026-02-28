@@ -154,9 +154,9 @@ export default function Countdown() {
 
     return (
         <div ref={containerRef} className={`fixed right-9 top-48 z-40 hidden lg:flex flex-col gap-4 w-64 transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none select-none'}`}>
-            <div className="group bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-lg p-4 transition-all">
+            <div className="group bg-white border border-zinc-200 rounded-lg shadow-lg p-4 transition-all">
                 <div className="flex items-center justify-between mb-3" onClick={handleCloseEdit}>
-                    <h3 className="font-medium text-zinc-900 dark:text-zinc-100 pt-1 text-sm flex items-center gap-2 cursor-default">
+                    <h3 className="font-medium text-zinc-900 pt-1 text-sm flex items-center gap-2 cursor-default">
                         <CalendarClock size={16} />
                         {isEnglish ? 'Countdown' : 'Cuenta Regresiva'}
                     </h3>
@@ -167,7 +167,7 @@ export default function Countdown() {
                                 setIsCreating(!isCreating)
                                 setFormData({ name: '', date: '' })
                             }}
-                            className={`p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer ${isCreating ? 'text-red-500 opacity-100' : 'text-zinc-500 opacity-0 group-hover:opacity-100'} transition-opacity`}
+                            className={`p-1 rounded hover:bg-zinc-100 transition-colors cursor-pointer ${isCreating ? 'text-red-500 opacity-100' : 'text-zinc-500 opacity-0 group-hover:opacity-100'} transition-opacity`}
                         >
                             {isCreating ? <X size={16} /> : <Plus size={16} />}
                         </button>
@@ -213,13 +213,13 @@ export default function Countdown() {
                                 </div>
                             )}
                             {index === 0 && countdowns.length > 1 && !editingId && (
-                                <div className="mt-4 border-t border-zinc-100 dark:border-zinc-800" />
+                                <div className="mt-4 border-t border-zinc-100" />
                             )}
                         </div>
                     ))}
 
                     {countdowns.length === 0 && !isCreating && (
-                        <div className="text-xs text-zinc-400 dark:text-zinc-600 text-center pt-5 pb-6 italic">
+                        <div className="text-xs text-zinc-400 text-center pt-5 pb-6 italic">
                             {isEnglish ? 'No active countdown' : 'No hay cuenta regresiva aún'}
                         </div>
                     )}
@@ -269,7 +269,7 @@ function CountdownDisplay({ item, isEnglish, onDelete, onEdit, isEditing, global
                     setTimeColor('text-yellow-500')
                     setFunMessage(isEnglish ? 'Almost there! 🏃‍♂️💨' : 'Ya casi! 🏃‍♂️💨')
                 } else {
-                    setTimeColor('text-zinc-500 dark:text-zinc-400')
+                    setTimeColor('text-zinc-500')
                     setFunMessage(isEnglish ? 'Keep going! 🚀' : 'Seguí así! 🚀')
                 }
 
@@ -328,11 +328,11 @@ function CountdownDisplay({ item, isEnglish, onDelete, onEdit, isEditing, global
                 </div>
             )}
 
-            <div className="font-bold text-lg text-zinc-800 dark:text-zinc-100 break-words pr-12 leading-tight">
+            <div className="font-bold text-lg text-zinc-800 break-words pr-12 leading-tight">
                 {item.name}
             </div>
 
-            <div className="text-[10px] text-zinc-400 dark:text-zinc-500 mb-1">
+            <div className="text-[10px] text-zinc-400 mb-1">
                 {formattedDate}
             </div>
 
@@ -340,7 +340,7 @@ function CountdownDisplay({ item, isEnglish, onDelete, onEdit, isEditing, global
                 {timeLeft}
             </div>
 
-            <div className="text-xs font-medium text-zinc-600 dark:text-zinc-400 mt-1 animate-bounce">
+            <div className="text-xs font-medium text-zinc-600 mt-1 animate-bounce">
                 {funMessage}
             </div>
         </div>
@@ -363,13 +363,13 @@ function CountdownForm({ formData, setFormData, handleSave, isEnglish, onCancel,
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder={isEnglish ? 'Event name...' : 'Nombre del evento...'}
                 autoFocus
-                className="w-full bg-zinc-50 dark:bg-zinc-800 border-none rounded text-xs px-2 py-1.5 focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-600 outline-none text-zinc-800 dark:text-zinc-200"
+                className="w-full bg-zinc-50 border-none rounded text-xs px-2 py-1.5 focus:ring-1 focus:ring-zinc-300 outline-none text-zinc-800"
             />
             <input
                 type="datetime-local"
                 value={formData.date}
                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                className="w-full bg-zinc-50 dark:bg-zinc-800 border-none rounded text-xs px-2 py-1.5 focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-600 outline-none text-zinc-800 dark:text-zinc-200"
+                className="w-full bg-zinc-50 border-none rounded text-xs px-2 py-1.5 focus:ring-1 focus:ring-zinc-300 outline-none text-zinc-800"
             />
             <div className="flex gap-2">
                 <button
@@ -384,7 +384,7 @@ function CountdownForm({ formData, setFormData, handleSave, isEnglish, onCancel,
                     <button
                         type="button"
                         onClick={onCancel}
-                        className="p-1.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-red-500 transition-colors"
+                        className="p-1.5 rounded bg-zinc-100 text-zinc-500 hover:text-red-500 transition-colors"
                     >
                         <X size={14} />
                     </button>

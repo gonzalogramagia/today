@@ -88,7 +88,7 @@ export default function Header({ lang, onAddNote, addNoteText, title, mobileAddT
             ) : (
                 /* Title + Small Button - Visible on Desktop when clock is disabled (mimics mobile layout) */
                 <div className="hidden lg:flex items-center justify-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500 -mt-20">
-                    <h1 className="text-2xl font-bold tracking-tighter text-black dark:text-white">
+                    <h1 className="text-2xl font-bold tracking-tighter text-black">
                         📝
                         <span className="ml-3">{title}</span>
                     </h1>

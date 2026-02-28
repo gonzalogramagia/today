@@ -113,15 +113,15 @@ export default function ImportModal({ lang }: ImportModalProps) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-xl shadow-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="bg-white w-full max-w-md rounded-xl shadow-2xl border border-zinc-200 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
 
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-zinc-100 dark:border-zinc-800">
+                <div className="flex items-center justify-between p-4 border-b border-zinc-100">
                     <h1 className="text-lg font-semibold flex items-center gap-2">
                         <FileDown className="w-5 h-5" />
                         {t.title}
                     </h1>
-                    <Link href="/" className="p-1 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                    <Link href="/" className="p-1 rounded-full hover:bg-zinc-100 transition-colors">
                         <X className="w-5 h-5 text-zinc-500" />
                     </Link>
                 </div>
@@ -132,7 +132,7 @@ export default function ImportModal({ lang }: ImportModalProps) {
                     {/* File Upload */}
                     <div
                         onClick={() => fileInputRef.current?.click()}
-                        className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${file ? 'border-[#6866D6] bg-[#6866D6]/5 dark:bg-[#6866D6]/20' : 'border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-600'
+                        className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${file ? 'border-[#6866D6] bg-[#6866D6]/5' : 'border-zinc-300 hover:border-zinc-400'
                             }`}
                     >
                         <input
@@ -145,7 +145,7 @@ export default function ImportModal({ lang }: ImportModalProps) {
                         {file ? (
                             <>
                                 <FileJson className="w-10 h-10 text-[#6866D6] mb-2" />
-                                <span className="font-medium text-sm text-zinc-900 dark:text-zinc-100">{file.name}</span>
+                                <span className="font-medium text-sm text-zinc-900">{file.name}</span>
                                 <span className="text-xs text-zinc-500">{(file.size / 1024).toFixed(1)} KB</span>
                             </>
                         ) : (
@@ -157,7 +157,7 @@ export default function ImportModal({ lang }: ImportModalProps) {
                     </div>
 
                     {error && (
-                        <div className="flex items-center gap-2 text-red-500 text-sm bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
+                        <div className="flex items-center gap-2 text-red-500 text-sm bg-red-50 p-3 rounded-lg">
                             <AlertCircle className="w-4 h-4" />
                             {error}
                         </div>
@@ -166,7 +166,7 @@ export default function ImportModal({ lang }: ImportModalProps) {
                     {/* Checkboxes */}
                     {previewData && !error && (
                         <div className="space-y-3 animate-in fade-in slide-in-from-top-4 duration-300">
-                            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300 block">
+                            <label className="text-sm font-medium text-zinc-700 block">
                                 {t.selectLabel}
                             </label>
                             <div className="grid grid-cols-1 gap-2">
@@ -181,12 +181,12 @@ export default function ImportModal({ lang }: ImportModalProps) {
                                         <div
                                             key={key}
                                             onClick={() => available && toggle(key as keyof typeof selected)}
-                                            className={`flex items-center gap-3 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 transition-colors ${available
-                                                ? 'cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50'
-                                                : 'opacity-50 cursor-not-allowed bg-zinc-50 dark:bg-zinc-900'
+                                            className={`flex items-center gap-3 p-3 rounded-lg border border-zinc-200 transition-colors ${available
+                                                ? 'cursor-pointer hover:bg-zinc-50'
+                                                : 'opacity-50 cursor-not-allowed bg-zinc-50'
                                                 }`}
                                         >
-                                            <div className={`${selected[key as keyof typeof selected] ? 'text-[#6866D6]' : 'text-zinc-300 dark:text-zinc-600'}`}>
+                                            <div className={`${selected[key as keyof typeof selected] ? 'text-[#6866D6]' : 'text-zinc-300'}`}>
                                                 {selected[key as keyof typeof selected] ? <CheckSquare className="w-5 h-5" /> : <Square className="w-5 h-5" />}
                                             </div>
                                             <span className="text-sm font-medium">{label}</span>
@@ -200,10 +200,10 @@ export default function ImportModal({ lang }: ImportModalProps) {
                 </div>
 
                 {/* Footer */}
-                <div className="p-4 border-t border-zinc-100 dark:border-zinc-800 flex justify-end gap-3 bg-zinc-50/50 dark:bg-zinc-900/50">
+                <div className="p-4 border-t border-zinc-100 flex justify-end gap-3 bg-zinc-50/50">
                     <Link
                         href="/"
-                        className="px-4 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+                        className="px-4 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 rounded-lg transition-colors"
                     >
                         {t.cancelBtn}
                     </Link>

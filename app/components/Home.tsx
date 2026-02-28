@@ -1217,7 +1217,7 @@ export default function Home({ lang }: HomeProps) {
                                         if (e.nativeEvent.stopImmediatePropagation) e.nativeEvent.stopImmediatePropagation();
                                         moveBlockUp(block.id);
                                     }}
-                                    className="text-gray-400 hover:text-[#6866D6] dark:hover:text-white transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-default p-1 bg-white/50 dark:bg-black/20 rounded shadow-sm hover:shadow transition-all border border-black/5"
+                                    className="text-gray-400 hover:text-[#6866D6] transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-default p-1 bg-white/50 rounded shadow-sm hover:shadow transition-all border border-black/5"
                                     disabled={blocks.findIndex(b => b.id === block.id) <= 0}
                                     title={t.moveUp || "Move Up"}
                                 >
@@ -1229,7 +1229,7 @@ export default function Home({ lang }: HomeProps) {
                                         if (e.nativeEvent.stopImmediatePropagation) e.nativeEvent.stopImmediatePropagation();
                                         moveBlockDown(block.id);
                                     }}
-                                    className="text-gray-400 hover:text-[#6866D6] dark:hover:text-white transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-default p-1 bg-white/50 dark:bg-black/20 rounded shadow-sm hover:shadow transition-all border border-black/5"
+                                    className="text-gray-400 hover:text-[#6866D6] transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-default p-1 bg-white/50 rounded shadow-sm hover:shadow transition-all border border-black/5"
                                     disabled={blocks.findIndex(b => b.id === block.id) >= blocks.length - 1}
                                     title={t.moveDown || "Move Down"}
                                 >

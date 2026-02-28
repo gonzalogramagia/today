@@ -211,9 +211,9 @@ export default function DailyTasks() {
 
     return (
         <div ref={containerRef} className={`fixed left-9 top-48 z-40 hidden lg:flex flex-col gap-4 w-64 transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none select-none'}`}>
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-lg p-4 transition-all">
+            <div className="bg-white border border-zinc-200 rounded-lg shadow-lg p-4 transition-all">
                 <div className="group/header flex items-center justify-between mb-5" onClick={() => editingId && cancelEditing()}>
-                    <h3 className="font-medium text-zinc-900 dark:text-zinc-100 text-sm flex items-center justify-start gap-2 relative group/tooltip w-max cursor-default">
+                    <h3 className="font-medium text-zinc-900 text-sm flex items-center justify-start gap-2 relative group/tooltip w-max cursor-default">
                         <span className="text-base select-none">
                             🕒
                         </span>
@@ -237,7 +237,7 @@ export default function DailyTasks() {
                                 setUrlValue('')
                             }
                         }}
-                        className={`p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer ${isAdding ? 'text-red-500 opacity-100' : 'text-zinc-500 opacity-0 group-hover/header:opacity-100'} ${editingId ? 'hidden' : ''} transition-opacity`}
+                        className={`p-1 rounded hover:bg-zinc-100 transition-colors cursor-pointer ${isAdding ? 'text-red-500 opacity-100' : 'text-zinc-500 opacity-0 group-hover/header:opacity-100'} ${editingId ? 'hidden' : ''} transition-opacity`}
                     >
                         {isAdding ? <X size={16} /> : <Plus size={16} />}
                     </button>
@@ -267,7 +267,7 @@ export default function DailyTasks() {
                                             onChange={(e) => setInputValue(e.target.value)}
                                             placeholder={isEnglish ? 'Task name...' : 'Nombre de tarea...'}
                                             autoFocus
-                                            className="flex-1 bg-zinc-50 dark:bg-zinc-800 border-none rounded text-xs px-2 py-1 focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-600 outline-none text-zinc-800 dark:text-zinc-200 mx-[1px]"
+                                            className="flex-1 bg-zinc-50 border-none rounded text-xs px-2 py-1 focus:ring-1 focus:ring-zinc-300 outline-none text-zinc-800 mx-[1px]"
                                         />
                                         <button
                                             type="submit"
@@ -280,7 +280,7 @@ export default function DailyTasks() {
                                         <button
                                             type="button"
                                             onClick={cancelEditing}
-                                            className="rounded px-1.5 py-1 transition-colors cursor-pointer bg-zinc-200 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-red-100 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400 mr-[1px]"
+                                            className="rounded px-1.5 py-1 transition-colors cursor-pointer bg-zinc-200 text-zinc-500 hover:bg-red-100 hover:text-red-500 mr-[1px]"
                                         >
                                             <X size={14} />
                                         </button>
@@ -290,24 +290,24 @@ export default function DailyTasks() {
                                         value={urlValue}
                                         onChange={(e) => setUrlValue(e.target.value)}
                                         placeholder={isEnglish ? 'Optional URL...' : 'URL opcional...'}
-                                        className="w-full bg-zinc-50 dark:bg-zinc-800 border-none rounded text-xs px-2 py-1 focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-600 outline-none text-zinc-800 dark:text-zinc-200 text-[10px] mx-[1px]"
+                                        className="w-full bg-zinc-50 border-none rounded text-xs px-2 py-1 focus:ring-1 focus:ring-zinc-300 outline-none text-zinc-800 text-[10px] mx-[1px]"
                                     />
                                 </form>
                             ) : (
                                 <div className={`flex items-center gap-2 text-sm ${editingId && editingId !== task.id ? 'opacity-50 grayscale pointer-events-none' : ''}`}>
                                     <button
                                         onClick={() => toggleTask(task.id)}
-                                        className={`flex-shrink-0 transition-colors cursor-pointer ${task.completed ? 'text-green-500' : 'text-zinc-300 dark:text-zinc-600 hover:text-zinc-400'}`}
+                                        className={`flex-shrink-0 transition-colors cursor-pointer ${task.completed ? 'text-green-500' : 'text-zinc-300 hover:text-zinc-400'}`}
                                     >
                                         {task.completed ? <CheckSquare size={16} /> : <Square size={16} />}
                                     </button>
-                                    <span className={`flex-1 break-words transition-all ${task.completed ? 'line-through text-zinc-400 dark:text-zinc-600' : 'text-zinc-700 dark:text-zinc-300'}`}>
+                                    <span className={`flex-1 break-words transition-all ${task.completed ? 'line-through text-zinc-400' : 'text-zinc-700'}`}>
                                         {task.url ? (
                                             <a
                                                 href={task.url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="hover:underline decoration-zinc-400 dark:decoration-zinc-600"
+                                                className="hover:underline decoration-zinc-400"
                                                 onClick={(e) => e.stopPropagation()}
                                             >
                                                 {task.text}
@@ -346,7 +346,7 @@ export default function DailyTasks() {
                     ))}
 
                     {tasks.length === 0 && (
-                        <div className="text-xs text-zinc-400 dark:text-zinc-600 text-center py-4 italic">
+                        <div className="text-xs text-zinc-400 text-center py-4 italic">
                             {isEnglish ? 'No tasks for today' : 'No hay tareas para hoy'}
                         </div>
                     )}
@@ -361,7 +361,7 @@ export default function DailyTasks() {
                                 onChange={(e) => setInputValue(e.target.value)}
                                 placeholder={isEnglish ? 'New task...' : 'Nueva tarea...'}
                                 autoFocus
-                                className="flex-1 bg-zinc-50 dark:bg-zinc-800 border-none rounded text-xs px-2 py-1.5 focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-600 outline-none text-zinc-800 dark:text-zinc-200 mx-[1px]"
+                                className="flex-1 bg-zinc-50 border-none rounded text-xs px-2 py-1.5 focus:ring-1 focus:ring-zinc-300 outline-none text-zinc-800 mx-[1px]"
                             />
                             <button
                                 type="submit"
@@ -378,7 +378,7 @@ export default function DailyTasks() {
                                     setInputValue('')
                                     setUrlValue('')
                                 }}
-                                className="rounded p-1.5 transition-colors cursor-pointer bg-zinc-200 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-red-100 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400 mr-[1px]"
+                                className="rounded p-1.5 transition-colors cursor-pointer bg-zinc-200 text-zinc-500 hover:bg-red-100 hover:text-red-500 mr-[1px]"
                             >
                                 <X size={14} />
                             </button>
@@ -388,7 +388,7 @@ export default function DailyTasks() {
                             value={urlValue}
                             onChange={(e) => setUrlValue(e.target.value)}
                             placeholder={isEnglish ? 'Optional URL...' : 'URL opcional...'}
-                            className="w-full bg-zinc-50 dark:bg-zinc-800 border-none rounded text-xs px-2 py-1.5 focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-600 outline-none text-zinc-800 dark:text-zinc-200 text-xs mx-[1px]"
+                            className="w-full bg-zinc-50 border-none rounded text-xs px-2 py-1.5 focus:ring-1 focus:ring-zinc-300 outline-none text-zinc-800 text-xs mx-[1px]"
                         />
                     </form>
                 )}

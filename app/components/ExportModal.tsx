@@ -128,15 +128,15 @@ export default function ExportModal({ lang }: ExportModalProps) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-xl shadow-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="bg-white w-full max-w-md rounded-xl shadow-2xl border border-zinc-200 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
 
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-zinc-100 dark:border-zinc-800">
+                <div className="flex items-center justify-between p-4 border-b border-zinc-100">
                     <h1 className="text-lg font-semibold flex items-center gap-2">
                         <FileUp className="w-5 h-5" />
                         {t.title}
                     </h1>
-                    <Link href="/" className="p-1 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                    <Link href="/" className="p-1 rounded-full hover:bg-zinc-100 transition-colors">
                         <X className="w-5 h-5 text-zinc-500" />
                     </Link>
                 </div>
@@ -146,21 +146,21 @@ export default function ExportModal({ lang }: ExportModalProps) {
 
                     {/* Filename Input */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                        <label className="text-sm font-medium text-zinc-700">
                             {t.filenameLabel}
                         </label>
                         <div className="flex items-center">
-                            <div className="bg-zinc-100 dark:bg-zinc-800 border border-r-0 border-zinc-200 dark:border-zinc-700 rounded-l-md px-3 py-2 text-sm text-zinc-500">
+                            <div className="bg-zinc-100 border border-r-0 border-zinc-200 rounded-l-md px-3 py-2 text-sm text-zinc-500">
                                 home-
                             </div>
                             <input
                                 type="text"
                                 value={filename}
                                 onChange={(e) => setFilename(e.target.value)}
-                                className="flex-1 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6866D6] dark:text-white"
+                                className="flex-1 bg-zinc-50 border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6866D6]"
                                 placeholder="backup"
                             />
-                            <div className="bg-zinc-100 dark:bg-zinc-800 border border-l-0 border-zinc-200 dark:border-zinc-700 rounded-r-md px-3 py-2 text-sm text-zinc-500">
+                            <div className="bg-zinc-100 border border-l-0 border-zinc-200 rounded-r-md px-3 py-2 text-sm text-zinc-500">
                                 .json
                             </div>
                         </div>
@@ -168,7 +168,7 @@ export default function ExportModal({ lang }: ExportModalProps) {
 
                     {/* Checkboxes */}
                     <div className="space-y-3">
-                        <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300 block">
+                        <label className="text-sm font-medium text-zinc-700 block">
                             {t.selectLabel}
                         </label>
                         <div className="grid grid-cols-1 gap-2">
@@ -181,9 +181,9 @@ export default function ExportModal({ lang }: ExportModalProps) {
                                 <div
                                     key={key}
                                     onClick={() => toggle(key as keyof typeof selected)}
-                                    className="flex items-center gap-3 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
+                                    className="flex items-center gap-3 p-3 rounded-lg border border-zinc-200 cursor-pointer hover:bg-zinc-50 transition-colors"
                                 >
-                                    <div className={`${selected[key as keyof typeof selected] ? 'text-[#6866D6]' : 'text-zinc-300 dark:text-zinc-600'}`}>
+                                    <div className={`${selected[key as keyof typeof selected] ? 'text-[#6866D6]' : 'text-zinc-300'}`}>
                                         {selected[key as keyof typeof selected] ? <CheckSquare className="w-5 h-5" /> : <Square className="w-5 h-5" />}
                                     </div>
                                     <span className="text-sm font-medium">{label}</span>
@@ -194,10 +194,10 @@ export default function ExportModal({ lang }: ExportModalProps) {
                 </div>
 
                 {/* Footer */}
-                <div className="p-4 border-t border-zinc-100 dark:border-zinc-800 flex justify-end gap-3 bg-zinc-50/50 dark:bg-zinc-900/50">
+                <div className="p-4 border-t border-zinc-100 flex justify-end gap-3 bg-zinc-50/50">
                     <Link
                         href="/"
-                        className="px-4 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+                        className="px-4 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 rounded-lg transition-colors"
                     >
                         {t.cancelBtn}
                     </Link>
