@@ -1131,15 +1131,15 @@ export default function Home({ lang }: HomeProps) {
                                     {editingBlockId !== block.id && (
                                         block.userTag ? (
                                             <span
-                                                onDoubleClick={() => startEditing(block, 'tag')}
-                                                className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-black/10 text-zinc-700 uppercase tracking-wider border border-black/10 whitespace-nowrap transition-colors"
+                                                onClick={() => startEditing(block, 'tag')}
+                                                className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-black/10 text-zinc-700 uppercase tracking-wider border border-black/10 whitespace-nowrap transition-colors cursor-pointer hover:bg-black/20"
                                             >
                                                 #{block.userTag}
                                             </span>
                                         ) : (
                                             <span
-                                                onDoubleClick={() => startEditing(block, 'tag')}
-                                                className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-zinc-400/10 text-zinc-400 uppercase tracking-widest border border-black/5 whitespace-nowrap italic transition-colors"
+                                                onClick={() => startEditing(block, 'tag')}
+                                                className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-zinc-400/10 text-zinc-400 uppercase tracking-widest border border-black/5 whitespace-nowrap italic transition-colors cursor-pointer hover:bg-zinc-400/20"
                                             >
                                                 {t.noTag}
                                             </span>
@@ -1206,7 +1206,7 @@ export default function Home({ lang }: HomeProps) {
                                             );
                                         })}
 
-                                        {/* Action Button: Attach (Only if NO non-image files exist) */}
+                                        {/* Action Button: Attach (Only when editing and no non-image files exist) */}
                                         {editingBlockId === block.id && (block.attachments || []).filter(a => !a.type.startsWith('image/') && !a.name.toLowerCase().endsWith('.jpg') && !a.name.toLowerCase().endsWith('.jpeg')).length === 0 && (
                                             <div className="flex items-center">
                                                 <button
@@ -1226,35 +1226,53 @@ export default function Home({ lang }: HomeProps) {
                                                         )}
                                                     </span>
                                                 </button>
-                                                <input
-                                                    type="file"
-                                                    ref={el => { fileInputRefs.current[block.id] = el }}
-                                                    className="hidden"
-                                                    accept={(() => {
-                                                        const currentLegacy = block.images?.length || 0;
-                                                        const currentAttach = (block.attachments || []).filter(a => a.type.startsWith('image/') || a.name.toLowerCase().endsWith('.jpg') || a.name.toLowerCase().endsWith('.jpeg')).length;
-                                                        const totalImages = currentLegacy + currentAttach;
-                                                        const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-                                                        const maxImgs = isMobile ? 2 : 4;
-
-                                                        if (totalImages >= maxImgs) {
-                                                            // Limit is reached, only accept non-images (excluding typical image mime types)
-                                                            return ".pdf,.doc,.docx,.txt,.mp4,.zip,.rar,.xls,.xlsx";
-                                                        }
-                                                        return undefined; // Accept any
-                                                    })()}
-                                                    multiple
-                                                    onChange={(e) => {
-                                                        handleFileUpload(block.id, e.target.files);
-                                                        e.target.value = '';
-                                                    }}
-                                                />
                                             </div>
                                         )}
                                     </div>
-
                                 </div>
                             </div>
+
+                            {/* Floating Attach Button (Corner) - Only in view mode */}
+                            {editingBlockId !== block.id && (
+                                <button
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        startEditing(block, 'content');
+                                        setTimeout(() => {
+                                            fileInputRefs.current[block.id]?.click();
+                                        }, 0);
+                                    }}
+                                    className="absolute bottom-4 right-4 p-1.5 bg-white/80 hover:bg-white text-zinc-500 hover:text-[#6866D6] rounded-md shadow-sm border border-black/5 opacity-0 group-hover/note:opacity-100 transition-all cursor-pointer z-10 active:scale-95"
+                                    title={lang === 'es' ? 'Adjuntar archivo' : 'Attach file'}
+                                >
+                                    <Paperclip size={14} />
+                                </button>
+                            )}
+
+                            {/* Hidden File Input (Always present per block) */}
+                            <input
+                                type="file"
+                                ref={el => { fileInputRefs.current[block.id] = el }}
+                                className="hidden"
+                                accept={(() => {
+                                    const currentLegacy = block.images?.length || 0;
+                                    const currentAttach = (block.attachments || []).filter(a => a.type.startsWith('image/') || a.name.toLowerCase().endsWith('.jpg') || a.name.toLowerCase().endsWith('.jpeg')).length;
+                                    const totalImages = currentLegacy + currentAttach;
+                                    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+                                    const maxImgs = isMobile ? 2 : 4;
+
+                                    if (totalImages >= maxImgs) {
+                                        return ".pdf,.doc,.docx,.txt,.mp4,.zip,.rar,.xls,.xlsx";
+                                    }
+                                    return undefined;
+                                })()}
+                                multiple
+                                onChange={(e) => {
+                                    handleFileUpload(block.id, e.target.files);
+                                    e.target.value = '';
+                                }}
+                            />
                         </div>
 
                         {/* Note Ordering Arrows - Positioned to the right outside the block */}
@@ -1287,34 +1305,35 @@ export default function Home({ lang }: HomeProps) {
                             </div>
                         )}
                     </div>
-                ))
-                }
+                ))}
             </div>
 
             {/* Floating Links Component */}
             <FloatingLinks lang={lang} />
 
             {/* Image Modal */}
-            {imageModalUrl && (
-                <div
-                    className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 md:p-10 animate-in fade-in duration-200"
-                    onClick={() => setImageModalUrl(null)}
-                >
-                    <button
-                        className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors cursor-pointer"
+            {
+                imageModalUrl && (
+                    <div
+                        className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 md:p-10 animate-in fade-in duration-200"
                         onClick={() => setImageModalUrl(null)}
                     >
-                        <X size={32} />
-                    </button>
-                    <img
-                        src={imageModalUrl}
-                        alt="Preview"
-                        className="max-w-full max-h-full object-contain rounded shadow-2xl animate-in zoom-in-95 duration-200"
-                        onClick={(e) => e.stopPropagation()}
-                    />
-                </div>
-            )}
-        </section>
+                        <button
+                            className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors cursor-pointer"
+                            onClick={() => setImageModalUrl(null)}
+                        >
+                            <X size={32} />
+                        </button>
+                        <img
+                            src={imageModalUrl}
+                            alt="Preview"
+                            className="max-w-full max-h-full object-contain rounded shadow-2xl animate-in zoom-in-95 duration-200"
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                    </div>
+                )
+            }
+        </section >
     );
 }
 
