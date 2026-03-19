@@ -475,8 +475,41 @@ export default function Home({ lang }: HomeProps) {
             }
         }
         if (files.length > 0) {
-            // Create a fake FileList-like object or just pass the array
             handleFileUpload(blockId, files as any);
+            return;
+        }
+
+        const text = e.clipboardData.getData('text');
+        if (text) {
+            const isUrl = /^(https?:\/\/|www\.)[\w\-.:/?#@!$&'()*+,;=%~]+$/i.test(text.trim());
+            const target = e.target as HTMLTextAreaElement | HTMLInputElement;
+
+            if (isUrl && target && (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT')) {
+                const start = target.selectionStart;
+                const end = target.selectionEnd;
+
+                if (start !== null && end !== null && start !== end) {
+                    e.preventDefault();
+                    // Determine which state to update
+                    const inputType = target.getAttribute('data-input-type');
+                    if (inputType === 'content') {
+                        const selectedText = editingContent.substring(start, end);
+                        const newText = `[${selectedText}](${text.trim()})`;
+                        const updated = editingContent.substring(0, start) + newText + editingContent.substring(end);
+                        setEditingContent(updated);
+                    } else if (inputType === 'title') {
+                        const selectedText = editingTitle.substring(start, end);
+                        const newText = `[${selectedText}](${text.trim()})`;
+                        const updated = editingTitle.substring(0, start) + newText + editingTitle.substring(end);
+                        setEditingTitle(updated);
+                    } else if (inputType === 'tag') {
+                        const selectedText = editingTag.substring(start, end);
+                        const newText = `[${selectedText}](${text.trim()})`;
+                        const updated = editingTag.substring(0, start) + newText + editingTag.substring(end);
+                        setEditingTag(updated);
+                    }
+                }
+            }
         }
     };
 
@@ -538,25 +571,40 @@ export default function Home({ lang }: HomeProps) {
 
         let formatted = escapeHtml(text);
 
-        // 1. Temporarily replace URLs with placeholders to avoid formatting them
+        // 1. Temporarily replace Markdown Links [text](url)
+        const mdLinks: string[] = [];
+        const mdLinkRegex = /\[([^\]]+)\]\((https?:\/\/[\w\-.:/?#@!$&'()*+,;=%~]+|www\.[\w\-.:/?#@!$&'()*+,;=%~]+)\)/g;
+        formatted = formatted.replace(mdLinkRegex, (_, text, url) => {
+            const fullUrl = url.startsWith("http") ? url : `https://${url}`;
+            mdLinks.push(`<a href="${fullUrl}" target="_blank" rel="noopener noreferrer" class="font-bold text-[#6866D6] hover:underline">${text}</a>`);
+            return `@@@MDLINK${mdLinks.length - 1}@@@`;
+        });
+
+        // 2. Temporarily replace remaining plain URLs with placeholders
         const urls: string[] = [];
         const urlRegex = /((https?:\/\/|www\.)[\w\-.:/?#@!$&'()*+,;=%~]+)/g;
         formatted = formatted.replace(urlRegex, (match) => {
             urls.push(match);
-            return `LINKTOKEN${urls.length - 1}TOKEN`;
+            return `@@@LINK${urls.length - 1}@@@`;
         });
 
-        // 2. Bold: *texto* -> <strong>texto</strong>
+        // 3. Bold: *texto* -> <strong>texto</strong>
         formatted = formatted.replace(/\*([^*]+)\*/g, "<strong>$1</strong>");
 
-        // 3. Italics: _texto_ -> <em>texto</em>
+        // 4. Italics: _texto_ -> <em>texto</em>
         formatted = formatted.replace(/_([^_]+)_/g, "<em>$1</em>");
 
-        // 4. Restore URLs and wrap them in <a> tags
-        formatted = formatted.replace(/LINKTOKEN(\d+)TOKEN/g, (_, idx) => {
+        // 5. Restore URLs and wrap them in <a> tags
+        formatted = formatted.replace(/@@@LINK(\d+)@@@/g, (_, idx) => {
             const match = urls[parseInt(idx)];
+            if (!match) return "";
             const url = match.startsWith("http") ? match : `https://${match}`;
-            return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-[#6866D6] hover:underline">${match}</a>`;
+            return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="font-bold text-[#6866D6] hover:underline">${match}</a>`;
+        });
+
+        // 6. Restore MD Links
+        formatted = formatted.replace(/@@@MDLINK(\d+)@@@/g, (_, idx) => {
+            return mdLinks[parseInt(idx)] || "";
         });
 
         return formatted;
@@ -878,6 +926,7 @@ export default function Home({ lang }: HomeProps) {
                                         onKeyDown={(e) => handleKeyDown(e, block.id)}
                                         onPaste={(e) => handlePaste(e, block.id)}
                                         placeholder={t.placeholder}
+                                        data-input-type="content"
                                         className="w-full min-h-[160px] p-3 border border-black/10 rounded-md resize-y bg-black/10 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50 whitespace-pre-wrap break-words overflow-auto"
                                     />
                                     {showEmojiPicker && filteredEmojis.length > 0 && (
