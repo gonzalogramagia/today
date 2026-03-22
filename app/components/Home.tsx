@@ -87,13 +87,11 @@ export default function Home({ lang }: HomeProps) {
   // Cargar datos del localStorage al montar el componente
   useEffect(() => {
     const savedBlocks = localStorage.getItem("localhost-blocks");
-
     if (savedBlocks) {
       try {
         const parsed = JSON.parse(savedBlocks);
         const migrated = (parsed as any[]).map((b) => {
-          const tag =
-            b && typeof b.tag === "string" && b.tag ? b.tag : generateId();
+          const tag = b && typeof b.tag === "string" && b.tag ? b.tag : generateId();
           const color = b && b.color ? b.color : "#FEFCE8";
           if (
             b &&
@@ -104,15 +102,20 @@ export default function Home({ lang }: HomeProps) {
           }
           return { ...b, tag, color };
         });
-        setBlocks(migrated as TextBlock[]);
+        // Solo setBlocks si hay datos, nunca sobreescribir con vacío
+        if (Array.isArray(migrated) && migrated.length > 0) {
+          setBlocks(migrated as TextBlock[]);
+        }
       } catch (e) {
         const raw = JSON.parse(savedBlocks) as any[];
-        const ensured = raw.map((b) => ({
-          ...b,
-          tag: b && b.tag ? b.tag : generateId(),
-          color: b && b.color ? b.color : "#FEFCE8",
-        }));
-        setBlocks(ensured as TextBlock[]);
+        if (Array.isArray(raw) && raw.length > 0) {
+          const ensured = raw.map((b) => ({
+            ...b,
+            tag: b && b.tag ? b.tag : generateId(),
+            color: b && b.color ? b.color : "#FEFCE8",
+          }));
+          setBlocks(ensured as TextBlock[]);
+        }
       }
     }
 
@@ -128,7 +131,10 @@ export default function Home({ lang }: HomeProps) {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === "localhost-blocks" && e.newValue) {
         try {
-          setBlocks(JSON.parse(e.newValue));
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setBlocks(parsed);
+          }
         } catch (err) {
           console.error("Failed to sync blocks", err);
         }
@@ -1012,7 +1018,7 @@ export default function Home({ lang }: HomeProps) {
                     data-input-type="title"
                     className={`w-full sm:flex-1 text-lg font-semibold px-2 py-1 border-b focus:outline-none focus:border-blue-500/50 rounded-t-md transition-all bg-black/10 border-black/10 text-zinc-900 shadow-sm`}
                     style={{ borderBottomColor: "rgba(0,0,0,0.1)" }}
-                    placeholder={`Nota #${block.tag}`}
+                    placeholder={t.blockNamePlaceholder}
                   />
                 ) : (
                   (() => {
@@ -1031,7 +1037,7 @@ export default function Home({ lang }: HomeProps) {
                           style={{ borderBottomColor: "rgba(0,0,0,0.1)" }}
                         >
                           {block.title || (
-                            <span className="text-zinc-400 select-none">{`Nota #${block.tag}`}</span>
+                            <span className="text-zinc-400 select-none">{`${lang === "en" ? "Note" : "Nota"} #${block.tag}`}</span>
                           )}
                         </a>
                       );
@@ -1043,7 +1049,7 @@ export default function Home({ lang }: HomeProps) {
                           onClick={() => startEditing(block, "title")}
                         >
                           {block.title || (
-                            <span className="text-zinc-400 select-none">{`Nota #${block.tag}`}</span>
+                            <span className="text-zinc-400 select-none">{`${lang === "en" ? "Note" : "Nota"} #${block.tag}`}</span>
                           )}
                         </span>
                       );
