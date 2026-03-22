@@ -26,20 +26,18 @@ export default function FloatingLinks({ lang }: FloatingLinksProps) {
     const router = useRouter();
     const pathname = usePathname();
 
-    // Determine external URL for emojis
+    // Actualizar URLs de los botones
     const emojisUrl = lang === "en"
-        ? "https://emojis.gonzalogramagia.com/en"
-        : "https://emojis.gonzalogramagia.com";
+        ? "https://milemojis.com/en"
+        : "https://milemojis.com";
 
-    // Determine external URL for music
     const musicUrl = lang === "en"
-        ? "https://music.gonzalogramagia.com/en"
-        : "https://music.gonzalogramagia.com";
+        ? "https://bien.estate/en"
+        : "https://bien.estate";
 
-    // Determine external URL for play
     const playUrl = lang === "en"
-        ? "https://play.gonzalogramagia.com/en"
-        : "https://play.gonzalogramagia.com";
+        ? "https://antipala.pro/en"
+        : "https://antipala.pro";
 
     const exportPath = lang === 'en' ? '/export' : '/exportar';
     const importPath = lang === 'en' ? '/import' : '/importar';
@@ -103,27 +101,27 @@ export default function FloatingLinks({ lang }: FloatingLinksProps) {
                 <a
                     href={emojisUrl}
                     className="p-3 bg-white border border-zinc-200 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 group"
-                    aria-label={t.goToEmojis}
-                    title={t.goToEmojis}
-                >
-                    <Smile className="w-6 h-6 text-gray-900 group-hover:text-yellow-500 transition-colors" />
-                </a>
-                <a
-                    href={musicUrl}
-                    className="p-3 bg-white border border-zinc-200 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 group cursor-pointer"
-                    aria-label={t.goToMusic}
-                    title={t.goToMusic}
-                >
-                    <Music className="w-6 h-6 text-zinc-900 group-hover:text-yellow-500 transition-colors" />
-                </a>
-                <a
-                    href={playUrl}
-                    className="p-3 bg-white border border-zinc-200 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 group cursor-pointer"
-                    aria-label={t.goToPlay}
-                    title={t.goToPlay}
-                >
-                    <Joystick className="w-6 h-6 text-gray-900 group-hover:text-yellow-500 transition-colors" />
-                </a>
+                        aria-label={t.goToEmojis}
+                        title={t.goToEmojis}
+                    >
+                        <Smile className="w-6 h-6 text-gray-900 group-hover:text-yellow-500 transition-colors" />
+                    </a>
+                    <a
+                        href={musicUrl}
+                        className="p-3 bg-white border border-zinc-200 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 group cursor-pointer"
+                        aria-label={t.goToMusic}
+                        title={t.goToMusic}
+                    >
+                        <Music className="w-6 h-6 text-zinc-900 group-hover:text-yellow-500 transition-colors" />
+                    </a>
+                    <a
+                        href={playUrl}
+                        className="p-3 bg-white border border-zinc-200 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 group cursor-pointer"
+                        aria-label={t.goToPlay}
+                        title={t.goToPlay}
+                    >
+                        <Joystick className="w-6 h-6 text-gray-900 group-hover:text-yellow-500 transition-colors" />
+                    </a>
             </div>
         </>
     );

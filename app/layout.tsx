@@ -1,32 +1,34 @@
-import './global.css'
-import ShortcutFloater from './components/ShortcutFloater'
-import DailyTasks from './components/DailyTasks'
-import Countdown from './components/Countdown'
-import type { Metadata } from 'next'
-import { GeistSans } from 'geist/font/sans'
-import { GeistMono } from 'geist/font/mono'
+import "./global.css";
+import ShortcutFloater from "./components/ShortcutFloater";
+import DailyTasks from "./components/DailyTasks";
+import Countdown from "./components/Countdown";
+import type { Metadata } from "next";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 
-const baseUrl = 'https://hoy.today'
+const baseUrl = "https://hoy.today";
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: 'Today',
-    template: '%s | Today',
+    default: "Hoy & Today",
+    template: "%s | Hoy & Today",
   },
-  description: 'Your personal space for productivity. Manage notes, daily tasks, and countdowns—all saved locally in your browser.',
+  description:
+    "Your personal space for productivity. Manage notes, daily tasks, and countdowns—all saved locally in your browser.",
   icons: {
-    icon: '/favicon.ico?v=2',
-    shortcut: '/favicon.ico?v=2',
-    apple: '/apple-touch-icon.png?v=2',
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+    apple: "/favicon.svg",
   },
   openGraph: {
-    title: 'Today',
-    description: 'Your personal space for productivity. Manage notes, daily tasks, and countdowns—all saved locally in your browser.',
+    title: "Hoy & Today",
+    description:
+      "Your personal space for productivity. Manage notes, daily tasks, and countdowns—all saved locally in your browser.",
     url: baseUrl,
-    siteName: 'Today',
-    locale: 'en_US',
-    type: 'website',
+    siteName: "Hoy & Today",
+    locale: "en_US",
+    type: "website",
   },
   robots: {
     index: true,
@@ -34,30 +36,29 @@ export const metadata: Metadata = {
     googleBot: {
       index: true,
       follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
     },
   },
-}
+};
 
-const cx = (...classes) => classes.filter(Boolean).join(' ')
+const cx = (...classes) => classes.filter(Boolean).join(" ");
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html
       lang="en"
       className={cx(
-        'text-black bg-white',
+        "text-black bg-white",
         GeistSans.variable,
-        GeistMono.variable
+        GeistMono.variable,
       )}
     >
-
       <body className="antialiased" cz-shortcut-listen="true">
         <div
           className="fixed inset-0 z-[-1] bg-cover bg-center bg-fixed bg-no-repeat opacity-5"
@@ -66,10 +67,8 @@ export default function RootLayout({
         <ShortcutFloater />
         <DailyTasks />
         <Countdown />
-        <div className="pt-0 lg:pt-8">
-          {children}
-        </div>
+        <div className="pt-0 lg:pt-8">{children}</div>
       </body>
     </html>
-  )
+  );
 }
