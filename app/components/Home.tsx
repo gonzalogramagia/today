@@ -105,6 +105,18 @@ export default function Home({ lang }: HomeProps) {
         // Solo setBlocks si hay datos, nunca sobreescribir con vacío
         if (Array.isArray(migrated) && migrated.length > 0) {
           setBlocks(migrated as TextBlock[]);
+        } else {
+          // Si no hay notas, crear una vacía
+          const id = generateId();
+          setBlocks([
+            {
+              id,
+              tag: generateId(),
+              title: "",
+              content: "",
+              color: "#FEFCE8",
+            },
+          ]);
         }
       } catch (e) {
         const raw = JSON.parse(savedBlocks) as any[];
@@ -115,8 +127,32 @@ export default function Home({ lang }: HomeProps) {
             color: b && b.color ? b.color : "#FEFCE8",
           }));
           setBlocks(ensured as TextBlock[]);
+        } else {
+          // Si no hay notas, crear una vacía
+          const id = generateId();
+          setBlocks([
+            {
+              id,
+              tag: generateId(),
+              title: "",
+              content: "",
+              color: "#FEFCE8",
+            },
+          ]);
         }
       }
+    } else {
+      // Si no hay nada en localStorage, crear una nota vacía
+      const id = generateId();
+      setBlocks([
+        {
+          id,
+          tag: generateId(),
+          title: "",
+          content: "",
+          color: "#FEFCE8",
+        },
+      ]);
     }
 
     const savedTagColors = localStorage.getItem("localhost-tag-colors");
