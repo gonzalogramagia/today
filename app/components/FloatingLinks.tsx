@@ -116,7 +116,7 @@ export default function FloatingLinks({ lang }: FloatingLinksProps) {
           aria-label={t.goToMusic}
           title={t.goToMusic}
         >
-          <Disc3 className="w-6 h-6 text-zinc-900 group-hover:text-yellow-500 transition-colors" />
+          <Disc3 className="w-6 h-6 text-zinc-900 group-hover:text-yellow-500 transition-colors animate-spin-slow" />
         </a>
         <a
           href={playUrl}
