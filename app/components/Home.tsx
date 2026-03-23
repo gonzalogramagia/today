@@ -787,6 +787,21 @@ export default function Home({ lang }: HomeProps) {
     setCreatedBlockId(id);
   };
 
+  const addBlockTop = () => {
+    const id = generateId();
+    const blockId = generateId();
+    const newBlock: TextBlock = {
+      id,
+      tag: blockId,
+      userTag: selectedTag || undefined,
+      title: "",
+      content: "",
+      color: selectedTag ? tagColors[selectedTag] || "#FEFCE8" : "#FEFCE8",
+    };
+    setBlocks((prev) => [newBlock, ...prev]);
+    setCreatedBlockId(id);
+  };
+
   const updateBlock = (
     id: string,
     content: string,
@@ -919,7 +934,7 @@ export default function Home({ lang }: HomeProps) {
         {/* Header (Notes + Clock + Desktop Add Button) */}
         <Header
           lang={lang === "es" ? "es" : "en"}
-          onAddNote={addBlock}
+          onAddNote={addBlockTop}
           addNoteText={t.addBlock}
           title={t.title}
           mobileAddText={t.addBlockMobile}
@@ -1018,7 +1033,7 @@ export default function Home({ lang }: HomeProps) {
                   e.stopPropagation();
                 }
               }}
-              className="border border-black/5 rounded-lg p-4 pb-2 transition-all duration-200"
+              className="relative group/note border border-black/5 rounded-lg p-4 pb-2 transition-all duration-200"
               style={{
                 backgroundColor:
                   (block.userTag && tagColors[block.userTag]) ||
@@ -1637,10 +1652,9 @@ export default function Home({ lang }: HomeProps) {
                   e.target.value = "";
                 }}
               />
-            </div>
             {/* Note Ordering Arrows - Positioned to the right outside the block */}
-            {blocks.length > 1 && (
-              <div className="absolute left-full ml-3 bottom-[-0.24px] flex flex-col gap-1 lg:opacity-0 lg:group-hover/note:opacity-100 transition-opacity">
+            {editingBlockId !== block.id && blocks.length > 1 && (
+              <div className="absolute left-full ml-3 bottom-[-0.24px] flex flex-col gap-2 lg:opacity-0 lg:group-hover/note:opacity-100 transition-opacity z-10">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -1672,6 +1686,7 @@ export default function Home({ lang }: HomeProps) {
                 </button>
               </div>
             )}
+          </div>
             {/* Add bar below the last note */}
             {idx === filteredBlocks.length - 1 && (
               <div className="flex justify-center mt-4">

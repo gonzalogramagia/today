@@ -56,12 +56,18 @@ export default function Header({ lang, onAddNote, addNoteText, title, mobileAddT
     return (
         <div className={`flex flex-col ${showClock ? 'lg:flex-row lg:mb-6 lg:gap-0' : 'lg:mb-20'} items-center justify-center gap-8 -mt-20 lg:-mt-24 -mb-4`}>
             {/* Image - Visible on all screens. On mobile it stands alone (replacing clock/calendar which is hidden) */}
-            <img
-                src="/notes.png"
-                alt="Notes"
-                onClick={onAddNote}
-                className={`w-64 lg:w-72 h-auto object-contain select-none hover:scale-105 transition-transform duration-300 ${onAddNote ? 'cursor-pointer' : ''}`}
-            />
+            <a 
+                href="https://www.tldraw.com/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:scale-105 transition-transform duration-300 block"
+            >
+                <img
+                    src="/notes.png"
+                    alt="Notes"
+                    className="w-64 lg:w-72 h-auto object-contain select-none cursor-pointer"
+                />
+            </a>
 
             {/* Desktop Content */}
             {showClock ? (
