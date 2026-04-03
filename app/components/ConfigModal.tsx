@@ -78,7 +78,7 @@ export default function ConfigModal({ lang, onClose, toggleLanguage, exportPath,
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-semibold text-zinc-900 flex items-center gap-2">
                         <Wrench className="w-5 h-5 scale-x-[-1]" />
-                        {lang === 'en' ? 'Configuration' : 'Configuración'}
+                        {lang === 'en' ? 'Configurations' : 'Configuraciones'}
                     </h2>
                     <button
                         onClick={onClose}
@@ -161,7 +161,7 @@ export default function ConfigModal({ lang, onClose, toggleLanguage, exportPath,
                                     {showCountdown ? <Eye size={20} className="text-zinc-600" /> : <EyeOff size={20} className="text-zinc-400" />}
                                 </div>
                                 <span className="font-medium text-zinc-900">
-                                    {lang === 'en' ? 'Countdown' : 'Cuenta Regresiva'}
+                                    {lang === 'en' ? 'Countdowns' : 'Cuentas Regresivas'}
                                 </span>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer">

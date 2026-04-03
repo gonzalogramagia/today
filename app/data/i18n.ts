@@ -36,7 +36,7 @@ export const dictionary: Record<Language, Dictionary> = {
     title: "MIS NOTAS",
     subtitle:
       "Se guardan automáticamente <br /> en el <strong>almacenamiento local</strong> de tu navegador",
-    addBlock: "Agregar otra nota +",
+    addBlock: "Agregar una nota +",
     addBlockMobile: "Agregar +",
     blockNamePlaceholder: "Nombre de la nota",
     copy: "Copiar",
@@ -67,7 +67,7 @@ export const dictionary: Record<Language, Dictionary> = {
     title: "MY NOTES",
     subtitle:
       "Automatically saved <br /> in your browser's <strong>local storage</strong>",
-    addBlock: "Add new note +",
+    addBlock: "Add a note +",
     addBlockMobile: "Add +",
     blockNamePlaceholder: "Block Name",
     copy: "Copy",

@@ -196,7 +196,7 @@ export default function Countdown() {
                 <div className="flex items-center justify-between mb-3" onClick={handleCloseEdit}>
                     <h3 className="font-medium text-zinc-900 pt-1 text-sm flex items-center gap-2 cursor-default">
                         <CalendarClock size={16} />
-                        {isEnglish ? 'Countdown' : 'Cuenta Regresiva'}
+                        {isEnglish ? 'Countdowns' : 'Cuentas Regresivas'}
                     </h3>
                     {countdowns.length < 2 && !editingId && (
                         <button
@@ -258,7 +258,7 @@ export default function Countdown() {
 
                     {countdowns.length === 0 && !isCreating && (
                         <div className="text-xs text-zinc-400 text-center pt-5 pb-6 italic">
-                            {isEnglish ? 'No active countdown' : 'No hay cuenta regresiva aún'}
+                            {isEnglish ? 'No active countdowns' : 'Aún no hay cuentas regresivas'}
                         </div>
                     )}
 
