@@ -38,12 +38,13 @@
 ### 🧭 Navigation Hub
 
 - **Fast Access**: Shortcut links with premium hover effects (grayscale & scale focus). Open in new window or tab.
-- **Quick Links**: Floating buttons for essential services:
-  - **Hoy & Today**: You are here!
-  - **Emojis**: Fast access to emoji library.
-  - **Music**: Direct link to your perfect soundtrack.
-  - **Play**: Take a break and play.
-  - **Config/GitHub**: Toggle between Settings and Source code.
+### 🔗 Quick Links
+Floating buttons for essential services:
+  - **Home**: You are here!
+  - **[Emojis](https://emojis.hoy.today)**: Fast access to emoji library.
+  - **[Playlist](https://playlist.hoy.today)**: Personal pinned video player for your favorite YouTube music & content.
+  - **[Minigame](https://minigame.hoy.today)**: Take a break and play Antipala Pro.
+  - **[Moovimiento](https://moovimiento.com/en)**: Visit Moovimiento.
 
 ### ⚙️ Configuration & Personalization
 

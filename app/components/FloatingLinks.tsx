@@ -35,14 +35,9 @@ export default function FloatingLinks({ lang }: FloatingLinksProps) {
   const pathname = usePathname();
 
   // Actualizar URLs de los botones
-  const emojisUrl =
-    lang === "en" ? "https://milemojis.com/en" : "https://milemojis.com";
-
-  const musicUrl =
-    lang === "en" ? "https://bien.estate/en" : "https://bien.estate";
-
-  const playUrl =
-    lang === "en" ? "https://antipala.pro/en" : "https://antipala.pro";
+  const emojisUrl = "https://emojis.hoy.today";
+  const musicUrl = "https://playlist.hoy.today";
+  const playUrl = "https://minigame.hoy.today";
 
   const exportPath = lang === "en" ? "/export" : "/exportar";
   const importPath = lang === "en" ? "/import" : "/importar";
@@ -108,7 +103,7 @@ export default function FloatingLinks({ lang }: FloatingLinksProps) {
           aria-label={t.goToEmojis}
           title={t.goToEmojis}
         >
-          <Smile className="w-6 h-6 text-gray-900 group-hover:text-yellow-500 transition-colors" />
+          <Smile className="w-6 h-6 text-gray-900 group-hover:text-[#6866D6] transition-colors" />
         </a>
         <a
           href={musicUrl}
@@ -116,7 +111,7 @@ export default function FloatingLinks({ lang }: FloatingLinksProps) {
           aria-label={t.goToMusic}
           title={t.goToMusic}
         >
-          <Disc3 className="w-6 h-6 text-zinc-900 group-hover:text-yellow-500 transition-colors animate-spin-slow" />
+          <Disc3 className="w-6 h-6 text-zinc-900 group-hover:text-[#6866D6] transition-colors animate-spin-slow" />
         </a>
         <a
           href={playUrl}
@@ -124,7 +119,7 @@ export default function FloatingLinks({ lang }: FloatingLinksProps) {
           aria-label={t.goToPlay}
           title={t.goToPlay}
         >
-          <Joystick className="w-6 h-6 text-gray-900 group-hover:text-yellow-500 transition-colors" />
+          <Joystick className="w-6 h-6 text-gray-900 group-hover:text-[#6866D6] transition-colors" />
         </a>
       </div>
     </>
