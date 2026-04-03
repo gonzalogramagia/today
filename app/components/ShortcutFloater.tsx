@@ -229,13 +229,7 @@ export default function ShortcutFloater() {
         const left = shortcut.position === 'left' ? 0 : width
         const top = 0
 
-        const openInTab = localStorage.getItem('config-open-in-new-tab') === 'true'
-
-        if (openInTab) {
-            window.open(shortcut.url, '_blank')
-        } else {
-            window.open(shortcut.url, '_self')
-        }
+        window.open(shortcut.url, '_blank')
     }
 
     return (
@@ -308,12 +302,7 @@ export default function ShortcutFloater() {
                                 href="https://chromewebstore.google.com/detail/just-focus/gefaddaengbodpiobpbgblajdboalmgc"
                                 onClick={(e) => {
                                     e.preventDefault()
-                                    const openInTab = localStorage.getItem('config-open-in-new-tab') === 'true'
-                                    if (openInTab) {
-                                        window.open("https://chromewebstore.google.com/detail/just-focus/gefaddaengbodpiobpbgblajdboalmgc", '_blank')
-                                    } else {
-                                        window.open("https://chromewebstore.google.com/detail/just-focus/gefaddaengbodpiobpbgblajdboalmgc", '_self')
-                                    }
+                                    window.open("https://chromewebstore.google.com/detail/just-focus/gefaddaengbodpiobpbgblajdboalmgc", '_blank')
                                 }}
                                 className="w-full h-full p-1 flex items-center justify-center rounded-full cursor-pointer"
                                 role="button"

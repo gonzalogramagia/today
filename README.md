@@ -32,7 +32,7 @@
 ### 🕒 Time & Focus
 
 - **Digital Clock**: Large, bold real-time clock and localized date display.
-- **Countdown Timer**: Track time to important events with visual urgency indicators (Yellow/Red).
+- **Countdown Timers**: Track time to important events with visual urgency indicators (Yellow/Red).
 - **Mens Sana Footer**: "Mens sana in corpore sano" - A reminder for balance.
 
 ### 🧭 Navigation Hub
@@ -42,7 +42,7 @@
 Floating buttons for essential services:
   - **Home**: You are here!
   - **[Emojis](https://emojis.hoy.today)**: Fast access to emoji library.
-  - **[Playlist](https://playlist.hoy.today)**: Personal pinned video player for your favorite YouTube music & content.
+  - **[Playlist](https://playlist.hoy.today)**: Your curated music collection ready at hand.
   - **[Minigame](https://minigame.hoy.today)**: Take a break and play Antipala Pro.
   - **[Moovimiento](https://moovimiento.com/en)**: Visit Moovimiento.
 
@@ -51,10 +51,9 @@ Floating buttons for essential services:
 - **Centralized Config**: A dedicated modal to manage all your preferences (toggle with Language button).
 - **Feature Toggles**: Customize your dashboard by showing or hiding core modules:
   - **Clock & Calendar**: Toggle the main time display.
-  - **Daily Tasks**: Show/Hide the daily tasks list.
-  - **Countdown**: Show/Hide the countdown timer.
+  - **Daily & Weekly Tasks**: Show/Hide the daily and weekly tasks list.
+  - **Countdown Timers**: Show/Hide the countdown timer.
   - **Shortcuts**: Show/Hide the floating shortcuts bubbles.
-- **Link Behavior**: Toggle to open shortcuts in a new tab or the current tab.
 - **Smooth Transitions**: All elements fade in/out smoothly to maintain a polished look.
 - **Language Switch**: Instantly toggle between English and Spanish.
 
@@ -78,7 +77,7 @@ Floating buttons for essential services:
 
 ## 📄 License
 
-This project is created for personal productivity and is shared as-is. Feel free to fork and adapt it for your own "Today"!
+This project is created for personal productivity and is shared as-is. Feel free to fork and adapt it for your own "Hoy & Today"!
 
 ---
 
@@ -87,7 +86,7 @@ This project is created for personal productivity and is shared as-is. Feel free
 To get the full experience and stay in the flow, I recommend these Chrome extensions:
 
 - **[New Tab Redirect](https://chromewebstore.google.com/detail/new-tab-redirect/icpgjfneehieebagbmdbhnlpiopdcmna)**
-  **Why?** Makes _Today_ your default new tab page, ensuring your tasks, top notes and countdowns are always the first thing you see — along with your shortcuts!
+  **Why?** Makes _Hoy & Today_ your default new tab page, ensuring your tasks, top notes and countdowns are always the first thing you see — along with your shortcuts!
 
 - **[Just Focus](https://chromewebstore.google.com/detail/just-focus/gefaddaengbodpiobpbgblajdboalmgc)**
   **Why?** A simple website blocker to eliminate distractions and keep your deep work sessions protected.
