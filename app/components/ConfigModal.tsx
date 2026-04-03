@@ -106,7 +106,7 @@ export default function ConfigModal({ lang, onClose, toggleLanguage, exportPath,
                                 checked={lang === 'en'}
                                 onChange={toggleLanguage}
                             />
-                            <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#6866D6]/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#6866D6]"></div>
+                            <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#EAB308]/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#EAB308]"></div>
                         </label>
                     </div>
 
@@ -129,7 +129,7 @@ export default function ConfigModal({ lang, onClose, toggleLanguage, exportPath,
                                     checked={showClock}
                                     onChange={handleToggleClock}
                                 />
-                                <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#6866D6]/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#6866D6]"></div>
+                                <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#EAB308]/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#EAB308]"></div>
                             </label>
                         </div>
 
@@ -140,7 +140,7 @@ export default function ConfigModal({ lang, onClose, toggleLanguage, exportPath,
                                     {showTasks ? <Eye size={20} className="text-zinc-600" /> : <EyeOff size={20} className="text-zinc-400" />}
                                 </div>
                                 <span className="font-medium text-zinc-900">
-                                    {lang === 'en' ? 'Daily Tasks' : 'Tareas Diarias'}
+                                    {lang === 'en' ? 'Daily & Weekly Tasks' : 'Tareas Diarias & Semanales'}
                                 </span>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer">
@@ -150,7 +150,7 @@ export default function ConfigModal({ lang, onClose, toggleLanguage, exportPath,
                                     checked={showTasks}
                                     onChange={handleToggleTasks}
                                 />
-                                <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#6866D6]/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#6866D6]"></div>
+                                <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#EAB308]/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#EAB308]"></div>
                             </label>
                         </div>
 
@@ -171,7 +171,7 @@ export default function ConfigModal({ lang, onClose, toggleLanguage, exportPath,
                                     checked={showCountdown}
                                     onChange={handleToggleCountdown}
                                 />
-                                <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#6866D6]/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#6866D6]"></div>
+                                <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#EAB308]/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#EAB308]"></div>
                             </label>
                         </div>
 
@@ -192,7 +192,7 @@ export default function ConfigModal({ lang, onClose, toggleLanguage, exportPath,
                                     checked={showShortcuts}
                                     onChange={handleToggleShortcuts}
                                 />
-                                <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#6866D6]/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#6866D6]"></div>
+                                <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#EAB308]/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#EAB308]"></div>
                             </label>
                         </div>
                     </div>
@@ -214,7 +214,7 @@ export default function ConfigModal({ lang, onClose, toggleLanguage, exportPath,
                                 checked={openInTab}
                                 onChange={handleToggleOpenInTab}
                             />
-                            <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#6866D6]/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#6866D6]"></div>
+                            <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#EAB308]/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#EAB308]"></div>
                         </label>
                     </div>
                 </div>
@@ -225,7 +225,7 @@ export default function ConfigModal({ lang, onClose, toggleLanguage, exportPath,
                         href={importPath}
                         className="flex flex-col items-center justify-center gap-2 p-4 bg-zinc-50 border border-zinc-100 rounded-xl hover:bg-zinc-100 transition-all group cursor-pointer"
                     >
-                        <FileDown size={24} className="text-zinc-500 group-hover:text-[#6866D6] transition-colors" />
+                        <FileDown size={24} className="text-zinc-500 group-hover:text-[#EAB308] transition-colors" />
                         <span className="text-sm font-medium text-zinc-600 group-hover:text-zinc-900">
                             {lang === 'en' ? 'Import Backup' : 'Importar Backup'}
                         </span>
@@ -234,7 +234,7 @@ export default function ConfigModal({ lang, onClose, toggleLanguage, exportPath,
                         href={exportPath}
                         className="flex flex-col items-center justify-center gap-2 p-4 bg-zinc-50 border border-zinc-100 rounded-xl hover:bg-zinc-100 transition-all group cursor-pointer"
                     >
-                        <FileUp size={24} className="text-zinc-500 group-hover:text-[#6866D6] transition-colors" />
+                        <FileUp size={24} className="text-zinc-500 group-hover:text-[#EAB308] transition-colors" />
                         <span className="text-sm font-medium text-zinc-600 group-hover:text-zinc-900">
                             {lang === 'en' ? 'Export Backup' : 'Exportar Backup'}
                         </span>

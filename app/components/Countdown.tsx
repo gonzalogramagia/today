@@ -3,11 +3,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { Timer, Trash2, CalendarClock, Plus, Pencil, X } from 'lucide-react'
 import { usePathname } from 'next/navigation'
+import { dictionary } from "../data/i18n"
 
 interface CountdownItem {
     id: string
     name: string
     date: string
+    type?: 'christmas' | 'new-year'
 }
 
 export default function Countdown() {
@@ -27,7 +29,18 @@ export default function Countdown() {
         if (!data.name || !data.date) return
 
         if (editingId) {
-            setCountdowns(countdowns.map(c => c.id === editingId ? { ...c, ...data } : c))
+            setCountdowns(countdowns.map(c => {
+                if (c.id === editingId) {
+                    // If name is changed, remove special type. If only date is changed, keep it.
+                    const isNameDifferent = c.name !== data.name;
+                    return { 
+                        ...c, 
+                        ...data,
+                        type: isNameDifferent ? undefined : c.type
+                    };
+                }
+                return c;
+            }))
             setEditingId(null)
         } else {
             if (countdowns.length >= 2) return
@@ -96,6 +109,31 @@ export default function Countdown() {
                         localStorage.setItem('countdown-events', JSON.stringify(migrated))
                         localStorage.removeItem('countdown-event')
                     } catch (e) { }
+                } else {
+                    // Check if it's the first time
+                    const isFirstTime = localStorage.getItem('countdown-first-time-check') === null
+                    if (isFirstTime) {
+                        const currentYear = new Date().getFullYear()
+                        const nextYear = currentYear + 1
+                        const t = dictionary[isEnglish ? 'en' : 'es']
+                        const initialCountdown = [
+                            {
+                                id: crypto.randomUUID(),
+                                name: `${t.countdownChristmas} ${currentYear}`,
+                                date: `${currentYear}-12-24T23:59`,
+                                type: 'christmas' as const
+                            },
+                            {
+                                id: crypto.randomUUID(),
+                                name: `${t.countdownNewYear} ${nextYear}`,
+                                date: `${nextYear}-01-01T00:00`,
+                                type: 'new-year' as const
+                            }
+                        ]
+                        setCountdowns(initialCountdown)
+                        localStorage.setItem('countdown-events', JSON.stringify(initialCountdown))
+                        localStorage.setItem('countdown-first-time-check', 'done')
+                    }
                 }
             }
         }
@@ -292,19 +330,19 @@ function CountdownDisplay({ item, isEnglish, onDelete, onEdit, isEditing, global
             const weekday = date.toLocaleString('en-US', { weekday: 'long' })
             const month = date.toLocaleString('en-US', { month: 'long' })
             const day = date.getDate()
-            const time = date.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+            const time = date.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
             return `On ${weekday}, ${month} ${day} at ${time}`
         })()
         : (() => {
             const weekday = date.toLocaleString('es-AR', { weekday: 'long' })
             const month = date.toLocaleString('es-AR', { month: 'long' })
             const day = date.getDate()
-            const time = date.toLocaleString('es-AR', { hour: 'numeric', minute: '2-digit', hour12: true })
+            const time = date.toLocaleString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })
 
             const capitalizedWeekday = weekday.charAt(0).toUpperCase() + weekday.slice(1)
             const capitalizedMonth = month.charAt(0).toUpperCase() + month.slice(1)
 
-            return `El ${capitalizedWeekday} ${day} de ${capitalizedMonth} a las ${time.replace('a. m.', 'a.m.').replace('p. m.', 'p.m.')}`
+            return `El ${capitalizedWeekday} ${day} de ${capitalizedMonth} a las ${time} hs`
         })()
 
     return (
@@ -329,7 +367,12 @@ function CountdownDisplay({ item, isEnglish, onDelete, onEdit, isEditing, global
             )}
 
             <div className="font-bold text-lg text-zinc-800 break-words pr-12 leading-tight">
-                {item.name}
+                {(() => {
+                    const t = dictionary[isEnglish ? 'en' : 'es'];
+                    if (item.type === 'christmas') return `${t.countdownChristmas} ${new Date(item.date).getFullYear()}`;
+                    if (item.type === 'new-year') return `${t.countdownNewYear} ${new Date(item.date).getFullYear()}`;
+                    return item.name;
+                })()}
             </div>
 
             <div className="text-[10px] text-zinc-400 mb-1">

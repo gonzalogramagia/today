@@ -27,6 +27,8 @@ export interface Dictionary {
   goToMusic: string;
   goToPlay: string;
   noTag: string;
+  countdownChristmas: string;
+  countdownNewYear: string;
 }
 
 export const dictionary: Record<Language, Dictionary> = {
@@ -58,6 +60,8 @@ export const dictionary: Record<Language, Dictionary> = {
     goToMusic: "Ir a Playlist",
     goToPlay: "Jugar Antipala Pro",
     noTag: "Sin Tag",
+    countdownChristmas: "🎄 Navidad",
+    countdownNewYear: "🎉 Año Nuevo",
   },
   en: {
     title: "MY NOTES",
@@ -87,5 +91,7 @@ export const dictionary: Record<Language, Dictionary> = {
     moveDown: "Move Down",
     goToPlay: "Play Antipala Pro",
     noTag: "No Tag",
+    countdownChristmas: "🎄 Christmas",
+    countdownNewYear: "🎉 New Year",
   },
 };

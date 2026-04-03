@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Plus, Trash2, Check, Square, CheckSquare, Pencil, X } from 'lucide-react'
+import { Plus, Trash2, Check, Square, CheckSquare, Pencil, X, Calendar } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 
 type Task = {
@@ -11,7 +11,7 @@ type Task = {
     completed: boolean
 }
 
-export default function DailyTasks() {
+export default function WeeklyTasks() {
     const [tasks, setTasks] = useState<Task[]>([])
     const [inputValue, setInputValue] = useState('')
     const [urlValue, setUrlValue] = useState('')
@@ -23,16 +23,6 @@ export default function DailyTasks() {
     const pathname = usePathname()
     const isEnglish = pathname?.startsWith('/en')
     const containerRef = useRef<HTMLDivElement>(null)
-
-    // Helper to get Argentina date string YYYY-MM-DD
-    const getArgentinaDate = () => {
-        return new Date().toLocaleDateString('es-AR', {
-            timeZone: 'America/Argentina/Buenos_Aires',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
-        })
-    }
 
     // Close form when clicking outside
     useEffect(() => {
@@ -69,33 +59,25 @@ export default function DailyTasks() {
 
     useEffect(() => {
         setMounted(true)
-        const savedTasks = localStorage.getItem('daily-tasks')
-        const lastReset = localStorage.getItem('daily-tasks-last-reset')
-        const today = getArgentinaDate()
+        const savedTasks = localStorage.getItem('weekly-tasks')
 
         let parsedTasks: Task[] = []
         if (savedTasks) {
             try {
                 parsedTasks = JSON.parse(savedTasks)
             } catch (e) {
-                console.error('Failed to parse daily tasks', e)
+                console.error('Failed to parse weekly tasks', e)
             }
-        }
-
-        // Check if reset is needed (if last reset was not today)
-        if (lastReset !== today) {
-            parsedTasks = parsedTasks.map(t => ({ ...t, completed: false }))
-            localStorage.setItem('daily-tasks-last-reset', today)
         }
 
         setTasks(parsedTasks)
 
         const handleStorageChange = (e: StorageEvent) => {
-            if (e.key === 'daily-tasks' && e.newValue) {
+            if (e.key === 'weekly-tasks' && e.newValue) {
                 try {
                     setTasks(JSON.parse(e.newValue))
                 } catch (err) {
-                    console.error('Failed to sync tasks', err)
+                    console.error('Failed to sync weekly tasks', err)
                 }
             }
         }
@@ -106,21 +88,8 @@ export default function DailyTasks() {
 
     useEffect(() => {
         if (!mounted) return
-        localStorage.setItem('daily-tasks', JSON.stringify(tasks))
+        localStorage.setItem('weekly-tasks', JSON.stringify(tasks))
     }, [tasks, mounted])
-
-    // Interval to check for date change if the app is kept open
-    useEffect(() => {
-        const interval = setInterval(() => {
-            const lastReset = localStorage.getItem('daily-tasks-last-reset')
-            const today = getArgentinaDate()
-            if (lastReset !== today) {
-                setTasks(current => current.map(t => ({ ...t, completed: false })))
-                localStorage.setItem('daily-tasks-last-reset', today)
-            }
-        }, 60000) // Check every minute
-        return () => clearInterval(interval)
-    }, [])
 
     const addTask = (e?: React.FormEvent) => {
         e?.preventDefault()
@@ -215,11 +184,11 @@ export default function DailyTasks() {
                 <div className="group/header flex items-center justify-between mb-5" onClick={() => editingId && cancelEditing()}>
                     <h3 className="font-medium text-zinc-900 text-sm flex items-center justify-start gap-2 relative group/tooltip w-max cursor-default">
                         <span className="text-base select-none">
-                            🕒
+                            📅
                         </span>
-                        <span>{isEnglish ? 'Daily Tasks' : 'Tareas Diarias'}</span>
+                        <span>{isEnglish ? 'Weekly Tasks' : 'Tareas de la Semana'}</span>
                         <div className="absolute bottom-full left-[-4px] mb-2 w-max bg-black text-white text-[10px] px-2 py-1 rounded opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-50">
-                            {isEnglish ? 'Resets at 23:59' : 'Se resetean a las 23:59'}
+                            {isEnglish ? 'Never resets' : 'No se resetean nunca'}
                             {/* Speech bubble pointer */}
                             <div className="absolute top-full left-2 w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-black"></div>
                         </div>
@@ -243,7 +212,7 @@ export default function DailyTasks() {
                     </button>
                 </div>
 
-                <div className={`space-y-2 max-h-[60vh] overflow-y-auto overflow-x-hidden mb-3 custom-scrollbar transition-opacity duration-200 ${isAdding ? 'opacity-50 pointer-events-none' : ''}`}>
+                <div className={`space-y-2 max-h-[30vh] overflow-y-auto overflow-x-hidden mb-3 custom-scrollbar transition-opacity duration-200 ${isAdding ? 'opacity-50 pointer-events-none' : ''}`}>
                     {tasks.map((task, index) => (
                         <div
                             key={task.id}
@@ -347,7 +316,7 @@ export default function DailyTasks() {
 
                     {tasks.length === 0 && (
                         <div className="text-xs text-zinc-400 text-center py-4 italic">
-                            {isEnglish ? 'No tasks for today' : 'No hay tareas para hoy'}
+                            {isEnglish ? 'No tasks this week' : 'No hay tareas esta semana'}
                         </div>
                     )}
                 </div>

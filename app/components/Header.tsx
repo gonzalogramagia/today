@@ -82,10 +82,10 @@ export default function Header({ lang, onAddNote, addNoteText, title, mobileAddT
                         title="Abrir calendario/reloj en anycalendar.org"
                         style={{ textDecoration: 'none' }}
                     >
-                        <span className="text-6xl font-black font-mono tracking-tighter text-zinc-900 leading-none cursor-pointer select-none group-hover:text-[#6866D6] transition-colors">
+                        <span className="text-6xl font-black font-mono tracking-tighter text-zinc-900 leading-none cursor-pointer select-none group-hover:text-[#EAB308] transition-colors">
                             {formatTime(currentTime)}
                         </span>
-                        <span className="text-lg text-zinc-500 font-medium capitalize cursor-pointer select-none group-hover:text-[#6866D6] transition-colors">
+                        <span className="text-lg text-zinc-500 font-medium capitalize cursor-pointer select-none group-hover:text-[#EAB308] transition-colors">
                             {formatDate(currentTime)}
                         </span>
                     </a>
