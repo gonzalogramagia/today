@@ -63,7 +63,7 @@ export default function FloatingLinks({ lang }: FloatingLinksProps) {
             aria-label={t.ariaGithub}
             target="_blank"
           >
-            <Github className="w-6 h-6 text-gray-900 group-hover:text-[#6866D6] transition-colors" />
+            <Github className="w-6 h-6 text-gray-900 group-hover:text-yellow-500 transition-colors" />
           </a>
         ) : (
           <button
@@ -71,7 +71,7 @@ export default function FloatingLinks({ lang }: FloatingLinksProps) {
             className="p-3 bg-white border border-zinc-200 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 group cursor-pointer"
             aria-label="Configuration"
           >
-            <Wrench className="w-6 h-6 text-gray-900 group-hover:text-[#6866D6] transition-colors scale-x-[-1]" />
+            <Wrench className="w-6 h-6 text-gray-900 group-hover:text-yellow-500 transition-colors scale-x-[-1]" />
           </button>
         )}
       </div>
@@ -99,33 +99,30 @@ export default function FloatingLinks({ lang }: FloatingLinksProps) {
         </button>
         <a
           href={emojisUrl}
-          target="_blank"
           rel="noopener noreferrer"
           className="p-3 bg-white border border-zinc-200 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 group"
           aria-label={t.goToEmojis}
           title={t.goToEmojis}
         >
-          <Smile className="w-6 h-6 text-gray-900 group-hover:text-[#6866D6] transition-colors" />
+          <Smile className="w-6 h-6 text-gray-900 group-hover:text-yellow-500 transition-colors" />
         </a>
         <a
           href={musicUrl}
-          target="_blank"
           rel="noopener noreferrer"
           className="p-3 bg-white border border-zinc-200 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 group cursor-pointer"
           aria-label={t.goToMusic}
           title={t.goToMusic}
         >
-          <Disc3 className="w-6 h-6 text-zinc-900 group-hover:text-[#6866D6] transition-colors animate-spin-slow" />
+          <Disc3 className="w-6 h-6 text-zinc-900 group-hover:text-yellow-500 transition-colors animate-spin-slow" />
         </a>
         <a
           href={playUrl}
-          target="_blank"
           rel="noopener noreferrer"
           className="p-3 bg-white border border-zinc-200 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 group cursor-pointer"
           aria-label={t.goToPlay}
           title={t.goToPlay}
         >
-          <Joystick className="w-6 h-6 text-gray-900 group-hover:text-[#6866D6] transition-colors" />
+          <Joystick className="w-6 h-6 text-gray-900 group-hover:text-yellow-500 transition-colors" />
         </a>
       </div>
     </>

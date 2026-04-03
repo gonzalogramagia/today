@@ -196,7 +196,7 @@ export default function ConfigModal({ lang, onClose, toggleLanguage, exportPath,
                         href={importPath}
                         className="flex flex-col items-center justify-center gap-2 p-4 bg-zinc-50 border border-zinc-100 rounded-xl hover:bg-zinc-100 transition-all group cursor-pointer"
                     >
-                        <FileDown size={24} className="text-zinc-500 group-hover:text-[#6866D6] transition-colors" />
+                        <FileDown size={24} className="text-zinc-500 group-hover:text-yellow-500 transition-colors" />
                         <span className="text-sm font-medium text-zinc-600 group-hover:text-zinc-900">
                             {lang === 'en' ? 'Import Backup' : 'Importar Backup'}
                         </span>
@@ -205,7 +205,7 @@ export default function ConfigModal({ lang, onClose, toggleLanguage, exportPath,
                         href={exportPath}
                         className="flex flex-col items-center justify-center gap-2 p-4 bg-zinc-50 border border-zinc-100 rounded-xl hover:bg-zinc-100 transition-all group cursor-pointer"
                     >
-                        <FileUp size={24} className="text-zinc-500 group-hover:text-[#6866D6] transition-colors" />
+                        <FileUp size={24} className="text-zinc-500 group-hover:text-yellow-500 transition-colors" />
                         <span className="text-sm font-medium text-zinc-600 group-hover:text-zinc-900">
                             {lang === 'en' ? 'Export Backup' : 'Exportar Backup'}
                         </span>
