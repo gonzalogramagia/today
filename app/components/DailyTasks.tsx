@@ -78,7 +78,7 @@ export default function DailyTasks() {
             const lastReset = localStorage.getItem('daily-tasks-last-reset')
 
             if (user) {
-                // Fetch from Supabase
+                // ENVIRONMENT: AUTHENTICATED (Supabase)
                 const { data, error } = await supabase
                     .from('daily_tasks')
                     .select('*')
@@ -87,37 +87,7 @@ export default function DailyTasks() {
                 if (!error && data) {
                     let remoteTasks = data as Task[]
                     
-                    // Initial Migration: If DB is empty but LocalStorage has tasks, upload them
-                    if (remoteTasks.length === 0) {
-                        const savedTasks = localStorage.getItem('daily-tasks')
-                        if (savedTasks) {
-                            try {
-                                const localTasks: Task[] = JSON.parse(savedTasks)
-                                if (localTasks.length > 0) {
-                                    const uploads = localTasks.map((t, idx) => ({
-                                        id: t.id,
-                                        user_id: user.id,
-                                        text: t.text,
-                                        url: t.url,
-                                        completed: t.completed,
-                                        sort_index: t.sort_index ?? idx
-                                    }))
-                                    const { error: uploadError } = await supabase
-                                        .from('daily_tasks')
-                                    .insert(uploads)
-                                    
-                                    if (!uploadError) {
-                                        setTasks(localTasks)
-                                        return
-                                    }
-                                }
-                            } catch (e) {
-                                console.error('Failed to migrate local tasks', e)
-                            }
-                        }
-                    }
-
-                    // Handle reset on Supabase tasks if needed
+                    // Handle daily reset logic on Supabase data
                     if (lastReset !== today) {
                         const { error: updateError } = await supabase
                             .from('daily_tasks')
@@ -126,35 +96,38 @@ export default function DailyTasks() {
 
                         if (!updateError) {
                             remoteTasks = remoteTasks.map(t => ({ ...t, completed: false }))
+                            // We use a separate key or logic for local tracked reset? 
+                            // Using the same key is fine for session tracking, but let's be careful.
                             localStorage.setItem('daily-tasks-last-reset', today)
                         }
                     }
                     setTasks(remoteTasks)
                     return
                 }
-            }
-
-            // Fallback to LocalStorage
-            const savedTasks = localStorage.getItem('daily-tasks')
-            let parsedTasks: Task[] = []
-            if (savedTasks) {
-                try {
-                    parsedTasks = JSON.parse(savedTasks)
-                } catch (e) {
-                    console.error('Failed to parse local daily tasks', e)
+            } else {
+                // ENVIRONMENT: GUEST (LocalStorage)
+                const savedTasks = localStorage.getItem('daily-tasks')
+                let parsedTasks: Task[] = []
+                if (savedTasks) {
+                    try {
+                        parsedTasks = JSON.parse(savedTasks)
+                    } catch (e) {
+                        console.error('Failed to parse local daily tasks', e)
+                    }
                 }
-            }
 
-            if (lastReset !== today) {
-                parsedTasks = parsedTasks.map(t => ({ ...t, completed: false }))
-                localStorage.setItem('daily-tasks-last-reset', today)
+                if (lastReset !== today) {
+                    parsedTasks = parsedTasks.map(t => ({ ...t, completed: false }))
+                    localStorage.setItem('daily-tasks-last-reset', today)
+                }
+                setTasks(parsedTasks)
             }
-            setTasks(parsedTasks)
         }
 
         loadTasks()
 
         const handleStorageChange = (e: StorageEvent) => {
+            // Only sync from other tabs if we are in GUEST mode
             if (e.key === 'daily-tasks' && e.newValue && !user) {
                 try {
                     setTasks(JSON.parse(e.newValue))
@@ -168,11 +141,11 @@ export default function DailyTasks() {
         return () => window.removeEventListener('storage', handleStorageChange)
     }, [user, supabase])
 
-    // Save to LocalStorage (as cache or guest storage)
+    // Save to LocalStorage ONLY for Guest environment
     useEffect(() => {
-        if (!mounted) return
+        if (!mounted || user) return // Do not touch localStorage if logged in
         localStorage.setItem('daily-tasks', JSON.stringify(tasks))
-    }, [tasks, mounted])
+    }, [tasks, mounted, user])
 
     // Interval to check for date change if the app is kept open
     useEffect(() => {

@@ -77,6 +77,7 @@ export default function ShortcutFloater() {
     useEffect(() => {
         const loadShortcuts = async () => {
             if (user) {
+                // ENVIRONMENT: AUTHENTICATED (Supabase)
                 const { data, error } = await supabase
                     .from('shortcuts')
                     .select('*')
@@ -91,54 +92,25 @@ export default function ShortcutFloater() {
                         position: s.position,
                         sort_index: s.sort_index
                     }))
-
-                    // Initial Migration: If DB is empty but LocalStorage has shortcuts, upload them
-                    if (remoteShortcuts.length === 0) {
-                        const saved = localStorage.getItem('local-shortcuts')
-                        if (saved) {
-                            try {
-                                const localShortcuts: Shortcut[] = JSON.parse(saved)
-                                if (localShortcuts.length > 0) {
-                                    const uploads = localShortcuts.map((s, idx) => ({
-                                        id: s.id,
-                                        user_id: user.id,
-                                        name: s.name,
-                                        icon_url: s.iconUrl,
-                                        url: s.url,
-                                        position: s.position,
-                                        sort_index: s.sort_index ?? idx
-                                    }))
-                                    const { error: uploadError } = await supabase
-                                        .from('shortcuts')
-                                        .insert(uploads)
-                                    
-                                    if (!uploadError) {
-                                        setShortcuts(localShortcuts)
-                                        return
-                                    }
-                                }
-                            } catch (e) {
-                                console.error('Failed to migrate local shortcuts', e)
-                            }
-                        }
-                    }
-
                     setShortcuts(remoteShortcuts)
                     return
                 }
-            }
-
-            const saved = localStorage.getItem('local-shortcuts')
-            if (saved) {
-                try {
-                    const parsed = JSON.parse(saved)
-                    const migrated = parsed.map((s: any) => ({
-                        ...s,
-                        position: s.position || 'right'
-                    }))
-                    setShortcuts(migrated)
-                } catch (e) {
-                    console.error('Failed to parse shortcuts', e)
+            } else {
+                // ENVIRONMENT: GUEST (LocalStorage)
+                const saved = localStorage.getItem('local-shortcuts')
+                if (saved) {
+                    try {
+                        const parsed = JSON.parse(saved)
+                        const migrated = parsed.map((s: any) => ({
+                            ...s,
+                            position: s.position || 'right'
+                        }))
+                        setShortcuts(migrated)
+                    } catch (e) {
+                        console.error('Failed to parse shortcuts', e)
+                    }
+                } else {
+                    setShortcuts([])
                 }
             }
         }
@@ -146,6 +118,7 @@ export default function ShortcutFloater() {
         loadShortcuts()
 
         const handleStorageChange = (e: StorageEvent) => {
+            // Only sync from other tabs if we are in GUEST mode
             if (e.key === 'local-shortcuts' && !user) {
                 loadShortcuts()
             }
@@ -155,9 +128,12 @@ export default function ShortcutFloater() {
         return () => window.removeEventListener('storage', handleStorageChange)
     }, [user, supabase])
 
+    // Save to LocalStorage ONLY for Guest environment
     const saveToStorage = (newShortcuts: Shortcut[]) => {
         setShortcuts(newShortcuts)
-        localStorage.setItem('local-shortcuts', JSON.stringify(newShortcuts))
+        if (!user) {
+            localStorage.setItem('local-shortcuts', JSON.stringify(newShortcuts))
+        }
     }
 
     const [confirmDelete, setConfirmDelete] = useState(false)

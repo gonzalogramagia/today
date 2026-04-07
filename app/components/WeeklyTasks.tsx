@@ -60,68 +60,40 @@ export default function WeeklyTasks() {
         return () => window.removeEventListener('config-update', checkVisibility)
     }, [])
 
+    // Fetch integration: Local + Supabase
     useEffect(() => {
         setMounted(true)
         const loadTasks = async () => {
             if (user) {
+                // ENVIRONMENT: AUTHENTICATED (Supabase)
                 const { data, error } = await supabase
                     .from('weekly_tasks')
                     .select('*')
                     .order('sort_index', { ascending: true })
 
                 if (!error && data) {
-                    const remoteTasks = data as Task[]
-                    
-                    // Initial Migration: If DB is empty but LocalStorage has tasks, upload them
-                    if (remoteTasks.length === 0) {
-                        const savedTasks = localStorage.getItem('weekly-tasks')
-                        if (savedTasks) {
-                            try {
-                                const localTasks: Task[] = JSON.parse(savedTasks)
-                                if (localTasks.length > 0) {
-                                    const uploads = localTasks.map((t, idx) => ({
-                                        id: t.id,
-                                        user_id: user.id,
-                                        text: t.text,
-                                        url: t.url,
-                                        completed: t.completed,
-                                        sort_index: t.sort_index ?? idx
-                                    }))
-                                    const { error: uploadError } = await supabase
-                                        .from('weekly_tasks')
-                                        .insert(uploads)
-                                    
-                                    if (!uploadError) {
-                                        setTasks(localTasks)
-                                        return
-                                    }
-                                }
-                            } catch (e) {
-                                console.error('Failed to migrate weekly tasks', e)
-                            }
-                        }
-                    }
-                    
-                    setTasks(remoteTasks)
+                    setTasks(data as Task[])
                     return
                 }
-            }
-
-            const savedTasks = localStorage.getItem('weekly-tasks')
-            let parsedTasks: Task[] = []
-            if (savedTasks) {
-                try {
-                    parsedTasks = JSON.parse(savedTasks)
-                } catch (e) {
-                    console.error('Failed to parse weekly tasks', e)
+            } else {
+                // ENVIRONMENT: GUEST (LocalStorage)
+                const savedTasks = localStorage.getItem('weekly-tasks')
+                let parsedTasks: Task[] = []
+                if (savedTasks) {
+                    try {
+                        parsedTasks = JSON.parse(savedTasks)
+                    } catch (e) {
+                        console.error('Failed to parse local weekly tasks', e)
+                    }
                 }
+                setTasks(parsedTasks)
             }
-            setTasks(parsedTasks)
         }
 
         loadTasks()
 
         const handleStorageChange = (e: StorageEvent) => {
+            // Only sync from other tabs if we are in GUEST mode
             if (e.key === 'weekly-tasks' && e.newValue && !user) {
                 try {
                     setTasks(JSON.parse(e.newValue))
@@ -135,10 +107,11 @@ export default function WeeklyTasks() {
         return () => window.removeEventListener('storage', handleStorageChange)
     }, [user, supabase])
 
+    // Save to LocalStorage ONLY for Guest environment
     useEffect(() => {
-        if (!mounted) return
+        if (!mounted || user) return // Do not touch localStorage if logged in
         localStorage.setItem('weekly-tasks', JSON.stringify(tasks))
-    }, [tasks, mounted])
+    }, [tasks, mounted, user])
 
     const addTask = async (e?: React.FormEvent) => {
         e?.preventDefault()
