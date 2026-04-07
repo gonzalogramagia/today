@@ -18,6 +18,8 @@ import { symbols, SymbolItem } from "../data/symbols";
 import { dictionary, Language } from "../data/i18n";
 import FloatingLinks from "./FloatingLinks";
 import Header from "./Header";
+import { createClient } from "@/utils/supabase/client";
+import { useAuth } from "@/app/hooks/useAuth";
 
 interface TextBlock {
   id: string;
@@ -36,6 +38,9 @@ interface HomeProps {
 
 export default function Home({ lang }: HomeProps) {
   const t = dictionary[lang];
+  const supabase = createClient();
+  const { user } = useAuth();
+  const [mounted, setMounted] = useState(false);
   const [blocks, setBlocks] = useState<TextBlock[]>([]);
   const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
   const [editingContent, setEditingContent] = useState("");
@@ -84,88 +89,108 @@ export default function Home({ lang }: HomeProps) {
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  // Cargar datos del localStorage al montar el componente
+  // Fetch integration: Local + Supabase
   useEffect(() => {
-    const savedBlocks = localStorage.getItem("localhost-blocks");
-    if (savedBlocks) {
-      try {
-        const parsed = JSON.parse(savedBlocks);
-        const migrated = (parsed as any[]).map((b) => {
-          const tag = b && typeof b.tag === "string" && b.tag ? b.tag : generateId();
-          const color = b && b.color ? b.color : "#FEFCE8";
-          if (
-            b &&
-            typeof b.title === "string" &&
-            /^Bloque [a-z0-9]{4}$/i.test(b.title)
-          ) {
-            return { ...b, title: "", tag, color };
-          }
-          return { ...b, tag, color };
-        });
-        // Solo setBlocks si hay datos, nunca sobreescribir con vacío
-        if (Array.isArray(migrated) && migrated.length > 0) {
-          setBlocks(migrated as TextBlock[]);
-        } else {
-          // Si no hay notas, crear una vacía
-          const id = generateId();
-          setBlocks([
-            {
-              id,
-              tag: generateId(),
-              title: "",
-              content: "",
-              color: "#FEFCE8",
-            },
-          ]);
-        }
-      } catch (e) {
-        const raw = JSON.parse(savedBlocks) as any[];
-        if (Array.isArray(raw) && raw.length > 0) {
-          const ensured = raw.map((b) => ({
-            ...b,
-            tag: b && b.tag ? b.tag : generateId(),
-            color: b && b.color ? b.color : "#FEFCE8",
-          }));
-          setBlocks(ensured as TextBlock[]);
-        } else {
-          // Si no hay notas, crear una vacía
-          const id = generateId();
-          setBlocks([
-            {
-              id,
-              tag: generateId(),
-              title: "",
-              content: "",
-              color: "#FEFCE8",
-            },
-          ]);
-        }
-      }
-    } else {
-      // Si no hay nada en localStorage, crear una nota vacía
-      const id = generateId();
-      setBlocks([
-        {
-          id,
-          tag: generateId(),
-          title: "",
-          content: "",
-          color: "#FEFCE8",
-        },
-      ]);
-    }
+    const loadBlocks = async () => {
+      if (user) {
+        // ENVIRONMENT: AUTHENTICATED (Supabase)
+        const { data, error } = await supabase
+          .from("notes")
+          .select("*")
+          .order("sort_index", { ascending: true });
 
-    const savedTagColors = localStorage.getItem("localhost-tag-colors");
-    if (savedTagColors) {
-      try {
-        setTagColors(JSON.parse(savedTagColors));
-      } catch (e) {
-        console.error("Failed to parse tag colors", e);
+        if (!error && data) {
+          const remoteBlocks = data.map((n: any) => ({
+            id: n.local_id,
+            tag: n.tag,
+            userTag: n.user_tag,
+            title: n.title,
+            content: n.content,
+            color: n.color,
+            attachments: n.attachments,
+          }));
+
+          if (remoteBlocks.length > 0) {
+            setBlocks(remoteBlocks);
+          } else {
+            // If DB is totally empty, create one initial note for them
+            const id = generateId();
+            setBlocks([
+              {
+                id,
+                tag: generateId(),
+                title: "",
+                content: "",
+                color: "#FEFCE8",
+              },
+            ]);
+          }
+          return;
+        }
+      } else {
+        // ENVIRONMENT: GUEST (LocalStorage)
+        const savedBlocks = localStorage.getItem("localhost-blocks");
+        if (savedBlocks) {
+          try {
+            const parsed = JSON.parse(savedBlocks);
+            const migrated = (parsed as any[]).map((b) => {
+              const tag =
+                b && typeof b.tag === "string" && b.tag ? b.tag : generateId();
+              const color = b && b.color ? b.color : "#FEFCE8";
+              if (
+                b &&
+                typeof b.title === "string" &&
+                /^Bloque [a-z0-9]{4}$/i.test(b.title)
+              ) {
+                return { ...b, title: "", tag, color };
+              }
+              return { ...b, tag, color };
+            });
+            if (Array.isArray(migrated) && migrated.length > 0) {
+              setBlocks(migrated as TextBlock[]);
+            } else {
+              const id = generateId();
+              setBlocks([
+                {
+                  id,
+                  tag: generateId(),
+                  title: "",
+                  content: "",
+                  color: "#FEFCE8",
+                },
+              ]);
+            }
+          } catch (e) {
+            const id = generateId();
+            setBlocks([
+              {
+                id,
+                tag: generateId(),
+                title: "",
+                content: "",
+                color: "#FEFCE8",
+              },
+            ]);
+          }
+        } else {
+          const id = generateId();
+          setBlocks([
+            {
+              id,
+              tag: generateId(),
+              title: "",
+              content: "",
+              color: "#FEFCE8",
+            },
+          ]);
+        }
       }
-    }
+    };
+
+    loadBlocks();
 
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "localhost-blocks" && e.newValue) {
+      if (e.key === "localhost-blocks" && e.newValue && !user) {
         try {
           const parsed = JSON.parse(e.newValue);
           if (Array.isArray(parsed) && parsed.length > 0) {
@@ -175,18 +200,17 @@ export default function Home({ lang }: HomeProps) {
           console.error("Failed to sync blocks", err);
         }
       }
-      if (e.key === "localhost-tag-colors" && e.newValue) {
-        try {
-          setTagColors(JSON.parse(e.newValue));
-        } catch (err) {
-          console.error("Failed to sync tag colors", err);
-        }
-      }
     };
 
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
+  }, [user, supabase]);
+
+  // Save to LocalStorage ONLY for Guest environment
+  useEffect(() => {
+    if (!mounted || user) return; // Do not touch localStorage if logged in
+    localStorage.setItem("localhost-blocks", JSON.stringify(blocks));
+  }, [blocks, mounted, user]);
 
   // Scroll and center the editing block
   useEffect(() => {
@@ -270,10 +294,9 @@ export default function Home({ lang }: HomeProps) {
     editingTag,
   ]);
 
-  // Guardar en localStorage cada vez que cambien los bloques
   useEffect(() => {
-    localStorage.setItem("localhost-blocks", JSON.stringify(blocks));
-  }, [blocks]);
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem("localhost-tag-colors", JSON.stringify(tagColors));
@@ -560,13 +583,24 @@ export default function Home({ lang }: HomeProps) {
           name: file.name,
           type: file.type,
         };
-        setBlocks((prev) =>
-          prev.map((b) =>
+        setBlocks((prev) => {
+          const next = prev.map((b) =>
             b.id === blockId
               ? { ...b, attachments: [...(b.attachments || []), newAttachment] }
               : b,
-          ),
-        );
+          );
+          
+          if (user) {
+            const updated = next.find(b => b.id === blockId);
+             supabase.from('notes')
+              .update({ attachments: updated?.attachments })
+              .eq('user_id', user.id)
+              .eq('local_id', blockId)
+              .then();
+          }
+          
+          return next;
+        });
       };
       reader.readAsDataURL(file);
     });
@@ -577,8 +611,8 @@ export default function Home({ lang }: HomeProps) {
     index: number,
     isLegacy: boolean,
   ) => {
-    setBlocks((prev) =>
-      prev.map((b) => {
+    setBlocks((prev) => {
+      const next = prev.map((b) => {
         if (b.id !== blockId) return b;
         if (isLegacy) {
           return { ...b, images: b.images?.filter((_, i) => i !== index) };
@@ -588,8 +622,22 @@ export default function Home({ lang }: HomeProps) {
             attachments: b.attachments?.filter((_, i) => i !== index),
           };
         }
-      }),
-    );
+      });
+      
+      // Sync to Supabase if needed
+      if (user) {
+        const updated = next.find(b => b.id === blockId);
+        if (updated) {
+          supabase.from('notes')
+            .update({ attachments: updated.attachments, images: updated.images })
+            .eq('user_id', user.id)
+            .eq('local_id', blockId)
+            .then();
+        }
+      }
+      
+      return next;
+    });
   };
 
   const swapImages = (blockId: string, idx1: number, idx2: number) => {
@@ -772,7 +820,7 @@ export default function Home({ lang }: HomeProps) {
     return formatted;
   };
 
-  const addBlock = () => {
+  const addBlock = async () => {
     const id = generateId();
     const blockId = generateId();
     const newBlock: TextBlock = {
@@ -783,11 +831,26 @@ export default function Home({ lang }: HomeProps) {
       content: "",
       color: selectedTag ? tagColors[selectedTag] || "#FEFCE8" : "#FEFCE8",
     };
+    
+    if (user) {
+      const { error } = await supabase.from('notes').insert({
+        user_id: user.id,
+        local_id: id,
+        tag: blockId,
+        user_tag: newBlock.userTag,
+        title: newBlock.title,
+        content: newBlock.content,
+        color: newBlock.color,
+        sort_index: blocks.length
+      });
+      if (error) console.error('Error adding note to Supabase', error);
+    }
+    
     setBlocks((prev) => [...prev, newBlock]);
     setCreatedBlockId(id);
   };
 
-  const addBlockTop = () => {
+  const addBlockTop = async () => {
     const id = generateId();
     const blockId = generateId();
     const newBlock: TextBlock = {
@@ -798,11 +861,34 @@ export default function Home({ lang }: HomeProps) {
       content: "",
       color: selectedTag ? tagColors[selectedTag] || "#FEFCE8" : "#FEFCE8",
     };
+    
+    if (user) {
+      // Shift all existing blocks down in Supabase
+      const { data: existing } = await supabase.from('notes').select('id, sort_index').eq('user_id', user.id);
+      if (existing) {
+        for (const note of existing) {
+          await supabase.from('notes').update({ sort_index: note.sort_index + 1 }).eq('id', note.id);
+        }
+      }
+
+      const { error } = await supabase.from('notes').insert({
+        user_id: user.id,
+        local_id: id,
+        tag: blockId,
+        user_tag: newBlock.userTag,
+        title: newBlock.title,
+        content: newBlock.content,
+        color: newBlock.color,
+        sort_index: 0
+      });
+      if (error) console.error('Error adding note to Supabase', error);
+    }
+    
     setBlocks((prev) => [newBlock, ...prev]);
     setCreatedBlockId(id);
   };
 
-  const updateBlock = (
+  const updateBlock = async (
     id: string,
     content: string,
     title?: string,
@@ -810,25 +896,38 @@ export default function Home({ lang }: HomeProps) {
   ) => {
     let finalTagName = "";
 
+    const normalizedTag =
+      userTag !== undefined
+        ? userTag.trim().replace(/\s+/g, "-").toUpperCase()
+        : undefined;
+
     setBlocks((prev) =>
       prev.map((block) => {
-        const normalizedTag =
-          userTag !== undefined
-            ? userTag.trim().replace(/\s+/g, "-").toUpperCase()
-            : block.userTag || "";
-
         if (block.id === id) {
-          finalTagName = normalizedTag;
+          const actualTag = normalizedTag ?? block.userTag ?? "";
+          finalTagName = actualTag;
           return {
             ...block,
             content,
             title: title ?? block.title,
-            userTag: normalizedTag || undefined,
+            userTag: actualTag || undefined,
           };
         }
         return block;
       }),
     );
+
+    if (user) {
+      const { error } = await supabase.from('notes')
+        .update({
+          content,
+          title: title ?? undefined,
+          user_tag: normalizedTag || undefined
+        })
+        .eq('user_id', user.id)
+        .eq('local_id', id);
+      if (error) console.error('Error updating note in Supabase', error);
+    }
 
     if (finalTagName && !tagColors[finalTagName]) {
       const block = blocks.find((b) => b.id === id);
@@ -838,10 +937,16 @@ export default function Home({ lang }: HomeProps) {
     }
   };
 
-  const updateBlockColor = (id: string, color: string) => {
+  const updateBlockColor = async (id: string, color: string) => {
     setBlocks((prev) =>
       prev.map((block) => (block.id === id ? { ...block, color } : block)),
     );
+    if (user) {
+      await supabase.from('notes')
+        .update({ color })
+        .eq('user_id', user.id)
+        .eq('local_id', id);
+    }
   };
 
   const updateTagColor = (tagName: string, color: string) => {
@@ -858,25 +963,40 @@ export default function Home({ lang }: HomeProps) {
     });
   };
 
-  const deleteBlock = (id: string, e?: React.MouseEvent) => {
+  const deleteBlock = async (id: string, e?: React.MouseEvent) => {
     if (e) {
       e.stopPropagation();
       if (e.nativeEvent.stopImmediatePropagation)
         e.nativeEvent.stopImmediatePropagation();
     }
     if (deletingBlockId === id) {
+      if (user) {
+        await supabase.from('notes').delete().eq('user_id', user.id).eq('local_id', id);
+      }
+
       setBlocks((prev) => {
         const remaining = prev.filter((block) => block.id !== id);
         if (remaining.length === 0) {
-          return [
-            {
-              id: generateId(),
-              tag: generateId(),
-              title: "",
-              content: "",
-              color: "#FEFCE8",
-            },
-          ];
+          const newId = generateId();
+          const newTag = generateId();
+          const initial = {
+            id: newId,
+            tag: newTag,
+            title: "",
+            content: "",
+            color: "#FEFCE8",
+          };
+          
+          if (user) {
+             supabase.from('notes').insert({
+               user_id: user.id,
+               local_id: newId,
+               tag: newTag,
+               sort_index: 0
+             }).then();
+          }
+          
+          return [initial];
         }
         return remaining;
       });
@@ -897,6 +1017,7 @@ export default function Home({ lang }: HomeProps) {
     ];
     setBlocks(newBlocks);
     setJustMovedId(id);
+    if (user) syncSortOrder(newBlocks);
   };
 
   const moveBlockDown = (id: string) => {
@@ -910,6 +1031,19 @@ export default function Home({ lang }: HomeProps) {
     ];
     setBlocks(newBlocks);
     setJustMovedId(id);
+    if (user) syncSortOrder(newBlocks);
+  };
+
+  const syncSortOrder = async (newBlocks: TextBlock[]) => {
+    if (!user) return;
+    // For simplicity, we update sequentially or in small batches
+    for (let i = 0; i < newBlocks.length; i++) {
+       supabase.from('notes')
+        .update({ sort_index: i })
+        .eq('user_id', user.id)
+        .eq('local_id', newBlocks[i].id)
+        .then();
+    }
   };
 
   // Determine external URL for emojis
