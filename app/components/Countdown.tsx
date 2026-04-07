@@ -123,6 +123,8 @@ export default function Countdown() {
         setMounted(true)
         if (authLoading) return
         const loadCountdowns = async () => {
+            if (authLoading) return
+
             if (user) {
                 // ENVIRONMENT: AUTHENTICATED
                 const { data, error } = await supabase
@@ -189,7 +191,7 @@ export default function Countdown() {
 
         window.addEventListener('storage', handleStorageChange)
         return () => window.removeEventListener('storage', handleStorageChange)
-    }, [user, supabase])
+    }, [user, authLoading, supabase])
 
     useEffect(() => {
         if (!mounted || user) return

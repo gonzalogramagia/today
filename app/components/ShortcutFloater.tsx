@@ -77,6 +77,8 @@ export default function ShortcutFloater() {
 
     useEffect(() => {
         const loadShortcuts = async () => {
+            if (authLoading) return
+
             if (user) {
                 // ENVIRONMENT: AUTHENTICATED (Supabase)
                 const { data, error } = await supabase
@@ -94,10 +96,8 @@ export default function ShortcutFloater() {
                         sort_index: s.sort_index
                     }))
                     setShortcuts(remoteShortcuts)
-                    setLoadingShortcuts(false)
-                    return
                 }
-            } else if (!authLoading) {
+            } else {
                 // ENVIRONMENT: GUEST (LocalStorage)
                 const saved = localStorage.getItem('local-shortcuts')
                 if (saved) {
@@ -115,7 +115,7 @@ export default function ShortcutFloater() {
                     setShortcuts([])
                 }
             }
-            if (!authLoading) setLoadingShortcuts(false)
+            setLoadingShortcuts(false)
         }
 
         loadShortcuts()
@@ -129,7 +129,7 @@ export default function ShortcutFloater() {
 
         window.addEventListener('storage', handleStorageChange)
         return () => window.removeEventListener('storage', handleStorageChange)
-    }, [user, supabase])
+    }, [user, authLoading, supabase])
 
     // Save to LocalStorage ONLY for Guest environment
     const saveToStorage = (newShortcuts: Shortcut[]) => {
