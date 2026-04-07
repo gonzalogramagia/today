@@ -110,13 +110,18 @@ export default function Home({ lang }: HomeProps) {
             attachments: n.attachments,
           }));
 
-          setBlocks(remoteBlocks.length > 0 ? remoteBlocks : [{
-            id: generateId(),
-            tag: generateId(),
-            title: "",
-            content: "",
-            color: "#FEFCE8",
-          }]);
+          if (remoteBlocks.length > 0) {
+            setBlocks(remoteBlocks);
+          } else {
+            // DB is empty, but we show a placeholder that will be upserted on first edit
+            setBlocks([{
+              id: "init",
+              tag: "nueva",
+              title: "",
+              content: "",
+              color: "#FEFCE8",
+            }]);
+          }
           return;
         } else if (error) {
           console.error("Supabase fetch error:", error);
@@ -922,14 +927,16 @@ export default function Home({ lang }: HomeProps) {
 
     if (user) {
       const { error } = await supabase.from('notes')
-        .update({
+        .upsert({
+          user_id: user.id,
+          local_id: id,
+          tag: blocks.find(b => b.id === id)?.tag || generateId(),
           content,
           title: title ?? undefined,
-          user_tag: normalizedTag || undefined
-        })
-        .eq('user_id', user.id)
-        .eq('local_id', id);
-      if (error) console.error('Error updating note in Supabase', error);
+          user_tag: normalizedTag || undefined,
+          color: blocks.find(b => b.id === id)?.color || "#FEFCE8"
+        }, { onConflict: 'user_id,local_id' });
+      if (error) console.error('Error upserting note in Supabase', error);
     }
 
     if (finalTagName && !tagColors[finalTagName]) {

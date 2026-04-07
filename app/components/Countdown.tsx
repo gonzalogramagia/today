@@ -50,9 +50,12 @@ export default function Countdown() {
             
             if (user) {
               await supabase.from('countdowns')
-                .update({ name: data.name, date: data.date })
-                .eq('user_id', user.id)
-                .eq('local_id', editingId);
+                .upsert({ 
+                    user_id: user.id,
+                    local_id: editingId,
+                    name: data.name, 
+                    date: data.date 
+                }, { onConflict: 'user_id,local_id' });
             }
             setEditingId(null)
         } else {
