@@ -256,6 +256,9 @@ export default function Countdown() {
                     <h3 className="font-medium text-zinc-900 pt-1 text-sm flex items-center gap-2 cursor-default">
                         <CalendarClock size={16} />
                         {isEnglish ? 'Countdowns' : 'Cuentas Regresivas'}
+                        {user && (
+                            <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse ml-0.5" title="Sincronizado" />
+                        )}
                     </h3>
                     {countdowns.length < 2 && !editingId && (
                         <button

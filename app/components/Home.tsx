@@ -1652,16 +1652,22 @@ export default function Home({ lang }: HomeProps) {
                     (block.userTag ? (
                       <span
                         onClick={() => startEditing(block, "tag")}
-                        className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-black/10 text-zinc-700 uppercase tracking-wider border border-black/10 whitespace-nowrap transition-colors cursor-pointer hover:bg-black/20"
+                        className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-black/10 text-zinc-700 uppercase tracking-wider border border-black/10 whitespace-nowrap transition-colors cursor-pointer hover:bg-black/20 flex items-center gap-1"
                       >
                         #{block.userTag}
+                        {user && (
+                          <span className="w-1 h-1 bg-green-500 rounded-full animate-pulse" />
+                        )}
                       </span>
                     ) : (
                       <span
                         onClick={() => startEditing(block, "tag")}
-                        className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-zinc-400/10 text-zinc-400 uppercase tracking-widest border border-black/5 whitespace-nowrap italic transition-colors cursor-pointer hover:bg-zinc-400/20"
+                        className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-zinc-400/10 text-zinc-400 uppercase tracking-widest border border-black/5 whitespace-nowrap italic transition-colors cursor-pointer hover:bg-zinc-400/20 flex items-center gap-1"
                       >
                         {t.noTag}
+                        {user && (
+                          <span className="w-1 h-1 bg-green-500 rounded-full animate-pulse" />
+                        )}
                       </span>
                     ))}
                 </div>

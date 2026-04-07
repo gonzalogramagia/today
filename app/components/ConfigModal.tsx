@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useState, useEffect } from "react";
 import { Language } from "../data/i18n";
 import GoogleAuth from "./GoogleAuth";
+import { useAuth } from "../hooks/useAuth";
 
 interface ConfigModalProps {
     lang: Language;
@@ -15,6 +16,7 @@ interface ConfigModalProps {
 }
 
 export default function ConfigModal({ lang, onClose, toggleLanguage, exportPath, importPath }: ConfigModalProps) {
+    const { user } = useAuth();
     const [showTasks, setShowTasks] = useState(true);
     const [showCountdown, setShowCountdown] = useState(true);
     const [showClock, setShowClock] = useState(true);
@@ -66,7 +68,7 @@ export default function ConfigModal({ lang, onClose, toggleLanguage, exportPath,
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm">
             <div className="absolute inset-0" onClick={onClose}></div>
 
-            <div className="bg-white border border-zinc-200 rounded-2xl shadow-2xl p-6 w-full max-w-md relative z-[70] animate-in fade-in zoom-in-95 duration-200">
+            <div className="bg-white border border-zinc-200 rounded-2xl shadow-2xl p-6 w-full max-w-md relative z-[70] animate-in fade-in zoom-in-95 duration-200 my-auto">
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-semibold text-zinc-900 flex items-center gap-2">
                         <Wrench className="w-5 h-5 scale-x-[-1]" />
@@ -191,30 +193,32 @@ export default function ConfigModal({ lang, onClose, toggleLanguage, exportPath,
 
                 </div>
 
-                {/* Export / Import Buttons */}
-                <div className="hidden lg:grid grid-cols-2 gap-3 mt-6">
-                    <Link
-                        href={importPath}
-                        className="flex flex-col items-center justify-center gap-2 p-4 bg-zinc-50 border border-zinc-100 rounded-xl hover:bg-zinc-100 transition-all group cursor-pointer"
-                    >
-                        <FileDown size={24} className="text-zinc-500 group-hover:text-yellow-500 transition-colors" />
-                        <span className="text-sm font-medium text-zinc-600 group-hover:text-zinc-900">
-                            {lang === 'en' ? 'Import Backup' : 'Importar Backup'}
-                        </span>
-                    </Link>
-                    <Link
-                        href={exportPath}
-                        className="flex flex-col items-center justify-center gap-2 p-4 bg-zinc-50 border border-zinc-100 rounded-xl hover:bg-zinc-100 transition-all group cursor-pointer"
-                    >
-                        <FileUp size={24} className="text-zinc-500 group-hover:text-yellow-500 transition-colors" />
-                        <span className="text-sm font-medium text-zinc-600 group-hover:text-zinc-900">
-                            {lang === 'en' ? 'Export Backup' : 'Exportar Backup'}
-                        </span>
-                    </Link>
-                </div>
+                {/* Export / Import Buttons - Only show for Guest (no user) */}
+                {!user && (
+                    <div className="hidden lg:grid grid-cols-2 gap-3 mt-6">
+                        <Link
+                            href={importPath}
+                            className="flex flex-col items-center justify-center gap-2 p-4 bg-zinc-50 border border-zinc-100 rounded-xl hover:bg-zinc-100 transition-all group cursor-pointer"
+                        >
+                            <FileDown size={24} className="text-zinc-500 group-hover:text-yellow-500 transition-colors" />
+                            <span className="text-sm font-medium text-zinc-600 group-hover:text-zinc-900">
+                                {lang === 'en' ? 'Import Backup' : 'Importar Backup'}
+                            </span>
+                        </Link>
+                        <Link
+                            href={exportPath}
+                            className="flex flex-col items-center justify-center gap-2 p-4 bg-zinc-50 border border-zinc-100 rounded-xl hover:bg-zinc-100 transition-all group cursor-pointer"
+                        >
+                            <FileUp size={24} className="text-zinc-500 group-hover:text-yellow-500 transition-colors" />
+                            <span className="text-sm font-medium text-zinc-600 group-hover:text-zinc-900">
+                                {lang === 'en' ? 'Export Backup' : 'Exportar Backup'}
+                            </span>
+                        </Link>
+                    </div>
+                )}
 
                 {/* Google Auth - Mobile only (hidden when desktop button is visible) */}
-                <div className="sm:hidden">
+                <div className="sm:hidden mt-8">
                     <GoogleAuth lang={lang} variant="full" />
                 </div>
             </div>

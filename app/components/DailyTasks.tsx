@@ -317,6 +317,9 @@ export default function DailyTasks() {
                             🕒
                         </span>
                         <span>{isEnglish ? 'Daily Tasks' : 'Tareas Diarias'}</span>
+                        {user && (
+                            <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse ml-0.5" title="Sincronizado" />
+                        )}
                         <div className="absolute bottom-full left-[-4px] mb-2 w-max bg-black text-white text-[10px] px-2 py-1 rounded opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-50">
                             {isEnglish ? 'Resets at 23:59' : 'Se resetean a las 23:59'}
                             {/* Speech bubble pointer */}
@@ -449,7 +452,7 @@ export default function DailyTasks() {
                         </div>
                     )))}
 
-                    {tasks.length === 0 && (
+                    {tasks.length === 0 && !loading && (
                         <div className="text-xs text-zinc-400 text-center py-4 italic">
                             {isEnglish ? 'No tasks for today' : 'No hay tareas para hoy'}
                         </div>
