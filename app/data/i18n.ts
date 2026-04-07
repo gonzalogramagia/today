@@ -29,6 +29,8 @@ export interface Dictionary {
   noTag: string;
   countdownChristmas: string;
   countdownNewYear: string;
+  signInWithGoogle: string;
+  signOut: string;
 }
 
 export const dictionary: Record<Language, Dictionary> = {
@@ -62,6 +64,8 @@ export const dictionary: Record<Language, Dictionary> = {
     noTag: "Sin Tag",
     countdownChristmas: "🎄 Navidad",
     countdownNewYear: "🎉 Año Nuevo",
+    signInWithGoogle: "Iniciar sesión con Google",
+    signOut: "Cerrar sesión",
   },
   en: {
     title: "MY NOTES",
@@ -93,5 +97,7 @@ export const dictionary: Record<Language, Dictionary> = {
     noTag: "No Tag",
     countdownChristmas: "🎄 Christmas",
     countdownNewYear: "🎉 New Year",
+    signInWithGoogle: "Sign in with Google",
+    signOut: "Sign out",
   },
 };

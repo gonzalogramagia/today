@@ -4,6 +4,7 @@ import { Wrench, Languages, FileDown, FileUp, X, Eye, EyeOff, ExternalLink, AppW
 import Link from 'next/link';
 import { useState, useEffect } from "react";
 import { Language } from "../data/i18n";
+import GoogleAuth from "./GoogleAuth";
 
 interface ConfigModalProps {
     lang: Language;
@@ -191,7 +192,7 @@ export default function ConfigModal({ lang, onClose, toggleLanguage, exportPath,
                 </div>
 
                 {/* Export / Import Buttons */}
-                <div className="hidden sm:grid grid-cols-2 gap-3 mt-6">
+                <div className="hidden lg:grid grid-cols-2 gap-3 mt-6">
                     <Link
                         href={importPath}
                         className="flex flex-col items-center justify-center gap-2 p-4 bg-zinc-50 border border-zinc-100 rounded-xl hover:bg-zinc-100 transition-all group cursor-pointer"
@@ -210,6 +211,11 @@ export default function ConfigModal({ lang, onClose, toggleLanguage, exportPath,
                             {lang === 'en' ? 'Export Backup' : 'Exportar Backup'}
                         </span>
                     </Link>
+                </div>
+
+                {/* Google Auth - Mobile only (hidden when desktop button is visible) */}
+                <div className="sm:hidden">
+                    <GoogleAuth lang={lang} variant="full" />
                 </div>
             </div>
         </div>

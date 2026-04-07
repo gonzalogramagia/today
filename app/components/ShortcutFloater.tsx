@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Plus, X, Pencil, Trash2, Search, Image as ImageIcon, Link } from 'lucide-react'
 import { usePathname } from 'next/navigation'
+import GoogleAuth from './GoogleAuth'
 
 type Position = 'left' | 'right'
 
@@ -294,28 +295,31 @@ export default function ShortcutFloater() {
                             </div>
                         ))
                     ) : (
-                        // Right side - Hardcoded Just Focus
-                        <div
-                            className="group relative flex items-center justify-center w-10 h-10 rounded-full bg-white border border-zinc-200 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-110 cursor-pointer overflow-visible"
-                        >
-                            <a
-                                href="https://chromewebstore.google.com/detail/just-focus/gefaddaengbodpiobpbgblajdboalmgc"
-                                onClick={(e) => {
-                                    e.preventDefault()
-                                    window.open("https://chromewebstore.google.com/detail/just-focus/gefaddaengbodpiobpbgblajdboalmgc", '_blank')
-                                }}
-                                className="w-full h-full p-1 flex items-center justify-center rounded-full cursor-pointer"
-                                role="button"
-                                tabIndex={0}
-                                draggable="true"
+                        // Right side - Google Auth and Hardcoded Just Focus
+                        <>
+                            <GoogleAuth lang={isEnglish ? 'en' : 'es'} variant="icon" />
+                            <div
+                                className="group relative flex items-center justify-center w-10 h-10 rounded-full bg-white border border-zinc-200 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-110 cursor-pointer overflow-visible"
                             >
-                                <img
-                                    src="/just-focus.png"
-                                    alt="Just Focus"
-                                    className="w-full h-full object-contain rounded-full"
-                                />
-                            </a>
-                        </div>
+                                <a
+                                    href="https://chromewebstore.google.com/detail/just-focus/gefaddaengbodpiobpbgblajdboalmgc"
+                                    onClick={(e) => {
+                                        e.preventDefault()
+                                        window.open("https://chromewebstore.google.com/detail/just-focus/gefaddaengbodpiobpbgblajdboalmgc", '_blank')
+                                    }}
+                                    className="w-full h-full p-1 flex items-center justify-center rounded-full cursor-pointer"
+                                    role="button"
+                                    tabIndex={0}
+                                    draggable="true"
+                                >
+                                    <img
+                                        src="/just-focus.png"
+                                        alt="Just Focus"
+                                        className="w-full h-full object-contain rounded-full"
+                                    />
+                                </a>
+                            </div>
+                        </>
                     )}
                 </div>
             ))}
