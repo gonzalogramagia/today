@@ -110,21 +110,24 @@ export default function Home({ lang }: HomeProps) {
             attachments: n.attachments,
           }));
 
-          if (remoteBlocks.length > 0) {
-            setBlocks(remoteBlocks);
-          } else {
-            // If DB is totally empty, create one initial note for them
-            const id = generateId();
-            setBlocks([
-              {
-                id,
-                tag: generateId(),
-                title: "",
-                content: "",
-                color: "#FEFCE8",
-              },
-            ]);
-          }
+          setBlocks(remoteBlocks.length > 0 ? remoteBlocks : [{
+            id: generateId(),
+            tag: generateId(),
+            title: "",
+            content: "",
+            color: "#FEFCE8",
+          }]);
+          return;
+        } else if (error) {
+          console.error("Supabase fetch error:", error);
+          // If error, we still clear local blocks to maintain isolation
+          setBlocks([{
+            id: generateId(),
+            tag: generateId(),
+            title: "",
+            content: "",
+            color: "#FEFCE8",
+          }]);
           return;
         }
       } else {
@@ -1087,10 +1090,18 @@ export default function Home({ lang }: HomeProps) {
             {t.addBlockMobile}
           </button>
         </div>
-        <p
-          className="mb-4 text-gray-600 text-center lg:-mt-16"
-          dangerouslySetInnerHTML={{ __html: t.subtitle }}
-        />
+        <p className="mb-4 text-gray-600 text-center lg:-mt-16">
+          {user ? (
+            <span className="flex items-center justify-center gap-1.5 text-zinc-500 text-sm font-medium bg-zinc-100/50 py-1 px-3 rounded-full w-max mx-auto border border-zinc-200/50 shadow-sm animate-in fade-in zoom-in duration-500">
+              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+              {lang === "es"
+                ? "Sincronizado con tu cuenta cloud"
+                : "Synced with your cloud account"}
+            </span>
+          ) : (
+            <span dangerouslySetInnerHTML={{ __html: t.subtitle }} />
+          )}
+        </p>
 
         {availableTags.length > 0 && (
           <div className="flex flex-wrap justify-center gap-2 mb-0 animate-in fade-in slide-in-from-top-2 duration-500">

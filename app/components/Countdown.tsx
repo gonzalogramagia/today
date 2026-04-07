@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react'
 import { Timer, Trash2, CalendarClock, Plus, Pencil, X } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { dictionary } from "../data/i18n"
+import { createClient } from "@/utils/supabase/client"
+import { useAuth } from "@/app/hooks/useAuth"
 
 interface CountdownItem {
     id: string
@@ -22,16 +24,19 @@ export default function Countdown() {
     const pathname = usePathname()
     const isEnglish = pathname?.startsWith('/en')
     const containerRef = useRef<HTMLDivElement>(null)
+    const supabase = createClient()
+    const { user } = useAuth()
 
-    const handleSaveFixed = (e?: React.FormEvent, customData?: { name: string, date: string }) => {
+    const handleSaveFixed = async (e?: React.FormEvent, customData?: { name: string, date: string }) => {
         e?.preventDefault()
         const data = customData || formData
         if (!data.name || !data.date) return
 
+        let updatedCountdowns: CountdownItem[] = [];
+
         if (editingId) {
-            setCountdowns(countdowns.map(c => {
+            updatedCountdowns = countdowns.map(c => {
                 if (c.id === editingId) {
-                    // If name is changed, remove special type. If only date is changed, keep it.
                     const isNameDifferent = c.name !== data.name;
                     return { 
                         ...c, 
@@ -40,11 +45,32 @@ export default function Countdown() {
                     };
                 }
                 return c;
-            }))
+            });
+            setCountdowns(updatedCountdowns);
+            
+            if (user) {
+              await supabase.from('countdowns')
+                .update({ name: data.name, date: data.date })
+                .eq('user_id', user.id)
+                .eq('local_id', editingId);
+            }
             setEditingId(null)
         } else {
             if (countdowns.length >= 2) return
-            setCountdowns([...countdowns, { id: crypto.randomUUID(), ...data }])
+            const newId = crypto.randomUUID();
+            const newItem = { id: newId, ...data };
+            updatedCountdowns = [...countdowns, newItem];
+            setCountdowns(updatedCountdowns);
+            
+            if (user) {
+              await supabase.from('countdowns').insert({
+                user_id: user.id,
+                local_id: newId,
+                name: data.name,
+                date: data.date,
+                sort_index: countdowns.length
+              });
+            }
             setIsCreating(false)
         }
         setFormData({ name: '', date: '' })
@@ -91,26 +117,37 @@ export default function Countdown() {
 
     useEffect(() => {
         setMounted(true)
-        const loadCountdowns = () => {
-            const saved = localStorage.getItem('countdown-events')
-            if (saved) {
-                try {
-                    setCountdowns(JSON.parse(saved))
-                } catch (e) {
-                    console.error('Failed to parse countdowns', e)
+        const loadCountdowns = async () => {
+            if (user) {
+                // ENVIRONMENT: AUTHENTICATED
+                const { data, error } = await supabase
+                    .from('countdowns')
+                    .select('*')
+                    .order('sort_index', { ascending: true });
+                
+                if (!error && data && data.length > 0) {
+                    setCountdowns(data.map((c: any) => ({
+                        id: c.local_id,
+                        name: c.name,
+                        date: c.date,
+                        type: c.type
+                    })));
+                } else {
+                    // If empty, set defaults but don't save yet? 
+                    // Actually, let's keep them empty if they are synced.
+                    setCountdowns([]);
                 }
             } else {
-                const oldSaved = localStorage.getItem('countdown-event')
-                if (oldSaved) {
+                // ENVIRONMENT: GUEST
+                const saved = localStorage.getItem('countdown-events')
+                if (saved) {
                     try {
-                        const old = JSON.parse(oldSaved)
-                        const migrated = [{ id: crypto.randomUUID(), name: old.name, date: old.date }]
-                        setCountdowns(migrated)
-                        localStorage.setItem('countdown-events', JSON.stringify(migrated))
-                        localStorage.removeItem('countdown-event')
-                    } catch (e) { }
+                        setCountdowns(JSON.parse(saved))
+                    } catch (e) {
+                        console.error('Failed to parse countdowns', e)
+                    }
                 } else {
-                    // Check if it's the first time
+                    // Default logic for beginners
                     const isFirstTime = localStorage.getItem('countdown-first-time-check') === null
                     if (isFirstTime) {
                         const currentYear = new Date().getFullYear()
@@ -141,22 +178,39 @@ export default function Countdown() {
         loadCountdowns()
 
         const handleStorageChange = (e: StorageEvent) => {
-            if (e.key === 'countdown-events') {
+            if (e.key === 'countdown-events' && !user) {
                 loadCountdowns()
             }
         }
 
         window.addEventListener('storage', handleStorageChange)
         return () => window.removeEventListener('storage', handleStorageChange)
-    }, [])
+    }, [user, supabase])
 
     useEffect(() => {
-        if (!mounted) return
+        if (!mounted || user) return
         localStorage.setItem('countdown-events', JSON.stringify(countdowns))
-    }, [countdowns, mounted])
+    }, [countdowns, mounted, user])
 
-    const handleDelete = (id: string) => {
-        setCountdowns(countdowns.filter(c => c.id !== id))
+    const handleDelete = async (id: string) => {
+        const remaining = countdowns.filter(c => c.id !== id);
+        setCountdowns(remaining);
+        if (user) {
+            await supabase.from('countdowns').delete().eq('user_id', user.id).eq('local_id', id);
+            // Re-sync sort order
+            syncSortOrder(remaining);
+        }
+    }
+
+    const syncSortOrder = async (items: CountdownItem[]) => {
+        if (!user) return;
+        for (let i = 0; i < items.length; i++) {
+            supabase.from('countdowns')
+                .update({ sort_index: i })
+                .eq('user_id', user.id)
+                .eq('local_id', items[i].id)
+                .then();
+        }
     }
 
     const startEditing = (item: CountdownItem) => {
@@ -182,6 +236,7 @@ export default function Countdown() {
         const [removed] = newCountdowns.splice(draggedIdx, 1)
         newCountdowns.splice(targetIdx, 0, removed)
         setCountdowns(newCountdowns)
+        if (user) syncSortOrder(newCountdowns)
     }
 
     const handleDragEnd = () => {
