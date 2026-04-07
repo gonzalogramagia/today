@@ -1115,8 +1115,7 @@ export default function Home({ lang }: HomeProps) {
                 <span>
                   Sincronizado con la{" "}
                   <strong>
-                    cuenta cloud de{" "}
-                    {user?.user_metadata?.full_name ||
+                    cuenta cloud de {user?.user_metadata?.full_name?.split(" ")[0] ||
                       user?.email?.split("@")[0] ||
                       "Usuario"}
                   </strong>
@@ -1125,7 +1124,7 @@ export default function Home({ lang }: HomeProps) {
                 <span>
                   Synced with{" "}
                   <strong>
-                    {user?.user_metadata?.full_name ||
+                    {user?.user_metadata?.full_name?.split(" ")[0] ||
                       user?.email?.split("@")[0] ||
                       "User"}
                     's cloud account

@@ -94,6 +94,7 @@ export default function ShortcutFloater() {
                         sort_index: s.sort_index
                     }))
                     setShortcuts(remoteShortcuts)
+                    setLoadingShortcuts(false)
                     return
                 }
             } else if (!authLoading) {
@@ -299,7 +300,7 @@ export default function ShortcutFloater() {
                         </button>
                     )}
 
-                    {loadingShortcuts ? (
+                    {loadingShortcuts && side === 'left' ? (
                         <div className="w-10 h-10 rounded-full bg-white border border-zinc-200 shadow-sm flex items-center justify-center animate-pulse">
                              <div className="w-4 h-4 border-2 border-zinc-200 border-t-zinc-500 rounded-full animate-spin" />
                         </div>

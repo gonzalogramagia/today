@@ -67,7 +67,7 @@ export const dictionary: Record<Language, Dictionary> = {
     countdownNewYear: "🎉 Año Nuevo",
     signInWithGoogle: "Iniciar sesión con Google",
     signOut: "Cerrar sesión",
-    signOutMobile: "Cerrar sesión de tu cuenta",
+    signOutMobile: "Cerrar sesión",
   },
   en: {
     title: "MY NOTES",
@@ -101,6 +101,6 @@ export const dictionary: Record<Language, Dictionary> = {
     countdownNewYear: "🎉 New Year",
     signInWithGoogle: "Sign in with Google",
     signOut: "Sign out",
-    signOutMobile: "Log out of your account",
+    signOutMobile: "Sign out",
   },
 };

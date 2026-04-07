@@ -93,7 +93,8 @@ export default function GoogleAuth({ lang, variant = 'icon' }: GoogleAuthProps) 
         if (variant === 'full') {
             return (
                 <div className="flex flex-col items-center gap-3">
-                    <span className="text-[10px] sm:text-xs font-medium text-zinc-400 uppercase tracking-wider">
+                    <span className="flex items-center gap-2 text-[10px] sm:text-xs font-medium text-zinc-400 uppercase tracking-wider">
+                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
                         {lang === 'es' ? 'Sincronizado con la cuenta cloud de ' : 'Synced with the cloud account of '}
                         <span className="text-zinc-600">{firstName}</span>
                     </span>
