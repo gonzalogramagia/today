@@ -218,7 +218,7 @@ export default function ConfigModal({ lang, onClose, toggleLanguage, exportPath,
                 )}
 
                 {/* Google Auth - Mobile only (hidden when desktop button is visible) */}
-                <div className="sm:hidden mt-8">
+                <div className="sm:hidden mt-4">
                     <GoogleAuth lang={lang} variant="full" />
                 </div>
             </div>

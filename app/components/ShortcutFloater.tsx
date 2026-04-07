@@ -18,7 +18,7 @@ type Shortcut = {
 }
 
 export default function ShortcutFloater() {
-    const { user, supabase } = useAuth()
+    const { user, loading: authLoading, supabase } = useAuth()
     const [shortcuts, setShortcuts] = useState<Shortcut[]>([])
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [editingId, setEditingId] = useState<string | null>(null)
@@ -96,7 +96,7 @@ export default function ShortcutFloater() {
                     setShortcuts(remoteShortcuts)
                     return
                 }
-            } else {
+            } else if (!authLoading) {
                 // ENVIRONMENT: GUEST (LocalStorage)
                 const saved = localStorage.getItem('local-shortcuts')
                 if (saved) {
@@ -110,9 +110,11 @@ export default function ShortcutFloater() {
                     } catch (e) {
                         console.error('Failed to parse shortcuts', e)
                     }
+                } else {
+                    setShortcuts([])
                 }
             }
-            setLoadingShortcuts(false)
+            if (!authLoading) setLoadingShortcuts(false)
         }
 
         loadShortcuts()
@@ -297,57 +299,13 @@ export default function ShortcutFloater() {
                         </button>
                     )}
 
-                    {loadingShortcuts && (
-                        <div className="flex gap-2">
-                             {[1, 2].map((i) => (
-                                <div key={i} className="w-10 h-10 rounded-full bg-zinc-100 border border-zinc-200 animate-pulse" />
-                             ))}
+                    {loadingShortcuts ? (
+                        <div className="w-10 h-10 rounded-full bg-white border border-zinc-200 shadow-sm flex items-center justify-center animate-pulse">
+                             <div className="w-4 h-4 border-2 border-zinc-200 border-t-zinc-500 rounded-full animate-spin" />
                         </div>
-                    )}
-
-                    {!loadingShortcuts && (side === 'left' ? (
-                        shortcuts.filter(s => s.position === side).map(shortcut => (
-                            <div
-                                key={shortcut.id}
-                                className="group relative flex items-center justify-center w-10 h-10 rounded-full bg-white border border-zinc-200 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-110 cursor-pointer overflow-visible"
-                            >
-                                <a
-                                    href={shortcut.url}
-                                    onClick={(e) => handleShortcutClick(e, shortcut)}
-                                    className="w-full h-full p-1 flex items-center justify-center rounded-full cursor-pointer"
-                                    role="button"
-                                    tabIndex={0}
-                                    draggable="true"
-                                >
-                                    <img
-                                        src={shortcut.iconUrl}
-                                        alt={shortcut.name}
-                                        className="w-full h-full object-contain rounded-full"
-                                        onError={(e) => {
-                                            (e.target as HTMLImageElement).style.display = 'none';
-                                            (e.target as HTMLImageElement).parentElement!.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>'
-                                        }}
-                                    />
-                                </a>
-
-                                <div
-                                    onClick={(e) => {
-                                        e.preventDefault()
-                                        e.stopPropagation()
-                                        handleOpenModal(side, shortcut)
-                                    }}
-                                    className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 cursor-pointer hover:bg-zinc-800 flex flex-col items-center gap-0.5"
-                                    title={t.editTooltip}
-                                >
-                                    {shortcut.name}
-                                    <Pencil size={8} className="text-zinc-400" />
-                                </div>
-                            </div>
-                        ))
                     ) : (
-                        <>
-                            <GoogleAuth lang={isEnglish ? 'en' : 'es'} variant="icon" />
-                            {shortcuts.filter(s => s.position === side).map(shortcut => (
+                        side === 'left' ? (
+                            shortcuts.filter(s => s.position === side).map(shortcut => (
                                 <div
                                     key={shortcut.id}
                                     className="group relative flex items-center justify-center w-10 h-10 rounded-full bg-white border border-zinc-200 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-110 cursor-pointer overflow-visible"
@@ -384,30 +342,72 @@ export default function ShortcutFloater() {
                                         <Pencil size={8} className="text-zinc-400" />
                                     </div>
                                 </div>
-                            ))}
-                            <div
-                                className="group relative flex items-center justify-center w-10 h-10 rounded-full bg-white border border-zinc-200 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-110 cursor-pointer overflow-visible"
-                            >
-                                <a
-                                    href="https://chromewebstore.google.com/detail/just-focus/gefaddaengbodpiobpbgblajdboalmgc"
-                                    onClick={(e) => {
-                                        e.preventDefault()
-                                        window.open("https://chromewebstore.google.com/detail/just-focus/gefaddaengbodpiobpbgblajdboalmgc", '_blank')
-                                    }}
-                                    className="w-full h-full p-1 flex items-center justify-center rounded-full cursor-pointer"
-                                    role="button"
-                                    tabIndex={0}
-                                    draggable="true"
+                            ))
+                        ) : (
+                            <>
+                                <GoogleAuth lang={isEnglish ? 'en' : 'es'} variant="icon" />
+                                {shortcuts.filter(s => s.position === side).map(shortcut => (
+                                    <div
+                                        key={shortcut.id}
+                                        className="group relative flex items-center justify-center w-10 h-10 rounded-full bg-white border border-zinc-200 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-110 cursor-pointer overflow-visible"
+                                    >
+                                        <a
+                                            href={shortcut.url}
+                                            onClick={(e) => handleShortcutClick(e, shortcut)}
+                                            className="w-full h-full p-1 flex items-center justify-center rounded-full cursor-pointer"
+                                            role="button"
+                                            tabIndex={0}
+                                            draggable="true"
+                                        >
+                                            <img
+                                                src={shortcut.iconUrl}
+                                                alt={shortcut.name}
+                                                className="w-full h-full object-contain rounded-full"
+                                                onError={(e) => {
+                                                    (e.target as HTMLImageElement).style.display = 'none';
+                                                    (e.target as HTMLImageElement).parentElement!.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>'
+                                                }}
+                                            />
+                                        </a>
+
+                                        <div
+                                            onClick={(e) => {
+                                                e.preventDefault()
+                                                e.stopPropagation()
+                                                handleOpenModal(side, shortcut)
+                                            }}
+                                            className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 cursor-pointer hover:bg-zinc-800 flex flex-col items-center gap-0.5"
+                                            title={t.editTooltip}
+                                        >
+                                            {shortcut.name}
+                                            <Pencil size={8} className="text-zinc-400" />
+                                        </div>
+                                    </div>
+                                ))}
+                                <div
+                                    className="group relative flex items-center justify-center w-10 h-10 rounded-full bg-white border border-zinc-200 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-110 cursor-pointer overflow-visible"
                                 >
-                                    <img
-                                        src="/just-focus.png"
-                                        alt="Just Focus"
-                                        className="w-full h-full object-contain rounded-full"
-                                    />
-                                </a>
-                            </div>
-                        </>
-                    ))}
+                                    <a
+                                        href="https://chromewebstore.google.com/detail/just-focus/gefaddaengbodpiobpbgblajdboalmgc"
+                                        onClick={(e) => {
+                                            e.preventDefault()
+                                            window.open("https://chromewebstore.google.com/detail/just-focus/gefaddaengbodpiobpbgblajdboalmgc", '_blank')
+                                        }}
+                                        className="w-full h-full p-1 flex items-center justify-center rounded-full cursor-pointer"
+                                        role="button"
+                                        tabIndex={0}
+                                        draggable="true"
+                                    >
+                                        <img
+                                            src="/just-focus.png"
+                                            alt="Just Focus"
+                                            className="w-full h-full object-contain rounded-full"
+                                        />
+                                    </a>
+                                </div>
+                            </>
+                        )
+                    )}
                 </div>
             ))}
 

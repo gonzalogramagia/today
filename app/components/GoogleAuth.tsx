@@ -74,28 +74,37 @@ export default function GoogleAuth({ lang, variant = 'icon' }: GoogleAuthProps) 
     }
 
     if (user) {
-        return (
+        const firstName = user.user_metadata.full_name?.split(' ')[0] || user.user_metadata.name?.split(' ')[0] || 'User'
+        
+        const logoutPill = (
             <div 
                 onClick={handleLogout}
                 title="Log out"
-                className="group flex items-center h-10 px-3 bg-zinc-50 border border-zinc-200 rounded-xl shadow-sm cursor-pointer hover:bg-zinc-100 transition-all gap-2.5"
+                className="group flex items-center h-12 px-6 bg-zinc-50 border border-zinc-200 rounded-xl shadow-sm cursor-pointer hover:bg-zinc-100 transition-all gap-2.5"
             >
                 <LogOut size={12} className="text-zinc-400 group-hover:text-zinc-600 transition-colors transform scale-x-[-1]" />
-                {user.user_metadata.avatar_url ? (
-                    <img 
-                        src={user.user_metadata.avatar_url} 
-                        className="w-5 h-5 rounded-full" 
-                        alt="Profile"
-                    />
-                ) : (
-                    <UserIcon size={16} className="text-zinc-600" />
-                )}
                 <span className="text-xs font-bold text-zinc-600 whitespace-nowrap overflow-hidden text-ellipsis">
                     <span className="hidden sm:inline">{t.signOut}</span>
                     <span className="sm:hidden">{t.signOutMobile}</span>
                 </span>
             </div>
         )
+
+        if (variant === 'full') {
+            return (
+                <div className="flex flex-col items-center gap-3">
+                    <span className="text-[10px] sm:text-xs font-medium text-zinc-400 uppercase tracking-wider">
+                        {lang === 'es' ? 'Sincronizado con la cuenta cloud de ' : 'Synced with the cloud account of '}
+                        <span className="text-zinc-600">{firstName}</span>
+                    </span>
+                    <div className="w-full flex justify-center">
+                        {logoutPill}
+                    </div>
+                </div>
+            )
+        }
+
+        return logoutPill
     }
 
     if (variant === 'icon') {
