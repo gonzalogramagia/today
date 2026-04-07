@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Plus, Trash2, Check, Square, CheckSquare, Pencil, X } from 'lucide-react'
+import { Plus, Trash2, Check, Square, CheckSquare, Pencil, X, Loader2 } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '../hooks/useAuth'
 
@@ -23,6 +23,7 @@ export default function DailyTasks() {
     const [editingId, setEditingId] = useState<string | null>(null)
     const [deletingId, setDeletingId] = useState<string | null>(null)
     const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null)
+    const [loading, setLoading] = useState(true)
     const pathname = usePathname()
     const isEnglish = pathname?.startsWith('/en')
     const containerRef = useRef<HTMLDivElement>(null)
@@ -96,32 +97,35 @@ export default function DailyTasks() {
 
                         if (!updateError) {
                             remoteTasks = remoteTasks.map(t => ({ ...t, completed: false }))
-                            // We use a separate key or logic for local tracked reset? 
-                            // Using the same key is fine for session tracking, but let's be careful.
                             localStorage.setItem('daily-tasks-last-reset', today)
                         }
                     }
                     setTasks(remoteTasks)
-                    return
                 }
             } else {
                 // ENVIRONMENT: GUEST (LocalStorage)
-                const savedTasks = localStorage.getItem('daily-tasks')
-                let parsedTasks: Task[] = []
-                if (savedTasks) {
-                    try {
-                        parsedTasks = JSON.parse(savedTasks)
-                    } catch (e) {
-                        console.error('Failed to parse local daily tasks', e)
+                // Apply daily reset logic locally
+                if (lastReset !== today) {
+                    const savedTasks = localStorage.getItem('daily-tasks')
+                    if (savedTasks) {
+                        try {
+                            const parsed = JSON.parse(savedTasks)
+                            const updated = (parsed as Task[]).map(t => ({ ...t, completed: false }))
+                            localStorage.setItem('daily-tasks', JSON.stringify(updated))
+                            setTasks(updated)
+                        } catch (e) { }
+                    }
+                    localStorage.setItem('daily-tasks-last-reset', today)
+                } else {
+                    const savedTasks = localStorage.getItem('daily-tasks')
+                    if (savedTasks) {
+                        try {
+                            setTasks(JSON.parse(savedTasks))
+                        } catch (e) { }
                     }
                 }
-
-                if (lastReset !== today) {
-                    parsedTasks = parsedTasks.map(t => ({ ...t, completed: false }))
-                    localStorage.setItem('daily-tasks-last-reset', today)
-                }
-                setTasks(parsedTasks)
             }
+            setLoading(false)
         }
 
         loadTasks()
@@ -338,20 +342,25 @@ export default function DailyTasks() {
                 </div>
 
                 <div className={`space-y-2 max-h-[60vh] overflow-y-auto overflow-x-hidden mb-3 custom-scrollbar transition-opacity duration-200 ${isAdding ? 'opacity-50 pointer-events-none' : ''}`}>
-                    {tasks.map((task, index) => (
-                        <div
-                            key={task.id}
-                            className={`group min-h-[24px] transition-all duration-200 ${draggedTaskId === task.id ? 'opacity-30 scale-[0.98] cursor-grabbing' : 'opacity-100'} ${editingId || isAdding ? 'cursor-default' : 'cursor-grab'}`}
-                            draggable={!editingId && !isAdding}
-                            onDragStart={() => handleDragStart(task.id)}
-                            onDragOver={(e) => handleDragOver(e, task.id)}
-                            onDragEnd={handleDragEnd}
-                            onClick={() => {
-                                if (editingId && editingId !== task.id) {
-                                    cancelEditing()
-                                }
-                            }}
-                        >
+                    {loading ? (
+                        <div className="flex items-center justify-center py-6 opacity-50">
+                            <Loader2 className="w-5 h-5 animate-spin text-[#6866D6]" />
+                        </div>
+                    ) : (
+                        tasks.map((task, index) => (
+                            <div
+                                key={task.id}
+                                className={`group min-h-[24px] transition-all duration-200 ${draggedTaskId === task.id ? 'opacity-30 scale-[0.98] cursor-grabbing' : 'opacity-100'} ${editingId || isAdding ? 'cursor-default' : 'cursor-grab'}`}
+                                draggable={!editingId && !isAdding}
+                                onDragStart={() => handleDragStart(task.id)}
+                                onDragOver={(e) => handleDragOver(e, task.id)}
+                                onDragEnd={handleDragEnd}
+                                onClick={() => {
+                                    if (editingId && editingId !== task.id) {
+                                        cancelEditing()
+                                    }
+                                }}
+                            >
                             {editingId === task.id ? (
                                 <form onSubmit={addTask} className="flex flex-col gap-2 animate-in fade-in duration-200 px-0.5">
                                     <div className="flex gap-2">
@@ -437,7 +446,7 @@ export default function DailyTasks() {
                                 </div>
                             )}
                         </div>
-                    ))}
+                    )))}
 
                     {tasks.length === 0 && (
                         <div className="text-xs text-zinc-400 text-center py-4 italic">

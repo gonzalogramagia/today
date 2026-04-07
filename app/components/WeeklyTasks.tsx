@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Plus, Trash2, Check, Square, CheckSquare, Pencil, X, Calendar } from 'lucide-react'
+import { Plus, Trash2, Check, Square, CheckSquare, Pencil, X, Calendar, Loader2 } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '../hooks/useAuth'
 
@@ -23,6 +23,7 @@ export default function WeeklyTasks() {
     const [editingId, setEditingId] = useState<string | null>(null)
     const [deletingId, setDeletingId] = useState<string | null>(null)
     const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null)
+    const [loading, setLoading] = useState(true)
     const pathname = usePathname()
     const isEnglish = pathname?.startsWith('/en')
     const containerRef = useRef<HTMLDivElement>(null)
@@ -73,7 +74,6 @@ export default function WeeklyTasks() {
 
                 if (!error && data) {
                     setTasks(data as Task[])
-                    return
                 }
             } else {
                 // ENVIRONMENT: GUEST (LocalStorage)
@@ -88,6 +88,7 @@ export default function WeeklyTasks() {
                 }
                 setTasks(parsedTasks)
             }
+            setLoading(false)
         }
 
         loadTasks()
@@ -287,20 +288,25 @@ export default function WeeklyTasks() {
                 </div>
 
                 <div className={`space-y-2 max-h-[30vh] overflow-y-auto overflow-x-hidden mb-3 custom-scrollbar transition-opacity duration-200 ${isAdding ? 'opacity-50 pointer-events-none' : ''}`}>
-                    {tasks.map((task, index) => (
-                        <div
-                            key={task.id}
-                            className={`group min-h-[24px] transition-all duration-200 ${draggedTaskId === task.id ? 'opacity-30 scale-[0.98] cursor-grabbing' : 'opacity-100'} ${editingId || isAdding ? 'cursor-default' : 'cursor-grab'}`}
-                            draggable={!editingId && !isAdding}
-                            onDragStart={() => handleDragStart(task.id)}
-                            onDragOver={(e) => handleDragOver(e, task.id)}
-                            onDragEnd={handleDragEnd}
-                            onClick={() => {
-                                if (editingId && editingId !== task.id) {
-                                    cancelEditing()
-                                }
-                            }}
-                        >
+                    {loading ? (
+                        <div className="flex items-center justify-center py-6 opacity-50">
+                            <Loader2 className="w-5 h-5 animate-spin text-[#6866D6]" />
+                        </div>
+                    ) : (
+                        tasks.map((task, index) => (
+                            <div
+                                key={task.id}
+                                className={`group min-h-[24px] transition-all duration-200 ${draggedTaskId === task.id ? 'opacity-30 scale-[0.98] cursor-grabbing' : 'opacity-100'} ${editingId || isAdding ? 'cursor-default' : 'cursor-grab'}`}
+                                draggable={!editingId && !isAdding}
+                                onDragStart={() => handleDragStart(task.id)}
+                                onDragOver={(e) => handleDragOver(e, task.id)}
+                                onDragEnd={handleDragEnd}
+                                onClick={() => {
+                                    if (editingId && editingId !== task.id) {
+                                        cancelEditing()
+                                    }
+                                }}
+                            >
                             {editingId === task.id ? (
                                 <form onSubmit={addTask} className="flex flex-col gap-2 animate-in fade-in duration-200 px-0.5">
                                     <div className="flex gap-2">
@@ -386,9 +392,9 @@ export default function WeeklyTasks() {
                                 </div>
                             )}
                         </div>
-                    ))}
+                    )))}
 
-                    {tasks.length === 0 && (
+                    {tasks.length === 0 && !loading && (
                         <div className="text-xs text-zinc-400 text-center py-4 italic">
                             {isEnglish ? 'No tasks this week' : 'No hay tareas esta semana'}
                         </div>

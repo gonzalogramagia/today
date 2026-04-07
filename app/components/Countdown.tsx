@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Timer, Trash2, CalendarClock, Plus, Pencil, X } from 'lucide-react'
+import { Timer, Trash2, CalendarClock, Plus, Pencil, X, Loader2 } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { dictionary } from "../data/i18n"
 import { createClient } from "@/utils/supabase/client"
@@ -21,6 +21,7 @@ export default function Countdown() {
     const [editingId, setEditingId] = useState<string | null>(null)
     const [formData, setFormData] = useState({ name: '', date: '' })
     const [draggedCountdownId, setDraggedCountdownId] = useState<string | null>(null)
+    const [loading, setLoading] = useState(true)
     const pathname = usePathname()
     const isEnglish = pathname?.startsWith('/en')
     const containerRef = useRef<HTMLDivElement>(null)
@@ -176,6 +177,7 @@ export default function Countdown() {
                     }
                 }
             }
+            setLoading(false)
         }
 
         loadCountdowns()
@@ -271,7 +273,12 @@ export default function Countdown() {
                 </div>
 
                 <div className="flex flex-col gap-4">
-                    {countdowns.map((item, index) => (
+                    {loading ? (
+                        <div className="flex items-center justify-center py-6 opacity-50">
+                            <Loader2 className="w-5 h-5 animate-spin text-[#6866D6]" />
+                        </div>
+                    ) : (
+                        countdowns.map((item, index) => (
                         <div
                             key={item.id}
                             className={`relative group/item transition-all duration-200 ${draggedCountdownId === item.id ? 'opacity-30 scale-[0.98] cursor-grabbing' : 'opacity-100'} ${editingId || isCreating ? 'cursor-default' : 'cursor-grab'}`}
@@ -312,9 +319,9 @@ export default function Countdown() {
                                 <div className="mt-4 border-t border-zinc-100" />
                             )}
                         </div>
-                    ))}
+                    )))}
 
-                    {countdowns.length === 0 && !isCreating && (
+                    {countdowns.length === 0 && !loading && !isCreating && (
                         <div className="text-xs text-zinc-400 text-center pt-5 pb-6 italic">
                             {isEnglish ? 'No active countdowns' : 'Aún no hay cuentas regresivas'}
                         </div>

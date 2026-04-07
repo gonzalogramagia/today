@@ -13,6 +13,7 @@ import {
   X,
   Plus,
   Paperclip,
+  Loader2,
 } from "lucide-react";
 import { symbols, SymbolItem } from "../data/symbols";
 import { dictionary, Language } from "../data/i18n";
@@ -41,6 +42,7 @@ export default function Home({ lang }: HomeProps) {
   const supabase = createClient();
   const { user } = useAuth();
   const [mounted, setMounted] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [blocks, setBlocks] = useState<TextBlock[]>([]);
   const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
   const [editingContent, setEditingContent] = useState("");
@@ -109,30 +111,35 @@ export default function Home({ lang }: HomeProps) {
             color: n.color,
             attachments: n.attachments,
           }));
-
           if (remoteBlocks.length > 0) {
             setBlocks(remoteBlocks);
           } else {
             // DB is empty, but we show a placeholder that will be upserted on first edit
-            setBlocks([{
-              id: "init",
-              tag: "nueva",
-              title: "",
-              content: "",
-              color: "#FEFCE8",
-            }]);
+            setBlocks([
+              {
+                id: "init",
+                tag: "nueva",
+                title: "",
+                content: "",
+                color: "#FEFCE8",
+              },
+            ]);
           }
+          setLoading(false);
           return;
         } else if (error) {
           console.error("Supabase fetch error:", error);
           // If error, we still clear local blocks to maintain isolation
-          setBlocks([{
-            id: generateId(),
-            tag: generateId(),
-            title: "",
-            content: "",
-            color: "#FEFCE8",
-          }]);
+          setBlocks([
+            {
+              id: "init",
+              tag: "error",
+              title: "Error al cargar",
+              content: "Hubo un problema sincronizando tus notas.",
+              color: "#FEFCE8",
+            },
+          ]);
+          setLoading(false);
           return;
         }
       } else {
@@ -192,6 +199,7 @@ export default function Home({ lang }: HomeProps) {
             },
           ]);
         }
+        setLoading(false);
       }
     };
 
@@ -1101,9 +1109,26 @@ export default function Home({ lang }: HomeProps) {
           {user ? (
             <span className="flex items-center justify-center gap-1.5 text-zinc-500 text-sm font-medium bg-zinc-100/50 py-1 px-3 rounded-full w-max mx-auto border border-zinc-200/50 shadow-sm animate-in fade-in zoom-in duration-500">
               <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-              {lang === "es"
-                ? "Sincronizado con tu cuenta cloud"
-                : "Synced with your cloud account"}
+              {lang === "es" ? (
+                <>
+                  Sincronizado con la cuenta cloud de{" "}
+                  <strong>
+                    {user?.user_metadata?.full_name ||
+                      user?.email?.split("@")[0] ||
+                      "Usuario"}
+                  </strong>
+                </>
+              ) : (
+                <>
+                  Synced with{" "}
+                  <strong>
+                    {user?.user_metadata?.full_name ||
+                      user?.email?.split("@")[0] ||
+                      "User"}
+                  </strong>
+                  's cloud account
+                </>
+              )}
             </span>
           ) : (
             <span dangerouslySetInnerHTML={{ __html: t.subtitle }} />
@@ -1151,7 +1176,15 @@ export default function Home({ lang }: HomeProps) {
       </div>
 
       <div className="space-y-6 group">
-        {filteredBlocks.map((block, idx) => (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 pointer-events-none opacity-50">
+            <Loader2 className="w-10 h-10 animate-spin text-[#6866D6] mb-4" />
+            <p className="text-zinc-500 font-medium">
+              {lang === "es" ? "Cargando tus notas..." : "Loading your notes..."}
+            </p>
+          </div>
+        ) : (
+          filteredBlocks.map((block, idx) => (
           <React.Fragment key={block.id}>
             <div
               data-block-id={block.id}
@@ -1853,7 +1886,7 @@ export default function Home({ lang }: HomeProps) {
               </div>
             )}
           </React.Fragment>
-        ))}
+        )))}
       </div>
 
       {/* Floating Links Component */}
