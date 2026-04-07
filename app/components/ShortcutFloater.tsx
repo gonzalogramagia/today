@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Plus, X, Pencil, Trash2, Search, Image as ImageIcon, Link } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import GoogleAuth from './GoogleAuth'
+import { useAuth } from '../hooks/useAuth'
 
 type Position = 'left' | 'right'
 
@@ -13,9 +14,11 @@ type Shortcut = {
     iconUrl: string
     url: string
     position: Position
+    sort_index?: number
 }
 
 export default function ShortcutFloater() {
+    const { user, supabase } = useAuth()
     const [shortcuts, setShortcuts] = useState<Shortcut[]>([])
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [editingId, setEditingId] = useState<string | null>(null)
@@ -72,12 +75,63 @@ export default function ShortcutFloater() {
     const [showIconPicker, setShowIconPicker] = useState(false)
 
     useEffect(() => {
-        const loadShortcuts = () => {
+        const loadShortcuts = async () => {
+            if (user) {
+                const { data, error } = await supabase
+                    .from('shortcuts')
+                    .select('*')
+                    .order('sort_index', { ascending: true })
+
+                if (!error && data) {
+                    const remoteShortcuts = data.map((s: any) => ({
+                        id: s.id,
+                        name: s.name,
+                        iconUrl: s.icon_url,
+                        url: s.url,
+                        position: s.position,
+                        sort_index: s.sort_index
+                    }))
+
+                    // Initial Migration: If DB is empty but LocalStorage has shortcuts, upload them
+                    if (remoteShortcuts.length === 0) {
+                        const saved = localStorage.getItem('local-shortcuts')
+                        if (saved) {
+                            try {
+                                const localShortcuts: Shortcut[] = JSON.parse(saved)
+                                if (localShortcuts.length > 0) {
+                                    const uploads = localShortcuts.map((s, idx) => ({
+                                        id: s.id,
+                                        user_id: user.id,
+                                        name: s.name,
+                                        icon_url: s.iconUrl,
+                                        url: s.url,
+                                        position: s.position,
+                                        sort_index: s.sort_index ?? idx
+                                    }))
+                                    const { error: uploadError } = await supabase
+                                        .from('shortcuts')
+                                        .insert(uploads)
+                                    
+                                    if (!uploadError) {
+                                        setShortcuts(localShortcuts)
+                                        return
+                                    }
+                                }
+                            } catch (e) {
+                                console.error('Failed to migrate local shortcuts', e)
+                            }
+                        }
+                    }
+
+                    setShortcuts(remoteShortcuts)
+                    return
+                }
+            }
+
             const saved = localStorage.getItem('local-shortcuts')
             if (saved) {
                 try {
                     const parsed = JSON.parse(saved)
-                    // Migrate existing shortcuts to have a position if missing
                     const migrated = parsed.map((s: any) => ({
                         ...s,
                         position: s.position || 'right'
@@ -92,16 +146,16 @@ export default function ShortcutFloater() {
         loadShortcuts()
 
         const handleStorageChange = (e: StorageEvent) => {
-            if (e.key === 'local-shortcuts') {
+            if (e.key === 'local-shortcuts' && !user) {
                 loadShortcuts()
             }
         }
 
         window.addEventListener('storage', handleStorageChange)
         return () => window.removeEventListener('storage', handleStorageChange)
-    }, [])
+    }, [user, supabase])
 
-    const saveShortcuts = (newShortcuts: Shortcut[]) => {
+    const saveToStorage = (newShortcuts: Shortcut[]) => {
         setShortcuts(newShortcuts)
         localStorage.setItem('local-shortcuts', JSON.stringify(newShortcuts))
     }
@@ -118,7 +172,7 @@ export default function ShortcutFloater() {
         } else {
             setEditingId(null)
             setName('')
-            setIconUrl('') // Cleared to ensure default logic in handleSubmit
+            setIconUrl('')
             setUrl('')
         }
         setShowIconPicker(false)
@@ -126,7 +180,7 @@ export default function ShortcutFloater() {
         setIsModalOpen(true)
     }
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
 
         const ensureUrl = (str: string) => {
@@ -136,43 +190,64 @@ export default function ShortcutFloater() {
         }
 
         const finalUrl = ensureUrl(url)
-        // Use user provided default or a safe fallback
         const finalIconUrl = iconUrl ? ensureUrl(iconUrl) : 'https://cdn-icons-png.flaticon.com/512/1006/1006771.png'
 
         if (editingId) {
             const updated = shortcuts.map(s =>
                 s.id === editingId ? { ...s, name, iconUrl: finalIconUrl, url: finalUrl } : s
             )
-            saveShortcuts(updated)
+            saveToStorage(updated)
+
+            if (user) {
+                await supabase
+                    .from('shortcuts')
+                    .update({
+                        name,
+                        icon_url: finalIconUrl,
+                        url: finalUrl
+                    })
+                    .eq('id', editingId)
+            }
         } else {
             const newShortcut: Shortcut = {
                 id: crypto.randomUUID(),
                 name,
                 iconUrl: finalIconUrl,
                 url: finalUrl,
-                position: activeSide
+                position: activeSide,
+                sort_index: shortcuts.length
             }
-            saveShortcuts([...shortcuts, newShortcut])
+            saveToStorage([...shortcuts, newShortcut])
+
+            if (user) {
+                await supabase
+                    .from('shortcuts')
+                    .insert([{
+                        id: newShortcut.id,
+                        user_id: user.id,
+                        name: newShortcut.name,
+                        icon_url: newShortcut.iconUrl,
+                        url: newShortcut.url,
+                        position: newShortcut.position,
+                        sort_index: newShortcut.sort_index
+                    }])
+            }
         }
         setIsModalOpen(false)
     }
 
     const handleUrlAutoFill = (val: string) => {
-        // Simple domain extraction to try and get favicon
-        // Auto-fill if empty OR if it's already an auto-generated google favicon url
         const isAutoGenerated = iconUrl.includes('google.com/s2/favicons')
 
         if (!iconUrl || isAutoGenerated) {
             try {
-                // Prepend https if needed for the URL object to work, though we clean it on submit
                 const urlObj = new URL(val.startsWith('http') ? val : `https://${val}`)
                 const domain = urlObj.hostname
-                // Only set if domain looks valid (has at least one dot, e.g. google.com)
                 if (domain.includes('.')) {
                     setIconUrl(`https://www.google.com/s2/favicons?sz=64&domain=${domain}`)
                 }
             } catch (e) {
-                // Invalid URL yet, ignore
+                // Invalid URL
             }
         }
     }
@@ -197,21 +272,27 @@ export default function ShortcutFloater() {
         }
     }
 
-    const handleDelete = () => {
+    const handleDelete = async () => {
         if (editingId) {
             if (!confirmDelete) {
                 setConfirmDelete(true)
                 return
             }
             const updated = shortcuts.filter(s => s.id !== editingId)
-            saveShortcuts(updated)
+            saveToStorage(updated)
+
+            if (user) {
+                await supabase
+                    .from('shortcuts')
+                    .delete()
+                    .eq('id', editingId)
+            }
             setConfirmDelete(false)
             setIsModalOpen(false)
         }
     }
 
     const getGoogleImagesUrl = () => {
-        // Default search if name is empty, but preferably should warn or adjust
         const query = name ? `${name} icon square 500x500` : 'app icon square 500x500'
         return `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(query)}`
     }
@@ -220,28 +301,16 @@ export default function ShortcutFloater() {
 
     const handleShortcutClick = (e: React.MouseEvent, shortcut: Shortcut) => {
         e.preventDefault()
-
-        const screenWidth = window.screen.availWidth
-        const screenHeight = window.screen.availHeight
-
-        const width = Math.round(screenWidth / 2)
-        const height = Math.round(screenHeight)
-
-        const left = shortcut.position === 'left' ? 0 : width
-        const top = 0
-
         window.open(shortcut.url, '_blank')
     }
 
     return (
         <>
-            {/* Split View Iframe Overlay */}
             {sides.map((side) => (
                 <div
                     key={side}
-                    className={`fixed top-7 ${side === 'left' ? 'left-8' : 'right-8 hidden sm:flex'} flex items-center gap-2 z-50 transition-opacity duration-300 ${areShortcutsVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'} [&:hover>*:not(:hover)]:scale-75 [&:hover>*:not(:hover)]:grayscale [&:hover>*:not(:hover)]:opacity-70`}
+                    className={`fixed top-7 ${side === 'left' ? 'left-8' : 'right-8 hidden sm:flex'} flex items-center gap-2 z-50 transition-opacity duration-300 ${areShortcutsVisible ? 'opacity-100' : 'opacity-0 pointer-events-none select-none'} [&:hover>*:not(:hover)]:scale-75 [&:hover>*:not(:hover)]:grayscale [&:hover>*:not(:hover)]:opacity-70`}
                 >
-                    {/* Add Button - Left only for 'left' side */}
                     {side === 'left' && (
                         <button
                             onClick={() => handleOpenModal(side)}
@@ -258,7 +327,6 @@ export default function ShortcutFloater() {
                                 key={shortcut.id}
                                 className="group relative flex items-center justify-center w-10 h-10 rounded-full bg-white border border-zinc-200 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-110 cursor-pointer overflow-visible"
                             >
-                                {/* Main Icon Button */}
                                 <a
                                     href={shortcut.url}
                                     onClick={(e) => handleShortcutClick(e, shortcut)}
@@ -272,14 +340,12 @@ export default function ShortcutFloater() {
                                         alt={shortcut.name}
                                         className="w-full h-full object-contain rounded-full"
                                         onError={(e) => {
-                                            // Fallback if image fails
                                             (e.target as HTMLImageElement).style.display = 'none';
                                             (e.target as HTMLImageElement).parentElement!.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>'
                                         }}
                                     />
                                 </a>
 
-                                {/* Tooltip Name - Click to Edit */}
                                 <div
                                     onClick={(e) => {
                                         e.preventDefault()
@@ -295,9 +361,46 @@ export default function ShortcutFloater() {
                             </div>
                         ))
                     ) : (
-                        // Right side - Google Auth and Hardcoded Just Focus
                         <>
                             <GoogleAuth lang={isEnglish ? 'en' : 'es'} variant="icon" />
+                            {shortcuts.filter(s => s.position === side).map(shortcut => (
+                                <div
+                                    key={shortcut.id}
+                                    className="group relative flex items-center justify-center w-10 h-10 rounded-full bg-white border border-zinc-200 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-110 cursor-pointer overflow-visible"
+                                >
+                                    <a
+                                        href={shortcut.url}
+                                        onClick={(e) => handleShortcutClick(e, shortcut)}
+                                        className="w-full h-full p-1 flex items-center justify-center rounded-full cursor-pointer"
+                                        role="button"
+                                        tabIndex={0}
+                                        draggable="true"
+                                    >
+                                        <img
+                                            src={shortcut.iconUrl}
+                                            alt={shortcut.name}
+                                            className="w-full h-full object-contain rounded-full"
+                                            onError={(e) => {
+                                                (e.target as HTMLImageElement).style.display = 'none';
+                                                (e.target as HTMLImageElement).parentElement!.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>'
+                                            }}
+                                        />
+                                    </a>
+
+                                    <div
+                                        onClick={(e) => {
+                                            e.preventDefault()
+                                            e.stopPropagation()
+                                            handleOpenModal(side, shortcut)
+                                        }}
+                                        className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 cursor-pointer hover:bg-zinc-800 flex flex-col items-center gap-0.5"
+                                        title={t.editTooltip}
+                                    >
+                                        {shortcut.name}
+                                        <Pencil size={8} className="text-zinc-400" />
+                                    </div>
+                                </div>
+                            ))}
                             <div
                                 className="group relative flex items-center justify-center w-10 h-10 rounded-full bg-white border border-zinc-200 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-110 cursor-pointer overflow-visible"
                             >
@@ -324,7 +427,6 @@ export default function ShortcutFloater() {
                 </div>
             ))}
 
-            {/* Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
                     <div className="bg-white rounded-lg shadow-xl w-full max-w-md border border-zinc-200 p-6 relative">

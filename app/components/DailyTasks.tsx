@@ -3,15 +3,18 @@
 import { useState, useEffect, useRef } from 'react'
 import { Plus, Trash2, Check, Square, CheckSquare, Pencil, X } from 'lucide-react'
 import { usePathname } from 'next/navigation'
+import { useAuth } from '../hooks/useAuth'
 
 type Task = {
     id: string
     text: string
     url?: string
     completed: boolean
+    sort_index?: number
 }
 
 export default function DailyTasks() {
+    const { user, supabase } = useAuth()
     const [tasks, setTasks] = useState<Task[]>([])
     const [inputValue, setInputValue] = useState('')
     const [urlValue, setUrlValue] = useState('')
@@ -67,31 +70,92 @@ export default function DailyTasks() {
         return () => window.removeEventListener('config-update', checkVisibility)
     }, [])
 
+    // Fetch integration: Local + Supabase
     useEffect(() => {
         setMounted(true)
-        const savedTasks = localStorage.getItem('daily-tasks')
-        const lastReset = localStorage.getItem('daily-tasks-last-reset')
-        const today = getArgentinaDate()
+        const loadTasks = async () => {
+            const today = getArgentinaDate()
+            const lastReset = localStorage.getItem('daily-tasks-last-reset')
 
-        let parsedTasks: Task[] = []
-        if (savedTasks) {
-            try {
-                parsedTasks = JSON.parse(savedTasks)
-            } catch (e) {
-                console.error('Failed to parse daily tasks', e)
+            if (user) {
+                // Fetch from Supabase
+                const { data, error } = await supabase
+                    .from('daily_tasks')
+                    .select('*')
+                    .order('sort_index', { ascending: true })
+
+                if (!error && data) {
+                    let remoteTasks = data as Task[]
+                    
+                    // Initial Migration: If DB is empty but LocalStorage has tasks, upload them
+                    if (remoteTasks.length === 0) {
+                        const savedTasks = localStorage.getItem('daily-tasks')
+                        if (savedTasks) {
+                            try {
+                                const localTasks: Task[] = JSON.parse(savedTasks)
+                                if (localTasks.length > 0) {
+                                    const uploads = localTasks.map((t, idx) => ({
+                                        id: t.id,
+                                        user_id: user.id,
+                                        text: t.text,
+                                        url: t.url,
+                                        completed: t.completed,
+                                        sort_index: t.sort_index ?? idx
+                                    }))
+                                    const { error: uploadError } = await supabase
+                                        .from('daily_tasks')
+                                    .insert(uploads)
+                                    
+                                    if (!uploadError) {
+                                        setTasks(localTasks)
+                                        return
+                                    }
+                                }
+                            } catch (e) {
+                                console.error('Failed to migrate local tasks', e)
+                            }
+                        }
+                    }
+
+                    // Handle reset on Supabase tasks if needed
+                    if (lastReset !== today) {
+                        const { error: updateError } = await supabase
+                            .from('daily_tasks')
+                            .update({ completed: false })
+                            .eq('user_id', user.id)
+
+                        if (!updateError) {
+                            remoteTasks = remoteTasks.map(t => ({ ...t, completed: false }))
+                            localStorage.setItem('daily-tasks-last-reset', today)
+                        }
+                    }
+                    setTasks(remoteTasks)
+                    return
+                }
             }
+
+            // Fallback to LocalStorage
+            const savedTasks = localStorage.getItem('daily-tasks')
+            let parsedTasks: Task[] = []
+            if (savedTasks) {
+                try {
+                    parsedTasks = JSON.parse(savedTasks)
+                } catch (e) {
+                    console.error('Failed to parse local daily tasks', e)
+                }
+            }
+
+            if (lastReset !== today) {
+                parsedTasks = parsedTasks.map(t => ({ ...t, completed: false }))
+                localStorage.setItem('daily-tasks-last-reset', today)
+            }
+            setTasks(parsedTasks)
         }
 
-        // Check if reset is needed (if last reset was not today)
-        if (lastReset !== today) {
-            parsedTasks = parsedTasks.map(t => ({ ...t, completed: false }))
-            localStorage.setItem('daily-tasks-last-reset', today)
-        }
-
-        setTasks(parsedTasks)
+        loadTasks()
 
         const handleStorageChange = (e: StorageEvent) => {
-            if (e.key === 'daily-tasks' && e.newValue) {
+            if (e.key === 'daily-tasks' && e.newValue && !user) {
                 try {
                     setTasks(JSON.parse(e.newValue))
                 } catch (err) {
@@ -102,8 +166,9 @@ export default function DailyTasks() {
 
         window.addEventListener('storage', handleStorageChange)
         return () => window.removeEventListener('storage', handleStorageChange)
-    }, [])
+    }, [user, supabase])
 
+    // Save to LocalStorage (as cache or guest storage)
     useEffect(() => {
         if (!mounted) return
         localStorage.setItem('daily-tasks', JSON.stringify(tasks))
@@ -117,30 +182,57 @@ export default function DailyTasks() {
             if (lastReset !== today) {
                 setTasks(current => current.map(t => ({ ...t, completed: false })))
                 localStorage.setItem('daily-tasks-last-reset', today)
+                if (user) {
+                    supabase.from('daily_tasks').update({ completed: false }).eq('user_id', user.id).then()
+                }
             }
         }, 60000) // Check every minute
         return () => clearInterval(interval)
-    }, [])
+    }, [user, supabase])
 
-    const addTask = (e?: React.FormEvent) => {
+    const addTask = async (e?: React.FormEvent) => {
         e?.preventDefault()
         if (!inputValue.trim()) return
 
         if (editingId) {
+            const updatedText = inputValue.trim()
+            const updatedUrl = urlValue.trim() || undefined
+            
             setTasks(tasks.map(t =>
                 t.id === editingId
-                    ? { ...t, text: inputValue.trim(), url: urlValue.trim() || undefined }
+                    ? { ...t, text: updatedText, url: updatedUrl }
                     : t
             ))
+
+            if(user) {
+                await supabase
+                    .from('daily_tasks')
+                    .update({ text: updatedText, url: updatedUrl })
+                    .eq('id', editingId)
+            }
             setEditingId(null)
         } else {
             const newTask: Task = {
                 id: crypto.randomUUID(),
                 text: inputValue.trim(),
                 url: urlValue.trim() || undefined,
-                completed: false
+                completed: false,
+                sort_index: tasks.length
             }
             setTasks([...tasks, newTask])
+
+            if (user) {
+                await supabase
+                    .from('daily_tasks')
+                    .insert([{
+                        id: newTask.id,
+                        user_id: user.id,
+                        text: newTask.text,
+                        url: newTask.url,
+                        completed: newTask.completed,
+                        sort_index: newTask.sort_index
+                    }])
+            }
         }
         setInputValue('')
         setUrlValue('')
@@ -169,15 +261,32 @@ export default function DailyTasks() {
         setUrlValue('')
     }
 
-    const toggleTask = (id: string) => {
+    const toggleTask = async (id: string) => {
+        const task = tasks.find(t => t.id === id)
+        if (!task) return
+
+        const newCompletedStatus = !task.completed
         setTasks(tasks.map(t =>
-            t.id === id ? { ...t, completed: !t.completed } : t
+            t.id === id ? { ...t, completed: newCompletedStatus } : t
         ))
+
+        if (user) {
+            await supabase
+                .from('daily_tasks')
+                .update({ completed: newCompletedStatus })
+                .eq('id', id)
+        }
     }
 
-    const confirmDelete = (id: string) => {
+    const confirmDelete = async (id: string) => {
         if (deletingId === id) {
             setTasks(tasks.filter(t => t.id !== id))
+            if (user) {
+                await supabase
+                    .from('daily_tasks')
+                    .delete()
+                    .eq('id', id)
+            }
             setDeletingId(null)
         } else {
             setDeletingId(id)
@@ -203,8 +312,20 @@ export default function DailyTasks() {
         setTasks(newTasks)
     }
 
-    const handleDragEnd = () => {
+    const handleDragEnd = async () => {
         setDraggedTaskId(null)
+        // Sync reorder to Supabase
+        if (user) {
+            const updates = tasks.map((task, index) => ({
+                id: task.id,
+                user_id: user.id,
+                text: task.text,
+                url: task.url,
+                completed: task.completed,
+                sort_index: index
+            }))
+            await supabase.from('daily_tasks').upsert(updates)
+        }
     }
 
     if (!mounted) return null

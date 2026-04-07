@@ -8,6 +8,8 @@
   },
   "dependencies": {
     "@notionhq/client": "^5.1.0",
+    "@supabase/ssr": "^0.10.0",
+    "@supabase/supabase-js": "^2.102.1",
     "@tailwindcss/postcss": "4.0.0-alpha.13",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

@@ -3,15 +3,18 @@
 import { useState, useEffect, useRef } from 'react'
 import { Plus, Trash2, Check, Square, CheckSquare, Pencil, X, Calendar } from 'lucide-react'
 import { usePathname } from 'next/navigation'
+import { useAuth } from '../hooks/useAuth'
 
 type Task = {
     id: string
     text: string
     url?: string
     completed: boolean
+    sort_index?: number
 }
 
 export default function WeeklyTasks() {
+    const { user, supabase } = useAuth()
     const [tasks, setTasks] = useState<Task[]>([])
     const [inputValue, setInputValue] = useState('')
     const [urlValue, setUrlValue] = useState('')
@@ -59,21 +62,67 @@ export default function WeeklyTasks() {
 
     useEffect(() => {
         setMounted(true)
-        const savedTasks = localStorage.getItem('weekly-tasks')
+        const loadTasks = async () => {
+            if (user) {
+                const { data, error } = await supabase
+                    .from('weekly_tasks')
+                    .select('*')
+                    .order('sort_index', { ascending: true })
 
-        let parsedTasks: Task[] = []
-        if (savedTasks) {
-            try {
-                parsedTasks = JSON.parse(savedTasks)
-            } catch (e) {
-                console.error('Failed to parse weekly tasks', e)
+                if (!error && data) {
+                    const remoteTasks = data as Task[]
+                    
+                    // Initial Migration: If DB is empty but LocalStorage has tasks, upload them
+                    if (remoteTasks.length === 0) {
+                        const savedTasks = localStorage.getItem('weekly-tasks')
+                        if (savedTasks) {
+                            try {
+                                const localTasks: Task[] = JSON.parse(savedTasks)
+                                if (localTasks.length > 0) {
+                                    const uploads = localTasks.map((t, idx) => ({
+                                        id: t.id,
+                                        user_id: user.id,
+                                        text: t.text,
+                                        url: t.url,
+                                        completed: t.completed,
+                                        sort_index: t.sort_index ?? idx
+                                    }))
+                                    const { error: uploadError } = await supabase
+                                        .from('weekly_tasks')
+                                        .insert(uploads)
+                                    
+                                    if (!uploadError) {
+                                        setTasks(localTasks)
+                                        return
+                                    }
+                                }
+                            } catch (e) {
+                                console.error('Failed to migrate weekly tasks', e)
+                            }
+                        }
+                    }
+                    
+                    setTasks(remoteTasks)
+                    return
+                }
             }
+
+            const savedTasks = localStorage.getItem('weekly-tasks')
+            let parsedTasks: Task[] = []
+            if (savedTasks) {
+                try {
+                    parsedTasks = JSON.parse(savedTasks)
+                } catch (e) {
+                    console.error('Failed to parse weekly tasks', e)
+                }
+            }
+            setTasks(parsedTasks)
         }
 
-        setTasks(parsedTasks)
+        loadTasks()
 
         const handleStorageChange = (e: StorageEvent) => {
-            if (e.key === 'weekly-tasks' && e.newValue) {
+            if (e.key === 'weekly-tasks' && e.newValue && !user) {
                 try {
                     setTasks(JSON.parse(e.newValue))
                 } catch (err) {
@@ -84,32 +133,56 @@ export default function WeeklyTasks() {
 
         window.addEventListener('storage', handleStorageChange)
         return () => window.removeEventListener('storage', handleStorageChange)
-    }, [])
+    }, [user, supabase])
 
     useEffect(() => {
         if (!mounted) return
         localStorage.setItem('weekly-tasks', JSON.stringify(tasks))
     }, [tasks, mounted])
 
-    const addTask = (e?: React.FormEvent) => {
+    const addTask = async (e?: React.FormEvent) => {
         e?.preventDefault()
         if (!inputValue.trim()) return
 
         if (editingId) {
+            const updatedText = inputValue.trim()
+            const updatedUrl = urlValue.trim() || undefined
+            
             setTasks(tasks.map(t =>
                 t.id === editingId
-                    ? { ...t, text: inputValue.trim(), url: urlValue.trim() || undefined }
+                    ? { ...t, text: updatedText, url: updatedUrl }
                     : t
             ))
+
+            if (user) {
+                await supabase
+                    .from('weekly_tasks')
+                    .update({ text: updatedText, url: updatedUrl })
+                    .eq('id', editingId)
+            }
             setEditingId(null)
         } else {
             const newTask: Task = {
                 id: crypto.randomUUID(),
                 text: inputValue.trim(),
                 url: urlValue.trim() || undefined,
-                completed: false
+                completed: false,
+                sort_index: tasks.length
             }
             setTasks([...tasks, newTask])
+
+            if (user) {
+                await supabase
+                    .from('weekly_tasks')
+                    .insert([{
+                        id: newTask.id,
+                        user_id: user.id,
+                        text: newTask.text,
+                        url: newTask.url,
+                        completed: newTask.completed,
+                        sort_index: newTask.sort_index
+                    }])
+            }
         }
         setInputValue('')
         setUrlValue('')
@@ -138,15 +211,32 @@ export default function WeeklyTasks() {
         setUrlValue('')
     }
 
-    const toggleTask = (id: string) => {
+    const toggleTask = async (id: string) => {
+        const task = tasks.find(t => t.id === id)
+        if (!task) return
+
+        const newCompletedStatus = !task.completed
         setTasks(tasks.map(t =>
-            t.id === id ? { ...t, completed: !t.completed } : t
+            t.id === id ? { ...t, completed: newCompletedStatus } : t
         ))
+
+        if (user) {
+            await supabase
+                .from('weekly_tasks')
+                .update({ completed: newCompletedStatus })
+                .eq('id', id)
+        }
     }
 
-    const confirmDelete = (id: string) => {
+    const confirmDelete = async (id: string) => {
         if (deletingId === id) {
             setTasks(tasks.filter(t => t.id !== id))
+            if (user) {
+                await supabase
+                    .from('weekly_tasks')
+                    .delete()
+                    .eq('id', id)
+            }
             setDeletingId(null)
         } else {
             setDeletingId(id)
@@ -172,8 +262,19 @@ export default function WeeklyTasks() {
         setTasks(newTasks)
     }
 
-    const handleDragEnd = () => {
+    const handleDragEnd = async () => {
         setDraggedTaskId(null)
+        if (user) {
+            const updates = tasks.map((task, index) => ({
+                id: task.id,
+                user_id: user.id,
+                text: task.text,
+                url: task.url,
+                completed: task.completed,
+                sort_index: index
+            }))
+            await supabase.from('weekly_tasks').upsert(updates)
+        }
     }
 
     if (!mounted) return null

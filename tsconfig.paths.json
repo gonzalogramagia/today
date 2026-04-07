@@ -10,6 +10,9 @@
       ],
       "@/types/*": [
         "app/types/*"
+      ],
+      "@/utils/*": [
+        "utils/*"
       ]
     }
   }

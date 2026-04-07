@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { LogOut, Lock } from 'lucide-react'
+import { LogOut, User as UserIcon } from 'lucide-react'
 import { Language, dictionary } from '../data/i18n'
+import { createClient } from '@/utils/supabase/client'
+import { type User } from '@supabase/supabase-js'
 
 interface GoogleAuthProps {
     lang: Language;
@@ -11,10 +13,41 @@ interface GoogleAuthProps {
 
 export default function GoogleAuth({ lang, variant = 'icon' }: GoogleAuthProps) {
     const t = dictionary[lang]
-    const comingSoon = lang === 'en' ? 'Available soon' : 'Próximamente'
+    const supabase = createClient()
+    const [user, setUser] = useState<User | null>(null)
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser()
+            setUser(user)
+            setLoading(false)
+        }
+
+        fetchUser()
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setUser(session?.user ?? null)
+        })
+
+        return () => subscription.unsubscribe()
+    }, [supabase])
+
+    const handleLogin = async () => {
+        await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: `${window.location.origin}/auth/callback`,
+            },
+        })
+    }
+
+    const handleLogout = async () => {
+        await supabase.auth.signOut()
+    }
 
     const GoogleIcon = () => (
-        <svg viewBox="0 0 24 24" className="w-full h-full grayscale opacity-50">
+        <svg viewBox="0 0 24 24" className="w-full h-full">
             <path
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                 fill="#4285F4"
@@ -34,41 +67,65 @@ export default function GoogleAuth({ lang, variant = 'icon' }: GoogleAuthProps) 
         </svg>
     )
 
+    if (loading) {
+        return (
+            <div className="animate-pulse flex items-center h-10 px-3 bg-zinc-50 border border-zinc-200 rounded-xl w-32" />
+        )
+    }
+
+    if (user) {
+        return (
+            <div 
+                onClick={handleLogout}
+                title="Log out"
+                className="group flex items-center h-10 px-3 bg-zinc-50 border border-zinc-200 rounded-xl shadow-sm cursor-pointer hover:bg-zinc-100 transition-all gap-2.5"
+            >
+                {user.user_metadata.avatar_url ? (
+                    <img 
+                        src={user.user_metadata.avatar_url} 
+                        className="w-5 h-5 rounded-full" 
+                        alt="Profile"
+                    />
+                ) : (
+                    <UserIcon size={16} className="text-zinc-600" />
+                )}
+                <span className="text-xs font-bold text-zinc-600 whitespace-nowrap">
+                    {user.user_metadata.full_name?.split(' ')[0] || 'User'}
+                </span>
+                <LogOut size={12} className="text-zinc-400 group-hover:text-zinc-600 transition-colors" />
+            </div>
+        )
+    }
+
     if (variant === 'icon') {
         return (
-            <div className="group relative flex items-center h-10 px-3 bg-zinc-50 border border-zinc-200 rounded-xl shadow-sm opacity-60 cursor-not-allowed overflow-visible gap-2.5">
+            <button 
+                onClick={handleLogin}
+                className="group relative flex items-center h-10 px-3 bg-zinc-50 border border-zinc-200 rounded-xl shadow-sm hover:bg-zinc-100 transition-all cursor-pointer overflow-visible gap-2.5"
+            >
                 <div className="w-5 h-5 flex-shrink-0">
                     <GoogleIcon />
                 </div>
-                <span className="text-xs font-bold text-zinc-400 whitespace-nowrap">
+                <span className="text-xs font-bold text-zinc-600 whitespace-nowrap">
                     {lang === 'en' ? 'Sign in' : 'Iniciar sesión'}
                 </span>
-                <Lock size={12} className="text-zinc-400" />
-                
-                {/* Tooltip */}
-                <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
-                    {comingSoon}
-                </div>
-            </div>
+            </button>
         )
     }
 
     return (
         <div className="w-full">
-            <div className="flex items-center justify-center gap-3 w-full p-4 bg-zinc-50 border border-zinc-200 rounded-2xl opacity-60 cursor-not-allowed mt-4 group">
+            <button 
+                onClick={handleLogin}
+                className="flex items-center justify-center gap-3 w-full p-4 bg-zinc-50 border border-zinc-200 rounded-2xl hover:bg-zinc-100 transition-all cursor-pointer group"
+            >
                 <div className="w-6 h-6">
                     <GoogleIcon />
                 </div>
-                <span className="font-bold text-zinc-400">
+                <span className="font-bold text-zinc-600">
                     {t.signInWithGoogle}
                 </span>
-                <div className="p-1 px-2 border border-zinc-300 rounded-md bg-white shadow-sm flex items-center gap-1">
-                    <Lock size={12} className="text-zinc-400" />
-                    <span className="text-[10px] uppercase tracking-wider font-bold text-zinc-400">
-                        Soon
-                    </span>
-                </div>
-            </div>
+            </button>
         </div>
     )
 }
