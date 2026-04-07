@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     template: "%s | Hoy & Today",
   },
   description:
-    "Your personal space for productivity. Manage notes, daily tasks, and countdowns—all saved locally in your browser.",
+    "Your personal space for productivity. Manage notes, daily tasks, and countdowns—saved locally or synced with Google and cloud storage.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Hoy & Today",
     description:
-      "Your personal space for productivity. Manage notes, daily tasks, and countdowns—all saved locally in your browser.",
+      "Your personal space for productivity. Manage notes, daily tasks, and countdowns—saved locally or synced with Google and cloud storage.",
     url: baseUrl,
     siteName: "Hoy & Today",
     locale: "en_US",
