@@ -80,7 +80,9 @@ export default function GoogleAuth({ lang, variant = 'icon' }: GoogleAuthProps) 
             <div 
                 onClick={handleLogout}
                 title="Log out"
-                className="group flex items-center h-12 px-6 bg-zinc-50 border border-zinc-200 rounded-xl shadow-sm cursor-pointer hover:bg-zinc-100 transition-all gap-2.5"
+                className={`group flex items-center bg-zinc-50 border border-zinc-200 rounded-xl shadow-sm cursor-pointer hover:bg-zinc-100 transition-all gap-2.5 ${
+                    variant === 'full' ? 'h-12 px-6' : 'h-10 px-3'
+                }`}
             >
                 <LogOut size={12} className="text-zinc-400 group-hover:text-zinc-600 transition-colors transform scale-x-[-1]" />
                 <span className="text-xs font-bold text-zinc-600 whitespace-nowrap overflow-hidden text-ellipsis">

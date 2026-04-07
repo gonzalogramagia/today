@@ -16,7 +16,7 @@ interface ConfigModalProps {
 }
 
 export default function ConfigModal({ lang, onClose, toggleLanguage, exportPath, importPath }: ConfigModalProps) {
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const [showTasks, setShowTasks] = useState(true);
     const [showCountdown, setShowCountdown] = useState(true);
     const [showClock, setShowClock] = useState(true);
@@ -194,7 +194,7 @@ export default function ConfigModal({ lang, onClose, toggleLanguage, exportPath,
                 </div>
 
                 {/* Export / Import Buttons - Only show for Guest (no user) */}
-                {!user && (
+                {!user && !authLoading && (
                     <div className="hidden lg:grid grid-cols-2 gap-3 mt-6">
                         <Link
                             href={importPath}
