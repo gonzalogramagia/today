@@ -14,7 +14,7 @@ type Task = {
 }
 
 export default function WeeklyTasks() {
-    const { user, supabase } = useAuth()
+    const { user, loading: authLoading, supabase } = useAuth()
     const [tasks, setTasks] = useState<Task[]>([])
     const [inputValue, setInputValue] = useState('')
     const [urlValue, setUrlValue] = useState('')
@@ -64,6 +64,7 @@ export default function WeeklyTasks() {
     // Fetch integration: Local + Supabase
     useEffect(() => {
         setMounted(true)
+        if (authLoading) return
         const loadTasks = async () => {
             if (user) {
                 // ENVIRONMENT: AUTHENTICATED (Supabase)
@@ -99,14 +100,14 @@ export default function WeeklyTasks() {
                 try {
                     setTasks(JSON.parse(e.newValue))
                 } catch (err) {
-                    console.error('Failed to sync weekly tasks', err)
+                    console.error('Failed to sync tasks', err)
                 }
             }
         }
 
         window.addEventListener('storage', handleStorageChange)
         return () => window.removeEventListener('storage', handleStorageChange)
-    }, [user, supabase])
+    }, [user, authLoading, supabase])
 
     // Save to LocalStorage ONLY for Guest environment
     useEffect(() => {

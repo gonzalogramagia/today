@@ -15,6 +15,7 @@ interface CountdownItem {
 }
 
 export default function Countdown() {
+    const { user, loading: authLoading } = useAuth()
     const [countdowns, setCountdowns] = useState<CountdownItem[]>([])
     const [mounted, setMounted] = useState(false)
     const [isCreating, setIsCreating] = useState(false)
@@ -26,7 +27,6 @@ export default function Countdown() {
     const isEnglish = pathname?.startsWith('/en')
     const containerRef = useRef<HTMLDivElement>(null)
     const supabase = createClient()
-    const { user } = useAuth()
 
     const handleSaveFixed = async (e?: React.FormEvent, customData?: { name: string, date: string }) => {
         e?.preventDefault()
@@ -121,6 +121,7 @@ export default function Countdown() {
 
     useEffect(() => {
         setMounted(true)
+        if (authLoading) return
         const loadCountdowns = async () => {
             if (user) {
                 // ENVIRONMENT: AUTHENTICATED
@@ -137,8 +138,6 @@ export default function Countdown() {
                         type: c.type
                     })));
                 } else {
-                    // If empty, set defaults but don't save yet? 
-                    // Actually, let's keep them empty if they are synced.
                     setCountdowns([]);
                 }
             } else {

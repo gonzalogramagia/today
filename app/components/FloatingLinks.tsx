@@ -35,9 +35,16 @@ export default function FloatingLinks({ lang }: FloatingLinksProps) {
   const pathname = usePathname();
 
   // Actualizar URLs de los botones
-  const emojisUrl = "https://emojis.hoy.today";
-  const musicUrl = "https://playlist.hoy.today";
-  const playUrl = "https://minigame.hoy.today";
+  const emojisUrl =
+    lang === "en" ? "https://emojis.hoy.today/en" : "https://emojis.hoy.today";
+  const musicUrl =
+    lang === "en"
+      ? "https://playlist.hoy.today/en"
+      : "https://playlist.hoy.today";
+  const playUrl =
+    lang === "en"
+      ? "https://minigame.hoy.today/en"
+      : "https://minigame.hoy.today";
 
   const exportPath = lang === "en" ? "/export" : "/exportar";
   const importPath = lang === "en" ? "/import" : "/importar";

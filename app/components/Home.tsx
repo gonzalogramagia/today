@@ -40,7 +40,7 @@ interface HomeProps {
 export default function Home({ lang }: HomeProps) {
   const t = dictionary[lang];
   const supabase = createClient();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [blocks, setBlocks] = useState<TextBlock[]>([]);
@@ -93,6 +93,8 @@ export default function Home({ lang }: HomeProps) {
 
   // Fetch integration: Local + Supabase
   useEffect(() => {
+    setMounted(true);
+    if (authLoading) return;
     const loadBlocks = async () => {
       if (user) {
         // ENVIRONMENT: AUTHENTICATED (Supabase)
@@ -220,7 +222,7 @@ export default function Home({ lang }: HomeProps) {
 
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
-  }, [user, supabase]);
+  }, [user, authLoading, supabase]);
 
   // Save to LocalStorage ONLY for Guest environment
   useEffect(() => {
@@ -1110,24 +1112,25 @@ export default function Home({ lang }: HomeProps) {
             <span className="flex items-center justify-center gap-1.5 text-zinc-500 text-sm font-medium bg-zinc-100/50 py-1 px-3 rounded-full w-max mx-auto border border-zinc-200/50 shadow-sm animate-in fade-in zoom-in duration-500">
               <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
               {lang === "es" ? (
-                <>
-                  Sincronizado con la cuenta cloud de{" "}
+                <span>
+                  Sincronizado con la{" "}
                   <strong>
+                    cuenta cloud de{" "}
                     {user?.user_metadata?.full_name ||
                       user?.email?.split("@")[0] ||
                       "Usuario"}
                   </strong>
-                </>
+                </span>
               ) : (
-                <>
+                <span>
                   Synced with{" "}
                   <strong>
                     {user?.user_metadata?.full_name ||
                       user?.email?.split("@")[0] ||
                       "User"}
+                    's cloud account
                   </strong>
-                  's cloud account
-                </>
+                </span>
               )}
             </span>
           ) : (
