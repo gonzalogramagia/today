@@ -80,6 +80,7 @@ export default function GoogleAuth({ lang, variant = 'icon' }: GoogleAuthProps) 
                 title="Log out"
                 className="group flex items-center h-10 px-3 bg-zinc-50 border border-zinc-200 rounded-xl shadow-sm cursor-pointer hover:bg-zinc-100 transition-all gap-2.5"
             >
+                <LogOut size={12} className="text-zinc-400 group-hover:text-zinc-600 transition-colors transform scale-x-[-1]" />
                 {user.user_metadata.avatar_url ? (
                     <img 
                         src={user.user_metadata.avatar_url} 
@@ -89,10 +90,10 @@ export default function GoogleAuth({ lang, variant = 'icon' }: GoogleAuthProps) 
                 ) : (
                     <UserIcon size={16} className="text-zinc-600" />
                 )}
-                <span className="text-xs font-bold text-zinc-600 whitespace-nowrap">
-                    {user.user_metadata.full_name?.split(' ')[0] || 'User'}
+                <span className="text-xs font-bold text-zinc-600 whitespace-nowrap overflow-hidden text-ellipsis">
+                    <span className="hidden sm:inline">{t.signOut}</span>
+                    <span className="sm:hidden">{t.signOutMobile}</span>
                 </span>
-                <LogOut size={12} className="text-zinc-400 group-hover:text-zinc-600 transition-colors" />
             </div>
         )
     }

@@ -24,6 +24,7 @@ export default function ShortcutFloater() {
     const [editingId, setEditingId] = useState<string | null>(null)
     const [activeSide, setActiveSide] = useState<Position>('right')
     const [areShortcutsVisible, setAreShortcutsVisible] = useState(true)
+    const [loadingShortcuts, setLoadingShortcuts] = useState(true)
 
     useEffect(() => {
         const checkVisibility = () => {
@@ -109,10 +110,9 @@ export default function ShortcutFloater() {
                     } catch (e) {
                         console.error('Failed to parse shortcuts', e)
                     }
-                } else {
-                    setShortcuts([])
                 }
             }
+            setLoadingShortcuts(false)
         }
 
         loadShortcuts()
@@ -297,7 +297,15 @@ export default function ShortcutFloater() {
                         </button>
                     )}
 
-                    {side === 'left' ? (
+                    {loadingShortcuts && (
+                        <div className="flex gap-2">
+                             {[1, 2].map((i) => (
+                                <div key={i} className="w-10 h-10 rounded-full bg-zinc-100 border border-zinc-200 animate-pulse" />
+                             ))}
+                        </div>
+                    )}
+
+                    {!loadingShortcuts && (side === 'left' ? (
                         shortcuts.filter(s => s.position === side).map(shortcut => (
                             <div
                                 key={shortcut.id}
@@ -399,7 +407,7 @@ export default function ShortcutFloater() {
                                 </a>
                             </div>
                         </>
-                    )}
+                    ))}
                 </div>
             ))}
 

@@ -1,98 +1,95 @@
 # 🗓️ Hoy & Today
 
-**Your privacy-first, browser-based personal dashboard.**
+**Your privacy-first, cloud-synced personal dashboard.**
 
-"Hoy & Today" is a minimalist productivity hub designed to keep your focus sharp and your data local. It combines note-taking, daily task tracking, and quick navigation in a clean, privacy-focused interface where everything lives in your browser's `localStorage`.
+"Hoy & Today" is a minimalist productivity hub designed to keep your focus sharp and your data persistent. It combines smart note-taking, daily task tracking, and quick navigation in a clean, high-performance interface.
 
 ---
 
 ## ✨ Key Features
 
 ### 📝 Smart Notes
+- **Hybrid Storage**: Your notes are stored locally as a guest, or automatically synced to **Supabase Cloud** when logged in.
+- **Auto-Preservation**: A fresh note is automatically generated whenever you clear your workspace.
+- **Rich Formatting**: Markdown support (`*bold*`, `_italics_`) and automated link detection.
+- **Emoji Support**: Native emoji integration via quick-insert shortcuts.
+- **Universal Attachments**:
+  - **Smart Grid**: Automatically manages layouts for up to 4 images.
+  - **File Previews**: Interactive buttons for PDF and diverse document types in the note footer.
+  - **Lightbox Preview**: High-quality fullscreen image viewer.
+  - **Drag & Drop**: Seamlessly attach media by dropping files onto your workspace.
 
-- **Privacy First**: stored 100% locally.
-- **Auto-Preservation**: Deleting the last note automatically generates a fresh one, so you're never left with an empty void.
-- **Rich Formatting**: Markdown support (`*bold*`, `_italics_`) and auto-linked URLs.
-- **Emoji Picker**: Type `:` to search/insert emojis instantly.
-- **Universal Attachments**: Support for images and files (PDF, MP4, etc.).
-  - **Smart Image Limits**: Up to 4 images on desktop and 2 on mobile (grid layout).
-  - **File Support**: Attach 1 non-image file per note (PDF, documents, etc.).
-  - **Interactive Previews**: Images show in a grid; files appear as elegant buttons in the footer.
-  - **Drag & Drop**: Drag images or files directly onto a note to attach.
-  - **Fullscreen Preview**: Click on images for a high-quality lightbox.
-  - **Safe Management**: Manage attachments securely while in edit mode.
+### ✅ Focus-Driven Tasks
+- **Focus Mode**: Active task creation fades out distractions to keep you in the zone.
+- **Auto Reset**: Progress is automatically reset at midnight (Argentina Time 🇦🇷).
+- **Safe Management**: Multi-step confirmation for deletions to prevent data loss.
 
-### ✅ Daily Tasks
+### ☁️ Authentication & Cloud Sync
+- **Google Auth**: Secure, single-click login.
+- **Cross-Device Persistence**: Your shortcuts and notes follow you anywhere.
+- **Auth Pills**: Premium user profile UI with responsive logout states.
 
-- **Focus Mode**: When adding a task, existing items fade out to help you concentrate on the new entry.
-- **Auto Reset**: Tasks automatically uncheck at midnight (Argentina Time 🇦🇷) — wake up to a fresh slate.
-- **Safe Delete**: Two-step confirmation (Trash ➔ Red Check) to prevent accidents.
-- **Cancel Creation**: Creating a task also has a trash button to cancel the action.
-
-### 🕒 Time & Focus
-
-- **Digital Clock**: Large, bold real-time clock and localized date display.
-- **Countdown Timers**: Track time to important events with visual urgency indicators (Yellow/Red).
-- **Mens Sana Footer**: "Mens sana in corpore sano" - A reminder for balance.
-
-### 🧭 Navigation Hub
-
-- **Fast Access**: Shortcut links with premium hover effects (grayscale & scale focus). Open in new window or tab.
-### 🔗 Quick Links
-Floating buttons for essential services:
-  - **Home**: You are here!
-  - **[Emojis](https://emojis.hoy.today)**: Fast access to emoji library.
-  - **[Playlist](https://playlist.hoy.today)**: Your curated music collection ready at hand.
-  - **[Minigame](https://minigame.hoy.today)**: Take a break and play Antipala Pro.
-  - **[Moovimiento](https://moovimiento.com/en)**: Visit Moovimiento.
-
-### ⚙️ Configuration & Personalization
-
-- **Centralized Config**: A dedicated modal to manage all your preferences (toggle with Language button).
-- **Feature Toggles**: Customize your dashboard by showing or hiding core modules:
-  - **Clock & Calendar**: Toggle the main time display.
-  - **Daily & Weekly Tasks**: Show/Hide the daily and weekly tasks list.
-  - **Countdown Timers**: Show/Hide the countdown timer.
-  - **Shortcuts**: Show/Hide the floating shortcuts bubbles.
-- **Smooth Transitions**: All elements fade in/out smoothly to maintain a polished look.
-- **Language Switch**: Instantly toggle between English and Spanish.
-
-### 💾 Data Backup
-
-- **Export**: Backup your shortcuts, daily tasks, notes, and countdowns to a JSON file.
-- **Import**: Restore your configuration from a backup file selectively.
+### 🧭 Navigation & Shortcuts
+- **Shortcut Hub**: Dynamic, user-configurable shortcuts with auto-loading favicons.
+- **Animated Loaders**: Smooth pulse-loading states for remote data fetching.
+- **Floating Links**: Quick access to Emojis, Playlists, and Minigames.
 
 ---
 
 ## 🛠️ Technology Stack
 
-- **Framework**: [Next.js 16](https://nextjs.org/)
-- **Library**: [React 19](https://react.dev/)
-- **Language**: [TypeScript](https://www.typescriptlang.org/)
-- **Styling**: [Tailwind](https://tailwindcss.com/)
-- **Icons**: [Lucide React](https://lucide.dev/)
-- **Font**: [Geist](https://vercel.com/font)
+| Component | Technology |
+| :--- | :--- |
+| **Framework** | [Next.js 16](https://nextjs.org/) |
+| **State & Flow** | [React 19](https://react.dev/) |
+| **Backend / Sync** | [Supabase](https://supabase.com/) |
+| **Styling** | [Tailwind CSS 4](https://tailwindcss.com/) |
+| **Database/Auth** | Cloud Sync via @supabase/ssr |
+| **Type Safety** | [TypeScript](https://www.typescriptlang.org/) |
+| **Icons** | [Lucide React](https://lucide.dev/) |
+| **Web Typography** | [Geist Sans/Mono](https://vercel.com/font) |
 
 ---
 
-## 📄 License
+## 🚀 Getting Started
 
-This project is created for personal productivity and is shared as-is. Feel free to fork and adapt it for your own "Hoy & Today"!
+### Prerequisites
+- Node.js 22+
+- Yarn
+
+### Setup
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/gonzalogramagia/today.git
+   cd today
+   ```
+
+2. **Install dependencies**
+   ```bash
+   yarn install
+   ```
+
+3. **Environment Configuration**
+   Create a `.env.local` file with your credentials:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+   ```
+
+4. **Run development server**
+   ```bash
+   yarn dev
+   ```
+
+Open [http://localhost:3000](http://localhost:3000) to see the dashboard.
 
 ---
 
-## Recommended Extensions
-
-To get the full experience and stay in the flow, I recommend these Chrome extensions:
-
-- **[New Tab Redirect](https://chromewebstore.google.com/detail/new-tab-redirect/icpgjfneehieebagbmdbhnlpiopdcmna)**
-  **Why?** Makes _Hoy & Today_ your default new tab page, ensuring your tasks, top notes and countdowns are always the first thing you see — along with your shortcuts!
-
-- **[Just Focus](https://chromewebstore.google.com/detail/just-focus/gefaddaengbodpiobpbgblajdboalmgc)**
-  **Why?** A simple website blocker to eliminate distractions and keep your deep work sessions protected.
-
-- **[Browser Guard](https://chromewebstore.google.com/detail/malwarebytes-browser-guar/ihcjicgdanjaechkgeegckofjjedodee)**
-  **Why?** Blocks ads and trackers for a faster, safer, and cleaner browsing experience.
+## 📦 Extensions (Recommended)
+Enhance your flow with these productivity tools:
+- **[New Tab Redirect](https://chromewebstore.google.com/detail/new-tab-redirect/icpgjfneehieebagbmdbhnlpiopdcmna)**: Set _Hoy & Today_ as your default dashboard.
+- **[Just Focus](https://chromewebstore.google.com/detail/just-focus/gefaddaengbodpiobpbgblajdboalmgc)**: Eliminate distractions during deep work sessions.
+- **[Malwarebytes Browser Guard](https://chromewebstore.google.com/detail/malwarebytes-browser-guar/ihcjicgdanjaechkgeegckofjjedodee)**: Privacy focused ad & tracker blocking.
 
 ---
 
