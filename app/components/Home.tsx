@@ -120,7 +120,7 @@ export default function Home({ lang }: HomeProps) {
             setBlocks([
               {
                 id: "init",
-                tag: "nueva",
+                tag: generateId(),
                 title: "",
                 content: "",
                 color: "#FEFCE8",
