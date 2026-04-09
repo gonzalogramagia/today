@@ -111,9 +111,9 @@ export default function WeeklyTasks() {
 
     // Save to LocalStorage ONLY for Guest environment
     useEffect(() => {
-        if (!mounted || user) return // Do not touch localStorage if logged in
+        if (!mounted || user || authLoading) return // Do not touch localStorage if logged in or still loading
         localStorage.setItem('weekly-tasks', JSON.stringify(tasks))
-    }, [tasks, mounted, user])
+    }, [tasks, mounted, user, authLoading])
 
     const addTask = async (e?: React.FormEvent) => {
         e?.preventDefault()
