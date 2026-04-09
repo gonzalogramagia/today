@@ -148,9 +148,9 @@ export default function DailyTasks() {
 
     // Save to LocalStorage ONLY for Guest environment
     useEffect(() => {
-        if (!mounted || user || authLoading) return // Do not touch localStorage if logged in or still loading
+        if (!mounted || user || authLoading || loading) return // Do not touch localStorage if logged in or still loading
         localStorage.setItem('daily-tasks', JSON.stringify(tasks))
-    }, [tasks, mounted, user, authLoading])
+    }, [tasks, mounted, user, authLoading, loading])
 
     // Interval to check for date change if the app is kept open
     useEffect(() => {

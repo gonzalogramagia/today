@@ -226,9 +226,9 @@ export default function Home({ lang }: HomeProps) {
 
   // Save to LocalStorage ONLY for Guest environment
   useEffect(() => {
-    if (!mounted || user) return; // Do not touch localStorage if logged in
+    if (!mounted || user || authLoading || loading) return; // Do not touch localStorage if logged in or still loading
     localStorage.setItem("localhost-blocks", JSON.stringify(blocks));
-  }, [blocks, mounted, user]);
+  }, [blocks, mounted, user, authLoading, loading]);
 
   // Scroll and center the editing block
   useEffect(() => {

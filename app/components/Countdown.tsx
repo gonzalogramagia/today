@@ -194,9 +194,9 @@ export default function Countdown() {
     }, [user, authLoading, supabase])
 
     useEffect(() => {
-        if (!mounted || user || authLoading) return
+        if (!mounted || user || authLoading || loading) return // Do not touch localStorage if logged in or still loading
         localStorage.setItem('countdown-events', JSON.stringify(countdowns))
-    }, [countdowns, mounted, user, authLoading])
+    }, [countdowns, mounted, user, authLoading, loading])
 
     const handleDelete = async (id: string) => {
         const remaining = countdowns.filter(c => c.id !== id);
