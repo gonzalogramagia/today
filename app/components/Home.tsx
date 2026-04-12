@@ -1260,38 +1260,34 @@ export default function Home({ lang }: HomeProps) {
                   />
                 ) : (
                   (() => {
-                    const isUrl =
-                      typeof block.title === "string" &&
-                      /^(https?:\/\/|www\.)\S+$/i.test(block.title.trim());
-                    if (isUrl) {
-                      let url = block.title.trim();
-                      if (!/^https?:\/\//i.test(url)) url = "https://" + url;
-                      return (
-                        <a
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-full sm:flex-1 text-lg font-semibold px-2 py-1 border-b border-transparent text-[#6866D6] hover:underline rounded-t-md transition-all block truncate"
-                          style={{ borderBottomColor: "rgba(0,0,0,0.1)" }}
-                        >
-                          {block.title || (
-                            <span className="text-zinc-400 select-none">{`${lang === "en" ? "Note" : "Nota"} #${block.tag}`}</span>
-                          )}
-                        </a>
-                      );
-                    } else {
+                    if (!block.title) {
                       return (
                         <span
                           className="w-full sm:flex-1 text-lg font-semibold px-2 py-1 border-b border-transparent text-zinc-900 rounded-t-md transition-all block truncate"
                           style={{ borderBottomColor: "rgba(0,0,0,0.1)" }}
                           onClick={() => startEditing(block, "title")}
                         >
-                          {block.title || (
-                            <span className="text-zinc-400 select-none">{`${lang === "en" ? "Note" : "Nota"} #${block.tag}`}</span>
-                          )}
+                          <span className="text-zinc-400 select-none">{`${lang === "en" ? "Note" : "Nota"} #${block.tag}`}</span>
                         </span>
                       );
                     }
+                    return (
+                      <span
+                        className="w-full sm:flex-1 text-lg font-semibold px-2 py-1 border-b border-transparent text-zinc-900 rounded-t-md transition-all block truncate"
+                        style={{ borderBottomColor: "rgba(0,0,0,0.1)" }}
+                        onClick={(e) => {
+                          let node = e.target as HTMLElement | null;
+                          while (node) {
+                            if (node.tagName === "A") return;
+                            node = node.parentElement;
+                          }
+                          startEditing(block, "title");
+                        }}
+                        dangerouslySetInnerHTML={{
+                          __html: formatText(block.title),
+                        }}
+                      />
+                    );
                   })()
                 )}
                 <div className="flex items-center justify-between w-full sm:w-auto sm:justify-start gap-3 mt-1 sm:mt-0">
