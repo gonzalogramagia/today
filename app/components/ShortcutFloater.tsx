@@ -25,6 +25,7 @@ export default function ShortcutFloater() {
     const [activeSide, setActiveSide] = useState<Position>('right')
     const [areShortcutsVisible, setAreShortcutsVisible] = useState(true)
     const [loadingShortcuts, setLoadingShortcuts] = useState(true)
+    const [draggedShortcutId, setDraggedShortcutId] = useState<string | null>(null)
 
     useEffect(() => {
         const checkVisibility = () => {
@@ -283,6 +284,50 @@ export default function ShortcutFloater() {
         window.open(shortcut.url, '_blank')
     }
 
+    const handleDragStart = (id: string) => {
+        setDraggedShortcutId(id)
+    }
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault()
+    }
+
+    const handleDrop = async (targetId: string) => {
+        if (!draggedShortcutId || draggedShortcutId === targetId) return
+
+        const draggedIndex = shortcuts.findIndex(s => s.id === draggedShortcutId)
+        const targetIndex = shortcuts.findIndex(s => s.id === targetId)
+
+        if (draggedIndex === -1 || targetIndex === -1) return
+        
+        // Ensure they are on the same side
+        if (shortcuts[draggedIndex].position !== shortcuts[targetIndex].position) return
+
+        const newShortcuts = [...shortcuts]
+        const [draggedItem] = newShortcuts.splice(draggedIndex, 1)
+        newShortcuts.splice(targetIndex, 0, draggedItem)
+
+        // Update sort_index for all
+        const updatedShortcuts = newShortcuts.map((s, idx) => ({
+            ...s,
+            sort_index: idx
+        }))
+
+        saveToStorage(updatedShortcuts)
+
+        if (user) {
+            // Bulk update sort_index in Supabase
+            for (let i = 0; i < updatedShortcuts.length; i++) {
+                supabase
+                    .from('shortcuts')
+                    .update({ sort_index: i })
+                    .eq('id', updatedShortcuts[i].id)
+                    .then()
+            }
+        }
+        setDraggedShortcutId(null)
+    }
+
     return (
         <>
             {sides.map((side) => (
@@ -307,18 +352,22 @@ export default function ShortcutFloater() {
                     ) : (
                         side === 'left' ? (
                             shortcuts.filter(s => s.position === side).map(shortcut => (
-                                <div
-                                    key={shortcut.id}
-                                    className="group relative flex items-center justify-center w-10 h-10 rounded-full bg-white border border-zinc-200 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-110 cursor-pointer overflow-visible"
-                                >
-                                    <a
-                                        href={shortcut.url}
-                                        onClick={(e) => handleShortcutClick(e, shortcut)}
-                                        className="w-full h-full p-1 flex items-center justify-center rounded-full cursor-pointer"
-                                        role="button"
-                                        tabIndex={0}
+                                    <div
+                                        key={shortcut.id}
                                         draggable="true"
+                                        onDragStart={() => handleDragStart(shortcut.id)}
+                                        onDragOver={handleDragOver}
+                                        onDrop={() => handleDrop(shortcut.id)}
+                                        className={`group relative flex items-center justify-center w-10 h-10 rounded-full bg-white border border-zinc-200 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-110 cursor-pointer overflow-visible ${draggedShortcutId === shortcut.id ? 'opacity-50 grayscale' : ''}`}
                                     >
+                                        <a
+                                            href={shortcut.url}
+                                            onClick={(e) => handleShortcutClick(e, shortcut)}
+                                            className="w-full h-full p-1 flex items-center justify-center rounded-full cursor-pointer"
+                                            role="button"
+                                            tabIndex={0}
+                                            draggable="false"
+                                        >
                                         <img
                                             src={shortcut.iconUrl}
                                             alt={shortcut.name}
@@ -350,7 +399,11 @@ export default function ShortcutFloater() {
                                 {shortcuts.filter(s => s.position === side).map(shortcut => (
                                     <div
                                         key={shortcut.id}
-                                        className="group relative flex items-center justify-center w-10 h-10 rounded-full bg-white border border-zinc-200 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-110 cursor-pointer overflow-visible"
+                                        draggable="true"
+                                        onDragStart={() => handleDragStart(shortcut.id)}
+                                        onDragOver={handleDragOver}
+                                        onDrop={() => handleDrop(shortcut.id)}
+                                        className={`group relative flex items-center justify-center w-10 h-10 rounded-full bg-white border border-zinc-200 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-110 cursor-pointer overflow-visible ${draggedShortcutId === shortcut.id ? 'opacity-50 grayscale' : ''}`}
                                     >
                                         <a
                                             href={shortcut.url}
@@ -358,7 +411,7 @@ export default function ShortcutFloater() {
                                             className="w-full h-full p-1 flex items-center justify-center rounded-full cursor-pointer"
                                             role="button"
                                             tabIndex={0}
-                                            draggable="true"
+                                            draggable="false"
                                         >
                                             <img
                                                 src={shortcut.iconUrl}

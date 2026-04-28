@@ -29,6 +29,14 @@ export default function MonthlyTasks() {
     useEffect(() => {
         const saved = localStorage.getItem('config-collapsed-monthly')
         if (saved === 'true') setIsCollapsed(true)
+
+        const handleStorage = (e: StorageEvent) => {
+            if (e.key === 'config-collapsed-monthly') {
+                setIsCollapsed(e.newValue === 'true')
+            }
+        }
+        window.addEventListener('storage', handleStorage)
+        return () => window.removeEventListener('storage', handleStorage)
     }, [])
 
     const toggleCollapse = (val: boolean) => {

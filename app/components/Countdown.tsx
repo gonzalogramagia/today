@@ -28,6 +28,14 @@ export default function Countdown() {
     useEffect(() => {
         const saved = localStorage.getItem('config-collapsed-countdown')
         if (saved === 'true') setIsCollapsed(true)
+
+        const handleStorage = (e: StorageEvent) => {
+            if (e.key === 'config-collapsed-countdown') {
+                setIsCollapsed(e.newValue === 'true')
+            }
+        }
+        window.addEventListener('storage', handleStorage)
+        return () => window.removeEventListener('storage', handleStorage)
     }, [])
 
     const toggleCollapse = (val: boolean) => {

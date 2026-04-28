@@ -50,6 +50,7 @@ export default function Home({ lang }: HomeProps) {
   const [deletingBlockId, setDeletingBlockId] = useState<string | null>(null);
   const [justMovedId, setJustMovedId] = useState<string | null>(null);
   const [createdBlockId, setCreatedBlockId] = useState<string | null>(null);
+  const [creationSource, setCreationSource] = useState<'top' | 'bottom' | null>(null);
   const [tagColors, setTagColors] = useState<Record<string, string>>({});
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [deletingFileId, setDeletingFileId] = useState<string | null>(null);
@@ -64,6 +65,16 @@ export default function Home({ lang }: HomeProps) {
         setCollapsedIds(new Set(JSON.parse(saved)));
       } catch (e) {}
     }
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "config-collapsed-notes" && e.newValue) {
+        try {
+          setCollapsedIds(new Set(JSON.parse(e.newValue)));
+        } catch (err) {}
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
   const toggleNoteCollapse = (id: string) => {
@@ -498,7 +509,10 @@ export default function Home({ lang }: HomeProps) {
         `[data-block-id="${createdBlockId}"]`,
       );
       if (element) {
-        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        element.scrollIntoView({ 
+          behavior: "smooth", 
+          block: creationSource === 'top' ? "center" : "end" 
+        });
         const input = element.querySelector(
           'input[type="text"]',
         ) as HTMLInputElement;
@@ -507,8 +521,9 @@ export default function Home({ lang }: HomeProps) {
         }
       }
       setCreatedBlockId(null);
+      setCreationSource(null);
     }
-  }, [blocks, createdBlockId]);
+  }, [blocks, createdBlockId, creationSource]);
 
   // --- Emoji Picker Logic ---
   // Helper function to remove accents for accent-insensitive search
@@ -863,6 +878,7 @@ export default function Home({ lang }: HomeProps) {
   };
 
   const addBlock = async () => {
+    setCreationSource('bottom');
     const id = generateId();
     const blockId = generateId();
     const newBlock: TextBlock = {
@@ -893,6 +909,7 @@ export default function Home({ lang }: HomeProps) {
   };
 
   const addBlockTop = async () => {
+    setCreationSource('top');
     const id = generateId();
     const blockId = generateId();
     const newBlock: TextBlock = {

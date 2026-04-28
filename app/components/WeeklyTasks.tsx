@@ -29,6 +29,14 @@ export default function WeeklyTasks() {
     useEffect(() => {
         const saved = localStorage.getItem('config-collapsed-weekly')
         if (saved === 'true') setIsCollapsed(true)
+
+        const handleStorage = (e: StorageEvent) => {
+            if (e.key === 'config-collapsed-weekly') {
+                setIsCollapsed(e.newValue === 'true')
+            }
+        }
+        window.addEventListener('storage', handleStorage)
+        return () => window.removeEventListener('storage', handleStorage)
     }, [])
 
     const toggleCollapse = (val: boolean) => {
