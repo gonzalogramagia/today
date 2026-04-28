@@ -297,12 +297,6 @@ export default function MonthlyTasks() {
                         {user && (
                             <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse ml-0.5" title="Sincronizado" />
                         )}
-                        {!isCollapsed && (
-                            <div className="absolute bottom-full left-[-4px] mb-2 w-max bg-black text-white text-[10px] px-2 py-1 rounded opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-50">
-                                {isEnglish ? 'Never resets' : 'No se resetean nunca'}
-                                <div className="absolute top-full left-2 w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-black"></div>
-                            </div>
-                        )}
                     </h3>
                     <button
                         onClick={(e) => {

@@ -47,16 +47,6 @@ export default function DailyTasks() {
         localStorage.setItem('config-collapsed-daily', String(val))
     }
 
-    // Helper to get Argentina date string YYYY-MM-DD
-    const getArgentinaDate = () => {
-        return new Date().toLocaleDateString('es-AR', {
-            timeZone: 'America/Argentina/Buenos_Aires',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
-        })
-    }
-
     // Close form when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -95,9 +85,6 @@ export default function DailyTasks() {
         setMounted(true)
         if (authLoading) return;
         const loadTasks = async () => {
-            const today = getArgentinaDate()
-            const lastReset = localStorage.getItem('daily-tasks-last-reset')
-
             if (user) {
                 // ENVIRONMENT: AUTHENTICATED (Supabase)
                 const { data, error } = await supabase
@@ -106,43 +93,15 @@ export default function DailyTasks() {
                     .order('sort_index', { ascending: true })
 
                 if (!error && data) {
-                    let remoteTasks = data as Task[]
-                    
-                    // Handle daily reset logic on Supabase data
-                    if (lastReset !== today) {
-                        const { error: updateError } = await supabase
-                            .from('daily_tasks')
-                            .update({ completed: false })
-                            .eq('user_id', user.id)
-
-                        if (!updateError) {
-                            remoteTasks = remoteTasks.map(t => ({ ...t, completed: false }))
-                            localStorage.setItem('daily-tasks-last-reset', today)
-                        }
-                    }
-                    setTasks(remoteTasks)
+                    setTasks(data as Task[])
                 }
             } else {
                 // ENVIRONMENT: GUEST (LocalStorage)
-                // Apply daily reset logic locally
-                if (lastReset !== today) {
-                    const savedTasks = localStorage.getItem('daily-tasks')
-                    if (savedTasks) {
-                        try {
-                            const parsed = JSON.parse(savedTasks)
-                            const updated = (parsed as Task[]).map(t => ({ ...t, completed: false }))
-                            localStorage.setItem('daily-tasks', JSON.stringify(updated))
-                            setTasks(updated)
-                        } catch (e) { }
-                    }
-                    localStorage.setItem('daily-tasks-last-reset', today)
-                } else {
-                    const savedTasks = localStorage.getItem('daily-tasks')
-                    if (savedTasks) {
-                        try {
-                            setTasks(JSON.parse(savedTasks))
-                        } catch (e) { }
-                    }
+                const savedTasks = localStorage.getItem('daily-tasks')
+                if (savedTasks) {
+                    try {
+                        setTasks(JSON.parse(savedTasks))
+                    } catch (e) { }
                 }
             }
             setLoading(false)
@@ -171,22 +130,6 @@ export default function DailyTasks() {
         localStorage.setItem('daily-tasks', JSON.stringify(tasks))
     }, [tasks, mounted, user, authLoading, loading])
 
-    // Interval to check for date change if the app is kept open
-    useEffect(() => {
-        const interval = setInterval(() => {
-            const lastReset = localStorage.getItem('daily-tasks-last-reset')
-            const today = getArgentinaDate()
-            if (lastReset !== today) {
-                setTasks(current => current.map(t => ({ ...t, completed: false })))
-                localStorage.setItem('daily-tasks-last-reset', today)
-                if (user) {
-                    supabase.from('daily_tasks').update({ completed: false }).eq('user_id', user.id).then()
-                }
-            }
-        }, 60000) // Check every minute
-        return () => clearInterval(interval)
-    }, [user, supabase])
-
     const addTask = async (e?: React.FormEvent) => {
         e?.preventDefault()
         if (!inputValue.trim()) return
@@ -194,14 +137,14 @@ export default function DailyTasks() {
         if (editingId) {
             const updatedText = inputValue.trim()
             const updatedUrl = urlValue.trim() || undefined
-            
+
             setTasks(tasks.map(t =>
                 t.id === editingId
                     ? { ...t, text: updatedText, url: updatedUrl }
                     : t
             ))
 
-            if(user) {
+            if (user) {
                 await supabase
                     .from('daily_tasks')
                     .update({ text: updatedText, url: updatedUrl })
@@ -331,7 +274,7 @@ export default function DailyTasks() {
         <div ref={containerRef} className={`transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none select-none'}`}>
             <div className="bg-white border border-zinc-200 rounded-lg shadow-lg p-4 transition-all">
                 <div className="group/header flex items-center justify-between mb-5" onClick={() => editingId && cancelEditing()}>
-                    <h3 
+                    <h3
                         onClick={(e) => {
                             e.stopPropagation()
                             toggleCollapse(!isCollapsed)
@@ -346,15 +289,9 @@ export default function DailyTasks() {
                                 </>
                             )}
                         </span>
-                        <span className="group-hover/title:text-[#6866D6] transition-colors">{isEnglish ? 'Daily Tasks' : 'Tareas Diarias'}</span>
+                        <span className="group-hover/title:text-[#6866D6] transition-colors">{isEnglish ? 'Day Tasks' : 'Tareas del Día'}</span>
                         {user && (
                             <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse ml-0.5" title="Sincronizado" />
-                        )}
-                        {!isCollapsed && (
-                            <div className="absolute bottom-full left-[-4px] mb-2 w-max bg-black text-white text-[10px] px-2 py-1 rounded opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-50">
-                                {isEnglish ? 'Resets at 23:59' : 'Se resetean a las 23:59'}
-                                <div className="absolute top-full left-2 w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-black"></div>
-                            </div>
                         )}
                     </h3>
                     <button
@@ -379,163 +316,163 @@ export default function DailyTasks() {
 
                 <div className={`${isCollapsed ? 'hidden' : ''}`}>
                     <div className={`space-y-2 max-h-[60vh] overflow-y-auto overflow-x-hidden mb-3 custom-scrollbar transition-opacity duration-200 ${isAdding ? 'opacity-50 pointer-events-none' : ''}`}>
-                    {loading ? (
-                        <div className="flex items-center justify-center py-6 opacity-50">
-                            <Loader2 className="w-5 h-5 animate-spin text-[#6866D6]" />
-                        </div>
-                    ) : (
-                        tasks.map((task, index) => (
-                            <div
-                                key={task.id}
-                                className={`group min-h-[24px] transition-all duration-200 ${draggedTaskId === task.id ? 'opacity-30 scale-[0.98] cursor-grabbing' : 'opacity-100'} ${editingId || isAdding ? 'cursor-default' : 'cursor-grab'}`}
-                                draggable={!editingId && !isAdding}
-                                onDragStart={() => handleDragStart(task.id)}
-                                onDragOver={(e) => handleDragOver(e, task.id)}
-                                onDragEnd={handleDragEnd}
-                                onClick={() => {
-                                    if (editingId && editingId !== task.id) {
-                                        cancelEditing()
-                                    }
-                                }}
-                            >
-                            {editingId === task.id ? (
-                                <form onSubmit={addTask} className="flex flex-col gap-2 animate-in fade-in duration-200 px-0.5">
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="text"
-                                            value={inputValue}
-                                            onChange={(e) => setInputValue(e.target.value)}
-                                            placeholder={isEnglish ? 'Task name...' : 'Nombre de tarea...'}
-                                            autoFocus
-                                            className="flex-1 bg-zinc-50 border-none rounded text-xs px-2 py-1 focus:ring-1 focus:ring-zinc-300 outline-none text-zinc-800 mx-[1px]"
-                                        />
-                                        <button
-                                            type="submit"
-                                            disabled={!inputValue.trim()}
-                                            className="bg-[#6866D6] text-white rounded px-1.5 py-1 hover:bg-[#5856c4] disabled:opacity-50 transition-colors cursor-pointer"
-                                            title={isEnglish ? 'Save' : 'Guardar'}
-                                        >
-                                            <Check size={14} />
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={cancelEditing}
-                                            className="rounded px-1.5 py-1 transition-colors cursor-pointer bg-zinc-200 text-zinc-500 hover:bg-red-100 hover:text-red-500 mr-[1px]"
-                                        >
-                                            <X size={14} />
-                                        </button>
-                                    </div>
-                                    <input
-                                        type="text"
-                                        value={urlValue}
-                                        onChange={(e) => setUrlValue(e.target.value)}
-                                        placeholder={isEnglish ? 'Optional URL...' : 'URL opcional...'}
-                                        className="w-full bg-zinc-50 border-none rounded text-xs px-2 py-1 focus:ring-1 focus:ring-zinc-300 outline-none text-zinc-800 text-[10px] mx-[1px]"
-                                    />
-                                </form>
-                            ) : (
-                                <div className={`flex items-center gap-2 text-sm ${editingId && editingId !== task.id ? 'opacity-50 grayscale pointer-events-none' : ''}`}>
-                                    <button
-                                        onClick={() => toggleTask(task.id)}
-                                        className={`flex-shrink-0 transition-colors cursor-pointer ${task.completed ? 'text-green-500' : 'text-zinc-300 hover:text-zinc-400'}`}
-                                    >
-                                        {task.completed ? <CheckSquare size={16} /> : <Square size={16} />}
-                                    </button>
-                                    <span className={`flex-1 break-words transition-all ${task.completed ? 'line-through text-zinc-400' : 'text-zinc-700'}`}>
-                                        {task.url ? (
-                                            <a
-                                                href={task.url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="hover:underline decoration-zinc-400"
-                                                onClick={(e) => e.stopPropagation()}
-                                            >
-                                                {task.text}
-                                            </a>
-                                        ) : (
-                                            task.text
-                                        )}
-                                    </span>
-                                    {(!isAdding && !editingId) && (
-                                        <div className="flex items-center gap-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {loading ? (
+                            <div className="flex items-center justify-center py-6 opacity-50">
+                                <Loader2 className="w-5 h-5 animate-spin text-[#6866D6]" />
+                            </div>
+                        ) : (
+                            tasks.map((task, index) => (
+                                <div
+                                    key={task.id}
+                                    className={`group min-h-[24px] transition-all duration-200 ${draggedTaskId === task.id ? 'opacity-30 scale-[0.98] cursor-grabbing' : 'opacity-100'} ${editingId || isAdding ? 'cursor-default' : 'cursor-grab'}`}
+                                    draggable={!editingId && !isAdding}
+                                    onDragStart={() => handleDragStart(task.id)}
+                                    onDragOver={(e) => handleDragOver(e, task.id)}
+                                    onDragEnd={handleDragEnd}
+                                    onClick={() => {
+                                        if (editingId && editingId !== task.id) {
+                                            cancelEditing()
+                                        }
+                                    }}
+                                >
+                                    {editingId === task.id ? (
+                                        <form onSubmit={addTask} className="flex flex-col gap-2 animate-in fade-in duration-200 px-0.5">
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    value={inputValue}
+                                                    onChange={(e) => setInputValue(e.target.value)}
+                                                    placeholder={isEnglish ? 'Task name...' : 'Nombre de tarea...'}
+                                                    autoFocus
+                                                    className="flex-1 bg-zinc-50 border-none rounded text-xs px-2 py-1 focus:ring-1 focus:ring-zinc-300 outline-none text-zinc-800 mx-[1px]"
+                                                />
+                                                <button
+                                                    type="submit"
+                                                    disabled={!inputValue.trim()}
+                                                    className="bg-[#6866D6] text-white rounded px-1.5 py-1 hover:bg-[#5856c4] disabled:opacity-50 transition-colors cursor-pointer"
+                                                    title={isEnglish ? 'Save' : 'Guardar'}
+                                                >
+                                                    <Check size={14} />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={cancelEditing}
+                                                    className="rounded px-1.5 py-1 transition-colors cursor-pointer bg-zinc-200 text-zinc-500 hover:bg-red-100 hover:text-red-500 mr-[1px]"
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
+                                            <input
+                                                type="text"
+                                                value={urlValue}
+                                                onChange={(e) => setUrlValue(e.target.value)}
+                                                placeholder={isEnglish ? 'Optional URL...' : 'URL opcional...'}
+                                                className="w-full bg-zinc-50 border-none rounded text-xs px-2 py-1 focus:ring-1 focus:ring-zinc-300 outline-none text-zinc-800 text-[10px] mx-[1px]"
+                                            />
+                                        </form>
+                                    ) : (
+                                        <div className={`flex items-center gap-2 text-sm ${editingId && editingId !== task.id ? 'opacity-50 grayscale pointer-events-none' : ''}`}>
                                             <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    startEditing(task)
-                                                }}
-                                                className="p-1 text-zinc-400 hover:text-[#6866D6] transition-colors cursor-pointer"
-                                                title={isEnglish ? 'Edit' : 'Editar'}
+                                                onClick={() => toggleTask(task.id)}
+                                                className={`flex-shrink-0 transition-colors cursor-pointer ${task.completed ? 'text-green-500' : 'text-zinc-300 hover:text-zinc-400'}`}
                                             >
-                                                <Pencil size={14} />
+                                                {task.completed ? <CheckSquare size={16} /> : <Square size={16} />}
                                             </button>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    confirmDelete(task.id)
-                                                }}
-                                                className={`p-1 cursor-pointer ${deletingId === task.id ? 'text-red-500 opacity-100' : 'text-zinc-400 hover:text-red-500'}`}
-                                                title={isEnglish ? 'Delete' : 'Eliminar'}
-                                            >
-                                                {deletingId === task.id ? <Check size={14} /> : <Trash2 size={14} />}
-                                            </button>
+                                            <span className={`flex-1 break-words transition-all ${task.completed ? 'line-through text-zinc-400' : 'text-zinc-700'}`}>
+                                                {task.url ? (
+                                                    <a
+                                                        href={task.url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="hover:underline decoration-zinc-400"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        {task.text}
+                                                    </a>
+                                                ) : (
+                                                    task.text
+                                                )}
+                                            </span>
+                                            {(!isAdding && !editingId) && (
+                                                <div className="flex items-center gap-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            startEditing(task)
+                                                        }}
+                                                        className="p-1 text-zinc-400 hover:text-[#6866D6] transition-colors cursor-pointer"
+                                                        title={isEnglish ? 'Edit' : 'Editar'}
+                                                    >
+                                                        <Pencil size={14} />
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            confirmDelete(task.id)
+                                                        }}
+                                                        className={`p-1 cursor-pointer ${deletingId === task.id ? 'text-red-500 opacity-100' : 'text-zinc-400 hover:text-red-500'}`}
+                                                        title={isEnglish ? 'Delete' : 'Eliminar'}
+                                                    >
+                                                        {deletingId === task.id ? <Check size={14} /> : <Trash2 size={14} />}
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
-                            )}
-                        </div>
-                    )))}
+                            )))}
 
-                    {tasks.length === 0 && !loading && (
-                        <div className="text-xs text-zinc-400 text-center py-4 italic">
-                            {isEnglish ? 'No tasks for today' : 'No hay tareas para hoy'}
-                        </div>
+                        {tasks.length === 0 && !loading && (
+                            <div className="text-xs text-zinc-400 text-center py-4 italic">
+                                {isEnglish ? 'No tasks' : 'No hay tareas'}
+                            </div>
+                        )}
+                    </div>
+
+                    {isAdding && (
+                        <form onSubmit={addTask} className="flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-200 px-0.5">
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={inputValue}
+                                    onChange={(e) => setInputValue(e.target.value)}
+                                    placeholder={isEnglish ? 'New task...' : 'Nueva tarea...'}
+                                    autoFocus
+                                    className="flex-1 bg-zinc-50 border-none rounded text-xs px-2 py-1.5 focus:ring-1 focus:ring-zinc-300 outline-none text-zinc-800 mx-[1px]"
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={!inputValue.trim()}
+                                    className="bg-[#6866D6] text-white rounded p-1.5 hover:bg-[#5856c4] disabled:opacity-50 transition-colors cursor-pointer"
+                                    title={isEnglish ? 'Add' : 'Agregar'}
+                                >
+                                    <Plus size={14} />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setIsAdding(false)
+                                        setInputValue('')
+                                        setUrlValue('')
+                                    }}
+                                    className="rounded p-1.5 transition-colors cursor-pointer bg-zinc-200 text-zinc-500 hover:bg-red-100 hover:text-red-500 mr-[1px]"
+                                >
+                                    <X size={14} />
+                                </button>
+                            </div>
+                            <input
+                                type="text"
+                                value={urlValue}
+                                onChange={(e) => setUrlValue(e.target.value)}
+                                placeholder={isEnglish ? 'Optional URL...' : 'URL opcional...'}
+                                className="w-full bg-zinc-50 border-none rounded text-xs px-2 py-1.5 focus:ring-1 focus:ring-zinc-300 outline-none text-zinc-800 text-xs mx-[1px]"
+                            />
+                        </form>
                     )}
                 </div>
 
-                {isAdding && (
-                    <form onSubmit={addTask} className="flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-200 px-0.5">
-                        <div className="flex gap-2">
-                            <input
-                                type="text"
-                                value={inputValue}
-                                onChange={(e) => setInputValue(e.target.value)}
-                                placeholder={isEnglish ? 'New task...' : 'Nueva tarea...'}
-                                autoFocus
-                                className="flex-1 bg-zinc-50 border-none rounded text-xs px-2 py-1.5 focus:ring-1 focus:ring-zinc-300 outline-none text-zinc-800 mx-[1px]"
-                            />
-                            <button
-                                type="submit"
-                                disabled={!inputValue.trim()}
-                                className="bg-[#6866D6] text-white rounded p-1.5 hover:bg-[#5856c4] disabled:opacity-50 transition-colors cursor-pointer"
-                                title={isEnglish ? 'Add' : 'Agregar'}
-                            >
-                                <Plus size={14} />
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setIsAdding(false)
-                                    setInputValue('')
-                                    setUrlValue('')
-                                }}
-                                className="rounded p-1.5 transition-colors cursor-pointer bg-zinc-200 text-zinc-500 hover:bg-red-100 hover:text-red-500 mr-[1px]"
-                            >
-                                <X size={14} />
-                            </button>
-                        </div>
-                        <input
-                            type="text"
-                            value={urlValue}
-                            onChange={(e) => setUrlValue(e.target.value)}
-                            placeholder={isEnglish ? 'Optional URL...' : 'URL opcional...'}
-                            className="w-full bg-zinc-50 border-none rounded text-xs px-2 py-1.5 focus:ring-1 focus:ring-zinc-300 outline-none text-zinc-800 text-xs mx-[1px]"
-                        />
-                    </form>
-                )}
-                </div>
-
                 {isCollapsed && (
-                    <div 
+                    <div
                         onClick={() => toggleCollapse(false)}
                         className="py-2 text-center cursor-pointer group/msg"
                     >

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Timer, Trash2, CalendarClock, Plus, Pencil, X, Loader2 } from 'lucide-react'
+import { Trash2, CalendarClock, Plus, Pencil, X, Loader2, EyeOff } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { dictionary } from "../data/i18n"
 import { createClient } from "@/utils/supabase/client"
@@ -23,25 +23,38 @@ export default function Countdown() {
     const [formData, setFormData] = useState({ name: '', date: '' })
     const [draggedCountdownId, setDraggedCountdownId] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
-    const [isCollapsed, setIsCollapsed] = useState(false)
+    const [individualCollapsedIds, setIndividualCollapsedIds] = useState<Set<string>>(new Set())
 
     useEffect(() => {
-        const saved = localStorage.getItem('config-collapsed-countdown')
-        if (saved === 'true') setIsCollapsed(true)
+        const saved = localStorage.getItem('config-collapsed-individual-countdown')
+        if (saved) {
+            try {
+                setIndividualCollapsedIds(new Set(JSON.parse(saved)))
+            } catch (e) {}
+        }
 
         const handleStorage = (e: StorageEvent) => {
-            if (e.key === 'config-collapsed-countdown') {
-                setIsCollapsed(e.newValue === 'true')
+            if (e.key === 'config-collapsed-individual-countdown' && e.newValue) {
+                try {
+                    setIndividualCollapsedIds(new Set(JSON.parse(e.newValue)))
+                } catch (err) {}
             }
         }
         window.addEventListener('storage', handleStorage)
         return () => window.removeEventListener('storage', handleStorage)
     }, [])
 
-    const toggleCollapse = (val: boolean) => {
-        setIsCollapsed(val)
-        localStorage.setItem('config-collapsed-countdown', String(val))
+    const toggleTimerCollapse = (id: string) => {
+        const newSet = new Set(individualCollapsedIds)
+        if (newSet.has(id)) {
+            newSet.delete(id)
+        } else {
+            newSet.add(id)
+        }
+        setIndividualCollapsedIds(newSet)
+        localStorage.setItem('config-collapsed-individual-countdown', JSON.stringify(Array.from(newSet)))
     }
+
     const pathname = usePathname()
     const isEnglish = pathname?.startsWith('/en')
     const containerRef = useRef<HTMLDivElement>(null)
@@ -142,10 +155,7 @@ export default function Countdown() {
         setMounted(true)
         if (authLoading) return
         const loadCountdowns = async () => {
-            if (authLoading) return
-
             if (user) {
-                // ENVIRONMENT: AUTHENTICATED
                 const { data, error } = await supabase
                     .from('countdowns')
                     .select('*')
@@ -162,7 +172,6 @@ export default function Countdown() {
                     setCountdowns([]);
                 }
             } else {
-                // ENVIRONMENT: GUEST
                 const saved = localStorage.getItem('countdown-events')
                 if (saved) {
                     try {
@@ -171,7 +180,6 @@ export default function Countdown() {
                         console.error('Failed to parse countdowns', e)
                     }
                 } else {
-                    // Default logic for beginners
                     const isFirstTime = localStorage.getItem('countdown-first-time-check') === null
                     if (isFirstTime) {
                         const currentYear = new Date().getFullYear()
@@ -210,10 +218,10 @@ export default function Countdown() {
 
         window.addEventListener('storage', handleStorageChange)
         return () => window.removeEventListener('storage', handleStorageChange)
-    }, [user, authLoading, supabase])
+    }, [user, authLoading, supabase, isEnglish])
 
     useEffect(() => {
-        if (!mounted || user || authLoading || loading) return // Do not touch localStorage if logged in or still loading
+        if (!mounted || user || authLoading || loading) return
         localStorage.setItem('countdown-events', JSON.stringify(countdowns))
     }, [countdowns, mounted, user, authLoading, loading])
 
@@ -222,7 +230,6 @@ export default function Countdown() {
         setCountdowns(remaining);
         if (user) {
             await supabase.from('countdowns').delete().eq('user_id', user.id).eq('local_id', id);
-            // Re-sync sort order
             syncSortOrder(remaining);
         }
     }
@@ -274,20 +281,9 @@ export default function Countdown() {
         <div ref={containerRef} className={`fixed right-9 top-48 bottom-32 z-40 hidden lg:flex flex-col gap-4 w-64 overflow-y-auto custom-scrollbar pr-2 transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none select-none'}`}>
             <div className="group bg-white border border-zinc-200 rounded-lg shadow-lg p-4 transition-all">
                 <div className="flex items-center justify-between mb-3" onClick={handleCloseEdit}>
-                    <h3 
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            toggleCollapse(!isCollapsed)
-                        }}
-                        className="font-medium text-zinc-900 pt-1 text-sm flex items-center gap-2 cursor-pointer group/title"
-                    >
-                        <span className="text-base select-none w-5 flex justify-center">
-                            {isCollapsed ? '👁' : (
-                                <>
-                                    <span className="group-hover/title:hidden"><CalendarClock size={16} /></span>
-                                    <span className="hidden group-hover/title:inline">👁</span>
-                                </>
-                            )}
+                    <h3 className="font-medium text-zinc-900 pt-1 text-sm flex items-center gap-2 group/title">
+                        <span className="text-base select-none w-5 flex justify-center text-zinc-400">
+                            <CalendarClock size={16} />
                         </span>
                         <span className="group-hover/title:text-[#6866D6] transition-colors">{isEnglish ? 'Countdowns' : 'Cuentas Regresivas'}</span>
                         {user && (
@@ -300,7 +296,6 @@ export default function Countdown() {
                                 e.stopPropagation()
                                 setIsCreating(!isCreating)
                                 setFormData({ name: '', date: '' })
-                                toggleCollapse(false) // Expand when adding
                             }}
                             className={`p-1 rounded hover:bg-zinc-100 transition-colors cursor-pointer ${isCreating ? 'text-red-500 opacity-100' : 'text-zinc-500 opacity-0 group-hover:opacity-100'} transition-opacity`}
                         >
@@ -308,97 +303,104 @@ export default function Countdown() {
                         </button>
                     )}
                 </div>
-                <div className={`${isCollapsed ? 'hidden' : ''}`}>
-                    <div className="flex flex-col gap-4">
-                        {loading ? (
-                            <div className="flex items-center justify-center py-6 opacity-50">
-                                <Loader2 className="w-5 h-5 animate-spin text-[#6866D6]" />
-                            </div>
-                        ) : (
-                            countdowns.map((item, index) => (
-                            <div
-                                key={item.id}
-                                className={`relative group/item transition-all duration-200 ${draggedCountdownId === item.id ? 'opacity-30 scale-[0.98] cursor-grabbing' : 'opacity-100'} ${editingId || isCreating ? 'cursor-default' : 'cursor-grab'}`}
-                                draggable={!editingId && !isCreating}
-                                onDragStart={() => handleDragStart(item.id)}
-                                onDragOver={(e) => handleDragOver(e, item.id)}
-                                onDragEnd={handleDragEnd}
-                                onClick={() => {
-                                    if (editingId && editingId !== item.id) {
-                                        handleCloseEdit()
-                                    }
-                                }}
-                            >
-                                <CountdownDisplay
-                                    item={item}
-                                    isEnglish={isEnglish}
-                                    onDelete={() => handleDelete(item.id)}
-                                    onEdit={() => startEditing(item)}
-                                    isEditing={editingId === item.id}
-                                    globalEditingId={editingId}
-                                />
-                                {editingId === item.id && (
-                                    <div className="mt-2">
-                                        <CountdownForm
-                                            formData={formData}
-                                            setFormData={setFormData}
-                                            handleSave={handleSave}
-                                            isEnglish={isEnglish}
-                                            onCancel={() => {
-                                                setEditingId(null)
-                                                setFormData({ name: '', date: '' })
-                                            }}
-                                            isEditing={true}
-                                        />
+                
+                <div className="flex flex-col gap-4">
+                    {loading ? (
+                        <div className="flex items-center justify-center py-6 opacity-50">
+                            <Loader2 className="w-5 h-5 animate-spin text-[#6866D6]" />
+                        </div>
+                    ) : (
+                        countdowns.map((item, index) => {
+                            const isItemCollapsed = individualCollapsedIds.has(item.id)
+                            if (isItemCollapsed) {
+                                return (
+                                    <div 
+                                        key={`collapsed-${item.id}`}
+                                        onClick={() => toggleTimerCollapse(item.id)}
+                                        className="pt-4 pb-4 text-center cursor-pointer group/msg border border-dashed border-zinc-100 rounded-lg hover:border-[#6866D6]/30 transition-all"
+                                    >
+                                        <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest group-hover/msg:text-[#6866D6] transition-colors">
+                                            {isEnglish ? 'Timer hidden' : 'Timer oculto'}
+                                        </div>
+                                        <div className="text-[9px] text-zinc-300 italic group-hover/msg:text-zinc-400 transition-colors">
+                                            {isEnglish ? 'Click to show' : 'Click para mostrar'}
+                                        </div>
                                     </div>
-                                )}
-                                {index === 0 && countdowns.length > 1 && !editingId && (
-                                    <div className="mt-4 border-t border-zinc-100" />
-                                )}
-                            </div>
-                        )))}
+                                )
+                            }
+                            return (
+                                <div
+                                    key={item.id}
+                                    className={`relative group/item transition-all duration-200 ${draggedCountdownId === item.id ? 'opacity-30 scale-[0.98] cursor-grabbing' : 'opacity-100'} ${editingId || isCreating ? 'cursor-default' : 'cursor-grab'}`}
+                                    draggable={!editingId && !isCreating}
+                                    onDragStart={() => handleDragStart(item.id)}
+                                    onDragOver={(e) => handleDragOver(e, item.id)}
+                                    onDragEnd={handleDragEnd}
+                                    onClick={() => {
+                                        if (editingId && editingId !== item.id) {
+                                            handleCloseEdit()
+                                        }
+                                    }}
+                                >
+                                    <CountdownDisplay
+                                        item={item}
+                                        isEnglish={isEnglish}
+                                        onDelete={() => handleDelete(item.id)}
+                                        onEdit={() => startEditing(item)}
+                                        onCollapse={() => toggleTimerCollapse(item.id)}
+                                        isEditing={editingId === item.id}
+                                        globalEditingId={editingId}
+                                    />
+                                    {editingId === item.id && (
+                                        <div className="mt-2">
+                                            <CountdownForm
+                                                formData={formData}
+                                                setFormData={setFormData}
+                                                handleSave={handleSave}
+                                                isEnglish={isEnglish}
+                                                onCancel={() => {
+                                                    setEditingId(null)
+                                                    setFormData({ name: '', date: '' })
+                                                }}
+                                                isEditing={true}
+                                            />
+                                        </div>
+                                    )}
+                                    {index < countdowns.length - 1 && !editingId && !individualCollapsedIds.has(countdowns[index+1].id) && (
+                                        <div className="mt-4 border-t border-zinc-100" />
+                                    )}
+                                </div>
+                            )
+                        })
+                    )}
 
-                        {countdowns.length === 0 && !loading && !isCreating && (
-                            <div className="text-xs text-zinc-400 text-center pt-5 pb-6 italic">
-                                {isEnglish ? 'No active countdowns' : 'Aún no hay cuentas regresivas'}
-                            </div>
-                        )}
+                    {countdowns.length === 0 && !loading && !isCreating && (
+                        <div className="text-xs text-zinc-400 text-center pt-5 pb-6 italic">
+                            {isEnglish ? 'No active countdowns' : 'Aún no hay cuentas regresivas'}
+                        </div>
+                    )}
 
-                        {isCreating && (
-                            <CountdownForm
-                                formData={formData}
-                                setFormData={setFormData}
-                                handleSave={handleSave}
-                                isEnglish={isEnglish}
-                                isEditing={false}
-                            />
-                        )}
-                    </div>
+                    {isCreating && (
+                        <CountdownForm
+                            formData={formData}
+                            setFormData={setFormData}
+                            handleSave={handleSave}
+                            isEnglish={isEnglish}
+                            isEditing={false}
+                        />
+                    )}
                 </div>
-
-                {isCollapsed && (
-                    <div 
-                        onClick={() => toggleCollapse(false)}
-                        className="pt-4 pb-2 text-center cursor-pointer group/msg mt-2 border-t border-zinc-50"
-                    >
-                        <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest group-hover/msg:text-[#6866D6] transition-colors">
-                            {isEnglish ? 'Countdowns hidden' : 'Timers ocultos'}
-                        </div>
-                        <div className="text-[9px] text-zinc-300 italic group-hover/msg:text-zinc-400 transition-colors">
-                            {isEnglish ? 'Click to show' : 'Click para mostrar'}
-                        </div>
-                    </div>
-                )}
             </div>
         </div>
     )
 }
 
-function CountdownDisplay({ item, isEnglish, onDelete, onEdit, isEditing, globalEditingId }: {
+function CountdownDisplay({ item, isEnglish, onDelete, onEdit, onCollapse, isEditing, globalEditingId }: {
     item: CountdownItem,
     isEnglish: boolean,
     onDelete: () => void,
     onEdit: () => void,
+    onCollapse: () => void,
     isEditing: boolean,
     globalEditingId: string | null
 }) {
@@ -467,6 +469,13 @@ function CountdownDisplay({ item, isEnglish, onDelete, onEdit, isEditing, global
             {!globalEditingId && (
                 <div className="absolute -top-1 right-0 flex items-center gap-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity">
                     <button
+                        onClick={onCollapse}
+                        className="text-zinc-400 hover:text-zinc-600 transition-colors cursor-pointer p-1"
+                        title={isEnglish ? 'Hide' : 'Ocultar'}
+                    >
+                        <EyeOff size={14} />
+                    </button>
+                    <button
                         onClick={onEdit}
                         className="text-zinc-400 hover:text-[#6866D6] transition-colors cursor-pointer p-1"
                         title={isEnglish ? 'Edit' : 'Editar'}
@@ -516,39 +525,38 @@ function CountdownForm({ formData, setFormData, handleSave, isEnglish, onCancel,
     isEditing: boolean
 }) {
     return (
-        <form onSubmit={handleSave} className="flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-200 pt-2">
+        <form onSubmit={handleSave} className="flex flex-col gap-2 p-2 bg-zinc-50 rounded border border-zinc-200">
             <input
                 type="text"
+                placeholder={isEnglish ? "Event name" : "Nombre del evento"}
+                className="text-xs p-1.5 border border-zinc-200 rounded outline-none focus:border-[#6866D6]"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder={isEnglish ? 'Event name...' : 'Nombre del evento...'}
+                onChange={e => setFormData({ ...formData, name: e.target.value })}
                 autoFocus
-                className="w-full bg-zinc-50 border-none rounded text-xs px-2 py-1.5 focus:ring-1 focus:ring-zinc-300 outline-none text-zinc-800"
             />
             <input
                 type="datetime-local"
+                className="text-xs p-1.5 border border-zinc-200 rounded outline-none focus:border-[#6866D6]"
                 value={formData.date}
-                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                className="w-full bg-zinc-50 border-none rounded text-xs px-2 py-1.5 focus:ring-1 focus:ring-zinc-300 outline-none text-zinc-800"
+                onChange={e => setFormData({ ...formData, date: e.target.value })}
             />
-            <div className="flex gap-2">
-                <button
-                    type="submit"
-                    disabled={!formData.name || !formData.date}
-                    className="flex-1 bg-[#6866D6] text-white rounded p-1.5 text-xs hover:bg-[#5856c4] disabled:opacity-50 transition-colors cursor-pointer flex items-center justify-center gap-1"
-                >
-                    <Timer size={14} />
-                    {isEnglish ? 'Save' : 'Guardar'}
-                </button>
-                {isEditing && onCancel && (
+            <div className="flex gap-1 justify-end mt-1">
+                {isEditing && (
                     <button
                         type="button"
                         onClick={onCancel}
-                        className="p-1.5 rounded bg-zinc-100 text-zinc-500 hover:text-red-500 transition-colors"
+                        className="text-[10px] px-2 py-1 text-zinc-500 hover:text-zinc-700 transition-colors cursor-pointer"
                     >
-                        <X size={14} />
+                        {isEnglish ? 'Cancel' : 'Cancelar'}
                     </button>
                 )}
+                <button
+                    type="submit"
+                    disabled={!formData.name || !formData.date}
+                    className="text-[10px] bg-[#6866D6] text-white px-3 py-1 rounded hover:bg-[#5856c4] disabled:opacity-50 transition-colors cursor-pointer"
+                >
+                    {isEnglish ? 'Save' : 'Guardar'}
+                </button>
             </div>
         </form>
     )
