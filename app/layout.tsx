@@ -2,6 +2,7 @@ import "./global.css";
 import ShortcutFloater from "./components/ShortcutFloater";
 import DailyTasks from "./components/DailyTasks";
 import WeeklyTasks from "./components/WeeklyTasks";
+import MonthlyTasks from "./components/MonthlyTasks";
 import Countdown from "./components/Countdown";
 import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
@@ -69,6 +70,7 @@ export default function RootLayout({
         <div className="fixed left-9 top-48 z-40 hidden lg:flex flex-col gap-4 w-64">
           <DailyTasks />
           <WeeklyTasks />
+          <MonthlyTasks />
         </div>
         <Countdown />
         <div className="pt-0 lg:pt-8">{children}</div>

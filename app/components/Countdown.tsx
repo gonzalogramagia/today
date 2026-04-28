@@ -60,7 +60,7 @@ export default function Countdown() {
             }
             setEditingId(null)
         } else {
-            if (countdowns.length >= 2) return
+            if (countdowns.length >= 3) return
             const newId = crypto.randomUUID();
             const newItem = { id: newId, ...data };
             updatedCountdowns = [...countdowns, newItem];
@@ -262,7 +262,7 @@ export default function Countdown() {
                             <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse ml-0.5" title="Sincronizado" />
                         )}
                     </h3>
-                    {countdowns.length < 2 && !editingId && (
+                    {countdowns.length < 3 && !editingId && (
                         <button
                             onClick={(e) => {
                                 e.stopPropagation()

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Plus, Trash2, Check, Square, CheckSquare, Pencil, X, Calendar, Loader2 } from 'lucide-react'
+import { Plus, Trash2, Check, Square, CheckSquare, Pencil, X, Loader2 } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '../hooks/useAuth'
 
@@ -13,7 +13,7 @@ type Task = {
     sort_index?: number
 }
 
-export default function WeeklyTasks() {
+export default function MonthlyTasks() {
     const { user, loading: authLoading, supabase } = useAuth()
     const [tasks, setTasks] = useState<Task[]>([])
     const [inputValue, setInputValue] = useState('')
@@ -68,8 +68,9 @@ export default function WeeklyTasks() {
         const loadTasks = async () => {
             if (user) {
                 // ENVIRONMENT: AUTHENTICATED (Supabase)
+                // Note: Assumes monthly_tasks table exists if user wants sync
                 const { data, error } = await supabase
-                    .from('weekly_tasks')
+                    .from('monthly_tasks')
                     .select('*')
                     .order('sort_index', { ascending: true })
 
@@ -78,13 +79,13 @@ export default function WeeklyTasks() {
                 }
             } else {
                 // ENVIRONMENT: GUEST (LocalStorage)
-                const savedTasks = localStorage.getItem('weekly-tasks')
+                const savedTasks = localStorage.getItem('monthly-tasks')
                 let parsedTasks: Task[] = []
                 if (savedTasks) {
                     try {
                         parsedTasks = JSON.parse(savedTasks)
                     } catch (e) {
-                        console.error('Failed to parse local weekly tasks', e)
+                        console.error('Failed to parse local monthly tasks', e)
                     }
                 }
                 setTasks(parsedTasks)
@@ -96,7 +97,7 @@ export default function WeeklyTasks() {
 
         const handleStorageChange = (e: StorageEvent) => {
             // Only sync from other tabs if we are in GUEST mode
-            if (e.key === 'weekly-tasks' && e.newValue && !user) {
+            if (e.key === 'monthly-tasks' && e.newValue && !user) {
                 try {
                     setTasks(JSON.parse(e.newValue))
                 } catch (err) {
@@ -112,7 +113,7 @@ export default function WeeklyTasks() {
     // Save to LocalStorage ONLY for Guest environment
     useEffect(() => {
         if (!mounted || user || authLoading || loading) return // Do not touch localStorage if logged in or still loading
-        localStorage.setItem('weekly-tasks', JSON.stringify(tasks))
+        localStorage.setItem('monthly-tasks', JSON.stringify(tasks))
     }, [tasks, mounted, user, authLoading, loading])
 
     const addTask = async (e?: React.FormEvent) => {
@@ -131,7 +132,7 @@ export default function WeeklyTasks() {
 
             if (user) {
                 await supabase
-                    .from('weekly_tasks')
+                    .from('monthly_tasks')
                     .update({ text: updatedText, url: updatedUrl })
                     .eq('id', editingId)
             }
@@ -148,7 +149,7 @@ export default function WeeklyTasks() {
 
             if (user) {
                 await supabase
-                    .from('weekly_tasks')
+                    .from('monthly_tasks')
                     .insert([{
                         id: newTask.id,
                         user_id: user.id,
@@ -197,7 +198,7 @@ export default function WeeklyTasks() {
 
         if (user) {
             await supabase
-                .from('weekly_tasks')
+                .from('monthly_tasks')
                 .update({ completed: newCompletedStatus })
                 .eq('id', id)
         }
@@ -208,7 +209,7 @@ export default function WeeklyTasks() {
             setTasks(tasks.filter(t => t.id !== id))
             if (user) {
                 await supabase
-                    .from('weekly_tasks')
+                    .from('monthly_tasks')
                     .delete()
                     .eq('id', id)
             }
@@ -248,7 +249,7 @@ export default function WeeklyTasks() {
                 completed: task.completed,
                 sort_index: index
             }))
-            await supabase.from('weekly_tasks').upsert(updates)
+            await supabase.from('monthly_tasks').upsert(updates)
         }
     }
 
@@ -260,9 +261,9 @@ export default function WeeklyTasks() {
                 <div className="group/header flex items-center justify-between mb-5" onClick={() => editingId && cancelEditing()}>
                     <h3 className="font-medium text-zinc-900 text-sm flex items-center justify-start gap-2 relative group/tooltip w-max cursor-default">
                         <span className="text-base select-none">
-                            🔜
+                            📅
                         </span>
-                        <span>{isEnglish ? 'Weekly Tasks' : 'Tareas de la Semana'}</span>
+                        <span>{isEnglish ? 'Monthly Tasks' : 'Tareas del Mes'}</span>
                         {user && (
                             <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse ml-0.5" title="Sincronizado" />
                         )}
@@ -400,7 +401,7 @@ export default function WeeklyTasks() {
 
                     {tasks.length === 0 && !loading && (
                         <div className="text-xs text-zinc-400 text-center py-4 italic">
-                            {isEnglish ? 'No tasks this week' : 'No hay tareas esta semana'}
+                            {isEnglish ? 'No tasks this month' : 'No hay tareas este mes'}
                         </div>
                     )}
                 </div>

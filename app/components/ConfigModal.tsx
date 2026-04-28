@@ -134,7 +134,7 @@ export default function ConfigModal({ lang, onClose, toggleLanguage, exportPath,
                                     {showTasks ? <Eye size={20} className="text-zinc-600" /> : <EyeOff size={20} className="text-zinc-400" />}
                                 </div>
                                 <span className="font-medium text-zinc-900">
-                                    {lang === 'en' ? 'Daily & Weekly Tasks' : 'Tareas Diarias & Semanales'}
+                                    {lang === 'en' ? 'Daily, Weekly & Monthly Tasks' : 'Tareas Diarias, Semanales & Mensuales'}
                                 </span>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer">
