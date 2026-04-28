@@ -55,6 +55,30 @@ export default function Home({ lang }: HomeProps) {
   const [deletingFileId, setDeletingFileId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [editingTag, setEditingTag] = useState("");
+  const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const saved = localStorage.getItem("config-collapsed-notes");
+    if (saved) {
+      try {
+        setCollapsedIds(new Set(JSON.parse(saved)));
+      } catch (e) {}
+    }
+  }, []);
+
+  const toggleNoteCollapse = (id: string) => {
+    const newSet = new Set(collapsedIds);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setCollapsedIds(newSet);
+    localStorage.setItem(
+      "config-collapsed-notes",
+      JSON.stringify(Array.from(newSet)),
+    );
+  };
 
   useEffect(() => {
     if (deletingBlockId || deletingFileId) {
@@ -1228,7 +1252,20 @@ export default function Home({ lang }: HomeProps) {
                   "#FEFCE8",
               }}
             >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-2 gap-3">
+                <div 
+                  onClick={() => toggleNoteCollapse(block.id)}
+                  className="flex-1 flex items-start gap-2 cursor-pointer group/title min-w-0"
+                >
+                  <span className="text-base select-none w-5 flex-shrink-0 flex justify-center mt-2">
+                    {collapsedIds.has(block.id) ? '👁' : (
+                      <>
+                        <span className="group-hover/title:hidden opacity-30 text-sm">📌</span>
+                        <span className="hidden group-hover/title:inline">👁</span>
+                      </>
+                    )}
+                  </span>
+                  <div className="flex-1 min-w-0">
                 {editingBlockId === block.id ? (
                   <input
                     type="text"
@@ -1290,6 +1327,8 @@ export default function Home({ lang }: HomeProps) {
                     );
                   })()
                 )}
+                </div>
+                </div>
                 <div className="flex items-center justify-between w-full sm:w-auto sm:justify-start gap-3 mt-1 sm:mt-0">
                   {editingBlockId !== block.id && (
                     <button
@@ -1361,6 +1400,8 @@ export default function Home({ lang }: HomeProps) {
                 </div>
               </div>
 
+              {!collapsedIds.has(block.id) && (
+              <>
               {editingBlockId === block.id ? (
                 <div className="relative">
                   <textarea
@@ -1841,6 +1882,22 @@ export default function Home({ lang }: HomeProps) {
                   e.target.value = "";
                 }}
               />
+              </>
+              )}
+
+              {collapsedIds.has(block.id) && (
+                <div 
+                  onClick={() => toggleNoteCollapse(block.id)}
+                  className="pt-5 pb-3 text-center cursor-pointer group/msg border-t border-black/5 mt-2"
+                >
+                  <div className="text-[10px] font-bold text-black/20 uppercase tracking-widest group-hover/msg:text-[#6866D6] transition-colors">
+                    {lang === 'en' ? 'Note content hidden' : 'Contenido oculto'}
+                  </div>
+                  <div className="text-[9px] text-black/20 italic group-hover/msg:text-black/40 transition-colors">
+                    {lang === 'en' ? 'Click to show' : 'Click para mostrar'}
+                  </div>
+                </div>
+              )}
             {/* Note Ordering Arrows - Positioned to the right outside the block */}
             {editingBlockId !== block.id && blocks.length > 1 && (
               <div className="absolute left-full ml-3 bottom-[-0.24px] flex flex-col gap-2 lg:opacity-0 lg:group-hover/note:opacity-100 transition-opacity z-10">

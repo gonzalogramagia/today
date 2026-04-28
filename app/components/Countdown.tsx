@@ -371,10 +371,10 @@ export default function Countdown() {
                 {isCollapsed && (
                     <div 
                         onClick={() => toggleCollapse(false)}
-                        className="py-2 text-center cursor-pointer group/msg mt-2 border-t border-zinc-50"
+                        className="pt-4 pb-2 text-center cursor-pointer group/msg mt-2 border-t border-zinc-50"
                     >
                         <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest group-hover/msg:text-[#6866D6] transition-colors">
-                            {isEnglish ? 'Countdowns hidden' : 'Cuentas ocultas'}
+                            {isEnglish ? 'Countdowns hidden' : 'Timers ocultos'}
                         </div>
                         <div className="text-[9px] text-zinc-300 italic group-hover/msg:text-zinc-400 transition-colors">
                             {isEnglish ? 'Click to show' : 'Click para mostrar'}
