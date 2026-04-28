@@ -23,6 +23,17 @@ export default function Countdown() {
     const [formData, setFormData] = useState({ name: '', date: '' })
     const [draggedCountdownId, setDraggedCountdownId] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
+    const [isCollapsed, setIsCollapsed] = useState(false)
+
+    useEffect(() => {
+        const saved = localStorage.getItem('config-collapsed-countdown')
+        if (saved === 'true') setIsCollapsed(true)
+    }, [])
+
+    const toggleCollapse = (val: boolean) => {
+        setIsCollapsed(val)
+        localStorage.setItem('config-collapsed-countdown', String(val))
+    }
     const pathname = usePathname()
     const isEnglish = pathname?.startsWith('/en')
     const containerRef = useRef<HTMLDivElement>(null)
@@ -252,12 +263,25 @@ export default function Countdown() {
     if (!mounted) return null
 
     return (
-        <div ref={containerRef} className={`fixed right-9 top-48 z-40 hidden lg:flex flex-col gap-4 w-64 transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none select-none'}`}>
+        <div ref={containerRef} className={`fixed right-9 top-48 bottom-32 z-40 hidden lg:flex flex-col gap-4 w-64 overflow-y-auto custom-scrollbar pr-2 transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none select-none'}`}>
             <div className="group bg-white border border-zinc-200 rounded-lg shadow-lg p-4 transition-all">
                 <div className="flex items-center justify-between mb-3" onClick={handleCloseEdit}>
-                    <h3 className="font-medium text-zinc-900 pt-1 text-sm flex items-center gap-2 cursor-default">
-                        <CalendarClock size={16} />
-                        {isEnglish ? 'Countdowns' : 'Cuentas Regresivas'}
+                    <h3 
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            toggleCollapse(!isCollapsed)
+                        }}
+                        className="font-medium text-zinc-900 pt-1 text-sm flex items-center gap-2 cursor-pointer group/title"
+                    >
+                        <span className="text-base select-none w-5 flex justify-center">
+                            {isCollapsed ? '👁' : (
+                                <>
+                                    <span className="group-hover/title:hidden"><CalendarClock size={16} /></span>
+                                    <span className="hidden group-hover/title:inline">👁</span>
+                                </>
+                            )}
+                        </span>
+                        <span className="group-hover/title:text-[#6866D6] transition-colors">{isEnglish ? 'Countdowns' : 'Cuentas Regresivas'}</span>
                         {user && (
                             <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse ml-0.5" title="Sincronizado" />
                         )}
@@ -268,6 +292,7 @@ export default function Countdown() {
                                 e.stopPropagation()
                                 setIsCreating(!isCreating)
                                 setFormData({ name: '', date: '' })
+                                toggleCollapse(false) // Expand when adding
                             }}
                             className={`p-1 rounded hover:bg-zinc-100 transition-colors cursor-pointer ${isCreating ? 'text-red-500 opacity-100' : 'text-zinc-500 opacity-0 group-hover:opacity-100'} transition-opacity`}
                         >
@@ -275,72 +300,87 @@ export default function Countdown() {
                         </button>
                     )}
                 </div>
+                <div className={`${isCollapsed ? 'hidden' : ''}`}>
+                    <div className="flex flex-col gap-4">
+                        {loading ? (
+                            <div className="flex items-center justify-center py-6 opacity-50">
+                                <Loader2 className="w-5 h-5 animate-spin text-[#6866D6]" />
+                            </div>
+                        ) : (
+                            countdowns.map((item, index) => (
+                            <div
+                                key={item.id}
+                                className={`relative group/item transition-all duration-200 ${draggedCountdownId === item.id ? 'opacity-30 scale-[0.98] cursor-grabbing' : 'opacity-100'} ${editingId || isCreating ? 'cursor-default' : 'cursor-grab'}`}
+                                draggable={!editingId && !isCreating}
+                                onDragStart={() => handleDragStart(item.id)}
+                                onDragOver={(e) => handleDragOver(e, item.id)}
+                                onDragEnd={handleDragEnd}
+                                onClick={() => {
+                                    if (editingId && editingId !== item.id) {
+                                        handleCloseEdit()
+                                    }
+                                }}
+                            >
+                                <CountdownDisplay
+                                    item={item}
+                                    isEnglish={isEnglish}
+                                    onDelete={() => handleDelete(item.id)}
+                                    onEdit={() => startEditing(item)}
+                                    isEditing={editingId === item.id}
+                                    globalEditingId={editingId}
+                                />
+                                {editingId === item.id && (
+                                    <div className="mt-2">
+                                        <CountdownForm
+                                            formData={formData}
+                                            setFormData={setFormData}
+                                            handleSave={handleSave}
+                                            isEnglish={isEnglish}
+                                            onCancel={() => {
+                                                setEditingId(null)
+                                                setFormData({ name: '', date: '' })
+                                            }}
+                                            isEditing={true}
+                                        />
+                                    </div>
+                                )}
+                                {index === 0 && countdowns.length > 1 && !editingId && (
+                                    <div className="mt-4 border-t border-zinc-100" />
+                                )}
+                            </div>
+                        )))}
 
-                <div className="flex flex-col gap-4">
-                    {loading ? (
-                        <div className="flex items-center justify-center py-6 opacity-50">
-                            <Loader2 className="w-5 h-5 animate-spin text-[#6866D6]" />
-                        </div>
-                    ) : (
-                        countdowns.map((item, index) => (
-                        <div
-                            key={item.id}
-                            className={`relative group/item transition-all duration-200 ${draggedCountdownId === item.id ? 'opacity-30 scale-[0.98] cursor-grabbing' : 'opacity-100'} ${editingId || isCreating ? 'cursor-default' : 'cursor-grab'}`}
-                            draggable={!editingId && !isCreating}
-                            onDragStart={() => handleDragStart(item.id)}
-                            onDragOver={(e) => handleDragOver(e, item.id)}
-                            onDragEnd={handleDragEnd}
-                            onClick={() => {
-                                if (editingId && editingId !== item.id) {
-                                    handleCloseEdit()
-                                }
-                            }}
-                        >
-                            <CountdownDisplay
-                                item={item}
+                        {countdowns.length === 0 && !loading && !isCreating && (
+                            <div className="text-xs text-zinc-400 text-center pt-5 pb-6 italic">
+                                {isEnglish ? 'No active countdowns' : 'Aún no hay cuentas regresivas'}
+                            </div>
+                        )}
+
+                        {isCreating && (
+                            <CountdownForm
+                                formData={formData}
+                                setFormData={setFormData}
+                                handleSave={handleSave}
                                 isEnglish={isEnglish}
-                                onDelete={() => handleDelete(item.id)}
-                                onEdit={() => startEditing(item)}
-                                isEditing={editingId === item.id}
-                                globalEditingId={editingId}
+                                isEditing={false}
                             />
-                            {editingId === item.id && (
-                                <div className="mt-2">
-                                    <CountdownForm
-                                        formData={formData}
-                                        setFormData={setFormData}
-                                        handleSave={handleSave}
-                                        isEnglish={isEnglish}
-                                        onCancel={() => {
-                                            setEditingId(null)
-                                            setFormData({ name: '', date: '' })
-                                        }}
-                                        isEditing={true}
-                                    />
-                                </div>
-                            )}
-                            {index === 0 && countdowns.length > 1 && !editingId && (
-                                <div className="mt-4 border-t border-zinc-100" />
-                            )}
-                        </div>
-                    )))}
-
-                    {countdowns.length === 0 && !loading && !isCreating && (
-                        <div className="text-xs text-zinc-400 text-center pt-5 pb-6 italic">
-                            {isEnglish ? 'No active countdowns' : 'Aún no hay cuentas regresivas'}
-                        </div>
-                    )}
-
-                    {isCreating && (
-                        <CountdownForm
-                            formData={formData}
-                            setFormData={setFormData}
-                            handleSave={handleSave}
-                            isEnglish={isEnglish}
-                            isEditing={false}
-                        />
-                    )}
+                        )}
+                    </div>
                 </div>
+
+                {isCollapsed && (
+                    <div 
+                        onClick={() => toggleCollapse(false)}
+                        className="py-2 text-center cursor-pointer group/msg mt-2 border-t border-zinc-50"
+                    >
+                        <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest group-hover/msg:text-[#6866D6] transition-colors">
+                            {isEnglish ? 'Countdowns hidden' : 'Cuentas ocultas'}
+                        </div>
+                        <div className="text-[9px] text-zinc-300 italic group-hover/msg:text-zinc-400 transition-colors">
+                            {isEnglish ? 'Click to show' : 'Click para mostrar'}
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     )

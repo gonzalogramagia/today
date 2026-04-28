@@ -24,6 +24,17 @@ export default function MonthlyTasks() {
     const [deletingId, setDeletingId] = useState<string | null>(null)
     const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
+    const [isCollapsed, setIsCollapsed] = useState(false)
+
+    useEffect(() => {
+        const saved = localStorage.getItem('config-collapsed-monthly')
+        if (saved === 'true') setIsCollapsed(true)
+    }, [])
+
+    const toggleCollapse = (val: boolean) => {
+        setIsCollapsed(val)
+        localStorage.setItem('config-collapsed-monthly', String(val))
+    }
     const pathname = usePathname()
     const isEnglish = pathname?.startsWith('/en')
     const containerRef = useRef<HTMLDivElement>(null)
@@ -259,19 +270,31 @@ export default function MonthlyTasks() {
         <div ref={containerRef} className={`transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none select-none'}`}>
             <div className="bg-white border border-zinc-200 rounded-lg shadow-lg p-4 transition-all">
                 <div className="group/header flex items-center justify-between mb-5" onClick={() => editingId && cancelEditing()}>
-                    <h3 className="font-medium text-zinc-900 text-sm flex items-center justify-start gap-2 relative group/tooltip w-max cursor-default">
-                        <span className="text-base select-none">
-                            📅
+                    <h3 
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            toggleCollapse(!isCollapsed)
+                        }}
+                        className="font-medium text-zinc-900 text-sm flex items-center justify-start gap-2 relative group/tooltip w-max cursor-pointer group/title"
+                    >
+                        <span className="text-base select-none w-5 flex justify-center">
+                            {isCollapsed ? '👁' : (
+                                <>
+                                    <span className="group-hover/title:hidden">📅</span>
+                                    <span className="hidden group-hover/title:inline">👁</span>
+                                </>
+                            )}
                         </span>
-                        <span>{isEnglish ? 'Monthly Tasks' : 'Tareas del Mes'}</span>
+                        <span className="group-hover/title:text-[#6866D6] transition-colors">{isEnglish ? 'Monthly Tasks' : 'Tareas del Mes'}</span>
                         {user && (
                             <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse ml-0.5" title="Sincronizado" />
                         )}
-                        <div className="absolute bottom-full left-[-4px] mb-2 w-max bg-black text-white text-[10px] px-2 py-1 rounded opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-50">
-                            {isEnglish ? 'Never resets' : 'No se resetean nunca'}
-                            {/* Speech bubble pointer */}
-                            <div className="absolute top-full left-2 w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-black"></div>
-                        </div>
+                        {!isCollapsed && (
+                            <div className="absolute bottom-full left-[-4px] mb-2 w-max bg-black text-white text-[10px] px-2 py-1 rounded opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-50">
+                                {isEnglish ? 'Never resets' : 'No se resetean nunca'}
+                                <div className="absolute top-full left-2 w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-black"></div>
+                            </div>
+                        )}
                     </h3>
                     <button
                         onClick={(e) => {
@@ -284,6 +307,7 @@ export default function MonthlyTasks() {
                                 setEditingId(null)
                                 setInputValue('')
                                 setUrlValue('')
+                                toggleCollapse(false) // Expand when adding
                             }
                         }}
                         className={`p-1 rounded hover:bg-zinc-100 transition-colors cursor-pointer ${isAdding ? 'text-red-500 opacity-100' : 'text-zinc-500 opacity-0 group-hover/header:opacity-100'} ${editingId ? 'hidden' : ''} transition-opacity`}
@@ -292,7 +316,8 @@ export default function MonthlyTasks() {
                     </button>
                 </div>
 
-                <div className={`space-y-2 max-h-[30vh] overflow-y-auto overflow-x-hidden mb-3 custom-scrollbar transition-opacity duration-200 ${isAdding ? 'opacity-50 pointer-events-none' : ''}`}>
+                <div className={`${isCollapsed ? 'hidden' : ''}`}>
+                    <div className={`space-y-2 max-h-[30vh] overflow-y-auto overflow-x-hidden mb-3 custom-scrollbar transition-opacity duration-200 ${isAdding ? 'opacity-50 pointer-events-none' : ''}`}>
                     {loading ? (
                         <div className="flex items-center justify-center py-6 opacity-50">
                             <Loader2 className="w-5 h-5 animate-spin text-[#6866D6]" />
@@ -445,6 +470,21 @@ export default function MonthlyTasks() {
                             className="w-full bg-zinc-50 border-none rounded text-xs px-2 py-1.5 focus:ring-1 focus:ring-zinc-300 outline-none text-zinc-800 text-xs mx-[1px]"
                         />
                     </form>
+                )}
+                </div>
+
+                {isCollapsed && (
+                    <div 
+                        onClick={() => toggleCollapse(false)}
+                        className="py-2 text-center cursor-pointer group/msg"
+                    >
+                        <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest group-hover/msg:text-[#6866D6] transition-colors">
+                            {isEnglish ? 'Tasks hidden' : 'Tareas ocultas'}
+                        </div>
+                        <div className="text-[9px] text-zinc-300 italic group-hover/msg:text-zinc-400 transition-colors">
+                            {isEnglish ? 'Click to show' : 'Click para mostrar'}
+                        </div>
+                    </div>
                 )}
             </div>
         </div>

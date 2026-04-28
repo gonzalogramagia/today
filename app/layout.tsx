@@ -67,7 +67,7 @@ export default function RootLayout({
           style={{ backgroundImage: "url('/wallpaper.png')" }}
         />
         <ShortcutFloater />
-        <div className="fixed left-9 top-48 z-40 hidden lg:flex flex-col gap-4 w-64">
+        <div className="fixed left-9 top-48 bottom-32 z-40 hidden lg:flex flex-col gap-4 w-64 overflow-y-auto custom-scrollbar pr-2">
           <DailyTasks />
           <WeeklyTasks />
           <MonthlyTasks />

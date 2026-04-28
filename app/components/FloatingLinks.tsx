@@ -95,7 +95,7 @@ export default function FloatingLinks({ lang }: FloatingLinksProps) {
       )}
 
       {/* Left Side Buttons: Home + Emojis + Music + Tasks */}
-      <div className="fixed bottom-8 left-8 flex gap-3 z-30 transition-opacity duration-300">
+      <div className="fixed bottom-8 left-8 flex gap-3 z-50 transition-opacity duration-300">
         <button
           disabled
           className="p-3 bg-white border border-zinc-200 rounded-full shadow-lg transition-all opacity-50 cursor-not-allowed group"
